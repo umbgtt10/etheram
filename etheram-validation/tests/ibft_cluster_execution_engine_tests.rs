@@ -2,10 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::common::ibft_cluster_test_helpers::block_hash;
-use crate::common::ibft_cluster_test_helpers::commit;
-use crate::common::ibft_cluster_test_helpers::pre_prepare;
-use crate::common::ibft_cluster_test_helpers::prepare;
+use crate::common::ibft_cluster_test_helpers::finalize_round_with_block;
 use crate::common::ibft_cluster_test_helpers::validators;
 use barechain_etheram_validation::ibft_cluster::IbftCluster;
 use barechain_etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
@@ -25,7 +22,6 @@ use etheram::execution::execution_result::ExecutionResult;
 use etheram::execution::transaction_result::TransactionResult;
 use etheram::execution::transaction_result::TransactionStatus;
 use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram::incoming::timer::timer_event::TimerEvent;
 use std::collections::BTreeMap;
 
 fn finalize_first_block_with_transaction(
@@ -36,33 +32,8 @@ fn finalize_first_block_with_transaction(
     let genesis_accounts = BTreeMap::from([(from, Account::new(1_000))]);
     let state_root = compute_state_root(&genesis_accounts);
     let proposed_block = Block::new(0, 0, vec![tx], state_root);
-    let proposed_block_hash = block_hash(&proposed_block);
 
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &proposed_block));
-        cluster.inject_message(receiver, 0, prepare(0, 0, proposed_block_hash));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 1..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_with_block(cluster, 0, 0, 0, &proposed_block);
 }
 
 fn word(value: u8) -> Hash {

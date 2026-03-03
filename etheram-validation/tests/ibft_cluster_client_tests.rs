@@ -3,17 +3,13 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common::ibft_cluster_test_helpers::block;
-use crate::common::ibft_cluster_test_helpers::block_hash;
-use crate::common::ibft_cluster_test_helpers::commit;
-use crate::common::ibft_cluster_test_helpers::pre_prepare;
-use crate::common::ibft_cluster_test_helpers::prepare;
+use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::validators;
 use barechain_etheram_validation::ibft_cluster::IbftCluster;
 use etheram::common_types::transaction::Transaction;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
 use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram::incoming::timer::timer_event::TimerEvent;
 
 #[test]
 fn get_height_at_genesis_returns_height_zero() {
@@ -35,33 +31,8 @@ fn get_height_after_consensus_returns_incremented_height() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
     let proposed_block = block(0, 0);
-    let proposed_block_hash = block_hash(&proposed_block);
 
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &proposed_block));
-        cluster.inject_message(receiver, 0, prepare(0, 0, proposed_block_hash));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 1..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &proposed_block);
     cluster.submit_request(0, 77, ClientRequest::GetHeight);
 
     // Act

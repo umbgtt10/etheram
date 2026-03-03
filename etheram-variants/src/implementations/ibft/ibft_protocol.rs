@@ -12,6 +12,7 @@ use crate::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use crate::implementations::ibft::vote_tracker::VoteTracker;
 use crate::implementations::ibft::wal_writer::NoOpWalWriter;
 use crate::implementations::ibft::wal_writer::WalWriter;
+use crate::implementations::no_op_execution_engine::NoOpExecutionEngine;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::collections::BTreeSet;
@@ -25,10 +26,15 @@ use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::collections::action_collection::ActionCollection;
 use etheram::common_types::block::Block;
+use etheram::common_types::state_root::compute_state_root_with_contract_storage;
 use etheram::common_types::types::Gas;
 use etheram::common_types::types::{Hash, Height};
 use etheram::context::context_dto::Context;
+use etheram::execution::execution_engine::BoxedExecutionEngine;
+use etheram::execution::receipts_root::compute_receipts_root;
+use etheram::execution::transaction_result::TransactionStatus;
 use etheram::state::cache::cache_update::CacheUpdate;
+use etheram::state::storage::storage_mutation::StorageMutation;
 
 pub(crate) const MAX_GAS_LIMIT: Gas = 1_000_000;
 const MAX_FUTURE_BUFFER_SIZE: usize = 100;
@@ -60,6 +66,7 @@ pub struct IbftProtocol {
     new_view_sent_round: Option<u64>,
     prepare_signatures: BTreeMap<(Height, u64, PeerId), SignatureBytes>,
     future_round_buffer: Vec<(MessageSource, IbftMessage)>,
+    execution_engine: BoxedExecutionEngine,
 }
 
 impl IbftProtocol {
@@ -97,11 +104,17 @@ impl IbftProtocol {
             new_view_sent_round: None,
             prepare_signatures: BTreeMap::new(),
             future_round_buffer: Vec::new(),
+            execution_engine: Box::new(NoOpExecutionEngine),
         }
     }
 
     pub fn with_wal_writer(mut self, wal_writer: Box<dyn WalWriter>) -> Self {
         self.wal_writer = wal_writer;
+        self
+    }
+
+    pub fn with_execution_engine(mut self, engine: BoxedExecutionEngine) -> Self {
+        self.execution_engine = engine;
         self
     }
 
@@ -150,6 +163,7 @@ impl IbftProtocol {
                 .map(|(h, r, p, s)| ((h, r, p), s))
                 .collect(),
             future_round_buffer: Vec::new(),
+            execution_engine: Box::new(NoOpExecutionEngine),
         }
     }
 
@@ -344,6 +358,37 @@ impl IbftProtocol {
         sequence
     }
 
+    fn execute_and_compute_commitments(&self, block: &Block, ctx: &Context) -> (Hash, Hash) {
+        let result = self
+            .execution_engine
+            .execute(block, &ctx.accounts, &ctx.contract_storage);
+        let mut post_accounts = ctx.accounts.clone();
+        let mut post_storage = ctx.contract_storage.clone();
+        for tx_result in &result.transaction_results {
+            if tx_result.status == TransactionStatus::Success {
+                for mutation in &tx_result.mutations {
+                    match mutation {
+                        StorageMutation::UpdateAccount(addr, account) => {
+                            post_accounts.insert(*addr, account.clone());
+                        }
+                        StorageMutation::UpdateContractStorage {
+                            address,
+                            slot,
+                            value,
+                        } => {
+                            post_storage.insert((*address, *slot), *value);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+        let post_state_root =
+            compute_state_root_with_contract_storage(&post_accounts, &post_storage);
+        let receipts_root = compute_receipts_root(&result.transaction_results);
+        (post_state_root, receipts_root)
+    }
+
     fn handle_timer_propose_block(
         &mut self,
         ctx: &Context,
@@ -353,15 +398,24 @@ impl IbftProtocol {
         if !is_proposer || self.prepare_sent {
             return actions;
         }
-        let block = match (&self.prepared_certificate, &self.pending_block) {
-            (Some(cert), Some(b)) if b.compute_hash() == cert.block_hash => b.clone(),
-            _ => Block::new(
-                ctx.current_height,
-                ctx.peer_id,
-                ctx.pending_txs.clone(),
-                ctx.state_root,
+        let (mut block, needs_execution) = match (&self.prepared_certificate, &self.pending_block) {
+            (Some(cert), Some(b)) if b.compute_hash() == cert.block_hash => (b.clone(), false),
+            _ => (
+                Block::new(
+                    ctx.current_height,
+                    ctx.peer_id,
+                    ctx.pending_txs.clone(),
+                    ctx.state_root,
+                ),
+                true,
             ),
         };
+        if needs_execution {
+            let (post_state_root, receipts_root) =
+                self.execute_and_compute_commitments(&block, ctx);
+            block.post_state_root = post_state_root;
+            block.receipts_root = receipts_root;
+        }
         let block_hash = block.compute_hash();
         self.pending_block = Some(block.clone());
         self.prepare_sent = true;

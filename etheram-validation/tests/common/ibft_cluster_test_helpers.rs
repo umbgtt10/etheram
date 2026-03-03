@@ -2,10 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use barechain_etheram_validation::ibft_cluster::IbftCluster;
 use barechain_etheram_variants::implementations::ibft::{
     ibft_message::IbftMessage, signature_scheme::SignatureBytes,
 };
 use etheram::common_types::block::Block;
+use etheram::incoming::timer::timer_event::TimerEvent;
 
 fn sequence(height: u64, round: u64, phase: u64) -> u64 {
     (height * 100) + (round * 10) + phase
@@ -50,4 +52,113 @@ pub fn commit(height: u64, round: u64, block_hash: [u8; 32]) -> IbftMessage {
 
 pub fn validators() -> Vec<u64> {
     vec![0, 1, 2, 3]
+}
+
+pub fn finalize_round_with_block(
+    cluster: &mut IbftCluster,
+    proposer: u64,
+    height: u64,
+    round: u64,
+    block: &Block,
+) {
+    let node_count = validators().len();
+    let proposed_block_hash = block_hash(block);
+
+    for receiver in 0..node_count {
+        cluster.inject_message(receiver, proposer, pre_prepare(height, round, block));
+    }
+    for receiver in 0..node_count {
+        if receiver as u64 != proposer {
+            cluster.inject_message(
+                receiver,
+                proposer,
+                prepare(height, round, proposed_block_hash),
+            );
+        }
+    }
+    for replica in 0..node_count {
+        cluster.drain(replica);
+    }
+    for sender in 0..node_count {
+        if sender as u64 == proposer {
+            continue;
+        }
+        for receiver in 0..node_count {
+            if receiver != sender {
+                cluster.inject_message(
+                    receiver,
+                    sender as u64,
+                    prepare(height, round, proposed_block_hash),
+                );
+            }
+        }
+    }
+    cluster.drain_all();
+    for sender in 0..node_count {
+        for receiver in 0..node_count {
+            if receiver != sender {
+                cluster.inject_message(
+                    receiver,
+                    sender as u64,
+                    commit(height, round, proposed_block_hash),
+                );
+            }
+        }
+    }
+    cluster.drain_all();
+}
+
+pub fn finalize_round_after_proposer_timer(
+    cluster: &mut IbftCluster,
+    proposer: usize,
+    height: u64,
+    round: u64,
+    block: &Block,
+) {
+    let node_count = validators().len();
+    let proposed_block_hash = block_hash(block);
+
+    cluster.fire_timer(proposer, TimerEvent::ProposeBlock);
+    cluster.drain(proposer);
+    for receiver in 0..node_count {
+        if receiver != proposer {
+            cluster.inject_message(receiver, proposer as u64, pre_prepare(height, round, block));
+            cluster.inject_message(
+                receiver,
+                proposer as u64,
+                prepare(height, round, proposed_block_hash),
+            );
+        }
+    }
+    for receiver in 0..node_count {
+        if receiver != proposer {
+            cluster.drain(receiver);
+        }
+    }
+    for sender in 0..node_count {
+        if sender != proposer {
+            for receiver in 0..node_count {
+                if receiver != sender {
+                    cluster.inject_message(
+                        receiver,
+                        sender as u64,
+                        prepare(height, round, proposed_block_hash),
+                    );
+                }
+            }
+        }
+    }
+    cluster.drain_all();
+    for sender in 0..node_count {
+        for receiver in 0..node_count {
+            if receiver != sender {
+                cluster.inject_message(
+                    receiver,
+                    sender as u64,
+                    commit(height, round, proposed_block_hash),
+                );
+            }
+        }
+    }
+    cluster.drain_all();
 }

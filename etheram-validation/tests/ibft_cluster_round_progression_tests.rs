@@ -5,6 +5,7 @@
 use crate::common::ibft_cluster_test_helpers::block;
 use crate::common::ibft_cluster_test_helpers::block_hash;
 use crate::common::ibft_cluster_test_helpers::commit;
+use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
 use crate::common::ibft_cluster_test_helpers::validators;
@@ -16,34 +17,9 @@ fn full_round_four_nodes_all_store_block_at_height_one() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
     let proposed_block = block(0, 0);
-    let proposed_block_hash = block_hash(&proposed_block);
 
     // Act
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &proposed_block));
-        cluster.inject_message(receiver, 0, prepare(0, 0, proposed_block_hash));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 1..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &proposed_block);
 
     // Assert
     for node in 0..4usize {
@@ -100,61 +76,11 @@ fn two_consecutive_full_rounds_both_blocks_stored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
     let block_zero = block(0, 0);
-    let block_hash_zero = block_hash(&block_zero);
     let block_one = block(1, 1);
-    let block_hash_one = block_hash(&block_one);
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &block_zero));
-        cluster.inject_message(receiver, 0, prepare(0, 0, block_hash_zero));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 1..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 0, block_hash_zero));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, block_hash_zero));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &block_zero);
 
     // Act
-    cluster.fire_timer(1, TimerEvent::ProposeBlock);
-    cluster.drain(1);
-    for receiver in [0, 2, 3] {
-        cluster.inject_message(receiver, 1, pre_prepare(1, 0, &block_one));
-        cluster.inject_message(receiver, 1, prepare(1, 0, block_hash_one));
-    }
-    for replica in [0usize, 2, 3] {
-        cluster.drain(replica);
-    }
-    for sender in [0usize, 2, 3] {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(1, 0, block_hash_one));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(1, 0, block_hash_one));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 1, 1, 0, &block_one);
 
     // Assert
     for node in 0..4usize {
@@ -173,52 +99,7 @@ fn hundred_consecutive_full_rounds_all_nodes_converge() {
     for height in 0..100u64 {
         let proposer = (height % 4) as usize;
         let proposed_block = block(height, proposer as u64);
-        let proposed_block_hash = block_hash(&proposed_block);
-        cluster.fire_timer(proposer, TimerEvent::ProposeBlock);
-        cluster.drain(proposer);
-        for receiver in 0..4usize {
-            if receiver != proposer {
-                cluster.inject_message(
-                    receiver,
-                    proposer as u64,
-                    pre_prepare(height, 0, &proposed_block),
-                );
-                cluster.inject_message(
-                    receiver,
-                    proposer as u64,
-                    prepare(height, 0, proposed_block_hash),
-                );
-            }
-        }
-        for receiver in 0..4usize {
-            if receiver != proposer {
-                cluster.drain(receiver);
-            }
-        }
-        for sender in 0..4usize {
-            for receiver in 0..4usize {
-                if receiver != sender {
-                    cluster.inject_message(
-                        receiver,
-                        sender as u64,
-                        prepare(height, 0, proposed_block_hash),
-                    );
-                }
-            }
-        }
-        cluster.drain_all();
-        for sender in 0..4usize {
-            for receiver in 0..4usize {
-                if receiver != sender {
-                    cluster.inject_message(
-                        receiver,
-                        sender as u64,
-                        commit(height, 0, proposed_block_hash),
-                    );
-                }
-            }
-        }
-        cluster.drain_all();
+        finalize_round_after_proposer_timer(&mut cluster, proposer, height, 0, &proposed_block);
 
         for node in 0..4usize {
             assert_eq!(cluster.node_height(node), height + 1);
