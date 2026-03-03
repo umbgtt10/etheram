@@ -5,6 +5,7 @@
 use crate::common::ibft_cluster_test_helpers::block;
 use crate::common::ibft_cluster_test_helpers::block_hash;
 use crate::common::ibft_cluster_test_helpers::commit;
+use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
 use crate::common::ibft_cluster_test_helpers::validators;
@@ -12,6 +13,7 @@ use barechain_etheram_validation::ibft_cluster::IbftCluster;
 use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
 use barechain_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
 use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram::common_types::block::Block;
 use etheram::incoming::timer::timer_event::TimerEvent;
 
 fn sequence(height: u64, round: u64, phase: u64) -> u64 {
@@ -37,6 +39,35 @@ fn new_view(height: u64, round: u64, view_change_senders: Vec<u64>) -> IbftMessa
     }
 }
 
+fn inject_full_vote_set_for_node(
+    cluster: &IbftCluster,
+    receiver: usize,
+    proposer: u64,
+    height: u64,
+    round: u64,
+    block: &Block,
+) {
+    let proposed_block_hash = block_hash(block);
+    cluster.inject_message(receiver, proposer, pre_prepare(height, round, block));
+    cluster.inject_message(
+        receiver,
+        proposer,
+        prepare(height, round, proposed_block_hash),
+    );
+    for sender in [0u64, 1u64, 3u64] {
+        if sender != proposer {
+            cluster.inject_message(
+                receiver,
+                sender,
+                prepare(height, round, proposed_block_hash),
+            );
+        }
+    }
+    for sender in [0u64, 1u64, 3u64] {
+        cluster.inject_message(receiver, sender, commit(height, round, proposed_block_hash));
+    }
+}
+
 #[test]
 fn new_view_round_one_then_full_round_all_nodes_store_block_at_height_one() {
     // Arrange
@@ -46,34 +77,9 @@ fn new_view_round_one_then_full_round_all_nodes_store_block_at_height_one() {
     }
     cluster.drain_all();
     let proposed_block = block(0, 1);
-    let proposed_block_hash = block_hash(&proposed_block);
 
     // Act
-    cluster.fire_timer(1, TimerEvent::ProposeBlock);
-    cluster.drain(1);
-    for receiver in [0usize, 2, 3] {
-        cluster.inject_message(receiver, 1, pre_prepare(0, 1, &proposed_block));
-        cluster.inject_message(receiver, 1, prepare(0, 1, proposed_block_hash));
-    }
-    for receiver in [0usize, 2, 3] {
-        cluster.drain(receiver);
-    }
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 1, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 1, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 1, 0, 1, &proposed_block);
 
     // Assert
     for node in 0..4usize {
@@ -151,34 +157,9 @@ fn timeout_round_twice_then_round_two_new_view_allows_block_finalization() {
     }
     cluster.drain_all();
     let proposed_block = block(0, 2);
-    let proposed_block_hash = block_hash(&proposed_block);
 
     // Act
-    cluster.fire_timer(2, TimerEvent::ProposeBlock);
-    cluster.drain(2);
-    for receiver in [0usize, 1, 3] {
-        cluster.inject_message(receiver, 2, pre_prepare(0, 2, &proposed_block));
-        cluster.inject_message(receiver, 2, prepare(0, 2, proposed_block_hash));
-    }
-    for receiver in [0usize, 1, 3] {
-        cluster.drain(receiver);
-    }
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 2, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 2, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 2, 0, 2, &proposed_block);
 
     // Assert
     for node in 0..4usize {
@@ -195,36 +176,7 @@ fn stale_view_change_and_new_view_after_commit_are_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
     let committed_block = block(0, 0);
-    let committed_block_hash = block_hash(&committed_block);
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &committed_block));
-        cluster.inject_message(receiver, 0, prepare(0, 0, committed_block_hash));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(
-                    receiver,
-                    sender as u64,
-                    prepare(0, 0, committed_block_hash),
-                );
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, committed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &committed_block);
 
     // Act
     cluster.inject_message(2, 1, view_change(0, 1));
@@ -262,14 +214,7 @@ fn new_view_invalid_prepared_certificate_is_ignored() {
         },
     );
     let proposed_block = block(0, 1);
-    let proposed_block_hash = block_hash(&proposed_block);
-    cluster.inject_message(2, 1, pre_prepare(0, 1, &proposed_block));
-    cluster.inject_message(2, 1, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 1, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, commit(0, 1, proposed_block_hash));
+    inject_full_vote_set_for_node(&cluster, 2, 1, 0, 1, &proposed_block);
 
     // Act
     cluster.drain(2);
@@ -284,14 +229,7 @@ fn new_view_duplicate_view_change_senders_with_unique_quorum_is_ignored() {
     let mut cluster = IbftCluster::new(validators(), vec![]);
     cluster.inject_message(2, 1, new_view(0, 1, vec![0, 0, 1, 2]));
     let proposed_block = block(0, 1);
-    let proposed_block_hash = block_hash(&proposed_block);
-    cluster.inject_message(2, 1, pre_prepare(0, 1, &proposed_block));
-    cluster.inject_message(2, 1, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 1, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, commit(0, 1, proposed_block_hash));
+    inject_full_vote_set_for_node(&cluster, 2, 1, 0, 1, &proposed_block);
 
     // Act
     cluster.drain(2);
@@ -326,14 +264,7 @@ fn new_view_prepared_certificate_signers_not_subset_of_view_change_senders_accep
         },
     );
     let proposed_block = block(0, 1);
-    let proposed_block_hash = block_hash(&proposed_block);
-    cluster.inject_message(2, 1, pre_prepare(0, 1, &proposed_block));
-    cluster.inject_message(2, 1, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 1, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, commit(0, 1, proposed_block_hash));
+    inject_full_vote_set_for_node(&cluster, 2, 1, 0, 1, &proposed_block);
 
     // Act
     cluster.drain(2);
@@ -348,14 +279,7 @@ fn new_view_without_local_view_change_votes_accepts_and_commits() {
     let mut cluster = IbftCluster::new(validators(), vec![]);
     cluster.inject_message(2, 1, new_view(0, 1, vec![0, 1, 3]));
     let proposed_block = block(0, 1);
-    let proposed_block_hash = block_hash(&proposed_block);
-    cluster.inject_message(2, 1, pre_prepare(0, 1, &proposed_block));
-    cluster.inject_message(2, 1, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, prepare(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 0, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 1, commit(0, 1, proposed_block_hash));
-    cluster.inject_message(2, 3, commit(0, 1, proposed_block_hash));
+    inject_full_vote_set_for_node(&cluster, 2, 1, 0, 1, &proposed_block);
 
     // Act
     cluster.drain(2);

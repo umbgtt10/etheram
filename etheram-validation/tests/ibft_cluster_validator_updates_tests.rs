@@ -4,6 +4,7 @@
 
 use crate::common::ibft_cluster_test_helpers::block;
 use crate::common::ibft_cluster_test_helpers::commit;
+use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
 use barechain_etheram_validation::ibft_cluster::IbftCluster;
@@ -20,8 +21,8 @@ trait IbftClusterValidatorUpdateOps {
         &mut self,
         height: u64,
         proposer: u64,
-        prepare_senders: [u64; 3],
-        commit_senders: [u64; 3],
+        prepare_senders: &[u64],
+        commit_senders: &[u64],
     );
 }
 
@@ -45,70 +46,31 @@ impl IbftClusterValidatorUpdateOps for IbftCluster {
     }
 
     fn commit_height_one_on_node_zero_with_proposer_two(&mut self) {
-        let proposed_block = block(1, 2);
-        let proposed_block_hash = proposed_block.compute_hash();
-
-        self.inject_message(0, 2, pre_prepare(1, 0, &proposed_block));
-        self.inject_message(0, 1, prepare(1, 0, proposed_block_hash));
-        self.inject_message(0, 3, prepare(1, 0, proposed_block_hash));
-        self.inject_message(0, 4, prepare(1, 0, proposed_block_hash));
-        self.inject_message(0, 1, commit(1, 0, proposed_block_hash));
-        self.inject_message(0, 3, commit(1, 0, proposed_block_hash));
-        self.inject_message(0, 4, commit(1, 0, proposed_block_hash));
-        self.drain(0);
+        self.finalize_height_on_node_zero(1, 2, &[1, 3, 4], &[1, 3, 4]);
     }
 
     fn finalize_height_zero_on_all_nodes(&mut self) {
         let proposed_block = block(0, 0);
-        let proposed_block_hash = proposed_block.compute_hash();
 
-        self.fire_timer(0, TimerEvent::ProposeBlock);
-        self.drain(0);
-        for receiver in 1..4usize {
-            self.inject_message(receiver, 0, pre_prepare(0, 0, &proposed_block));
-            self.inject_message(receiver, 0, prepare(0, 0, proposed_block_hash));
-        }
-        for replica in 1..4usize {
-            self.drain(replica);
-        }
-        for sender in 0..4usize {
-            for receiver in 0..4usize {
-                if receiver != sender {
-                    self.inject_message(
-                        receiver,
-                        sender as u64,
-                        prepare(0, 0, proposed_block_hash),
-                    );
-                }
-            }
-        }
-        self.drain_all();
-        for sender in 0..4usize {
-            for receiver in 0..4usize {
-                if receiver != sender {
-                    self.inject_message(receiver, sender as u64, commit(0, 0, proposed_block_hash));
-                }
-            }
-        }
-        self.drain_all();
+        finalize_round_after_proposer_timer(self, 0, 0, 0, &proposed_block);
     }
 
     fn finalize_height_on_node_zero(
         &mut self,
         height: u64,
         proposer: u64,
-        prepare_senders: [u64; 3],
-        commit_senders: [u64; 3],
+        prepare_senders: &[u64],
+        commit_senders: &[u64],
     ) {
         let proposed_block = block(height, proposer);
         let proposed_block_hash = proposed_block.compute_hash();
 
         self.inject_message(0, proposer, pre_prepare(height, 0, &proposed_block));
         for sender in prepare_senders {
-            self.inject_message(0, sender, prepare(height, 0, proposed_block_hash));
+            self.inject_message(0, *sender, prepare(height, 0, proposed_block_hash));
         }
         for sender in commit_senders {
-            self.inject_message(0, sender, commit(height, 0, proposed_block_hash));
+            self.inject_message(0, *sender, commit(height, 0, proposed_block_hash));
         }
         self.drain(0);
     }
@@ -127,17 +89,9 @@ fn inject_message_pre_prepare_old_proposer_before_future_update_height_commits_b
         );
     cluster.commit_height_zero_on_node_zero();
     let old_set_block = block(1, 1);
-    let old_set_block_hash = old_set_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 1, pre_prepare(1, 0, &old_set_block));
-    cluster.inject_message(0, 1, prepare(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 2, prepare(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 1, commit(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 2, commit(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, old_set_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 1, &[1, 2, 3], &[1, 2, 3]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 2);
@@ -157,17 +111,9 @@ fn inject_message_pre_prepare_duplicate_validator_update_old_proposer_commits_bl
         );
     cluster.commit_height_zero_on_node_zero();
     let old_set_block = block(1, 1);
-    let old_set_block_hash = old_set_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 1, pre_prepare(1, 0, &old_set_block));
-    cluster.inject_message(0, 1, prepare(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 2, prepare(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 1, commit(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 2, commit(1, 0, old_set_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, old_set_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 1, &[1, 2, 3], &[1, 2, 3]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 2);
@@ -210,17 +156,9 @@ fn inject_message_pre_prepare_new_proposer_after_validator_update_height_commits
         );
     cluster.commit_height_zero_on_node_zero();
     let valid_block = block(1, 2);
-    let valid_block_hash = valid_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 2, pre_prepare(1, 0, &valid_block));
-    cluster.inject_message(0, 2, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 2, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, commit(1, 0, valid_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 2, &[2, 3, 4], &[2, 3, 4]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 2);
@@ -245,18 +183,10 @@ fn inject_message_pre_prepare_second_update_old_proposer_is_rejected_and_new_pro
     cluster.commit_height_one_on_node_zero_with_proposer_two();
     let invalid_block = block(2, 3);
     let valid_block = block(2, 4);
-    let valid_block_hash = valid_block.compute_hash();
 
     // Act
     cluster.inject_message(0, 3, pre_prepare(2, 0, &invalid_block));
-    cluster.inject_message(0, 4, pre_prepare(2, 0, &valid_block));
-    cluster.inject_message(0, 2, prepare(2, 0, valid_block_hash));
-    cluster.inject_message(0, 3, prepare(2, 0, valid_block_hash));
-    cluster.inject_message(0, 5, prepare(2, 0, valid_block_hash));
-    cluster.inject_message(0, 2, commit(2, 0, valid_block_hash));
-    cluster.inject_message(0, 3, commit(2, 0, valid_block_hash));
-    cluster.inject_message(0, 5, commit(2, 0, valid_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(2, 4, &[2, 3, 5], &[2, 3, 5]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 3);
@@ -275,18 +205,9 @@ fn inject_message_prepare_from_removed_validator_after_update_does_not_help_reac
             updates,
         );
     cluster.commit_height_zero_on_node_zero();
-    let valid_block = block(1, 2);
-    let valid_block_hash = valid_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 2, pre_prepare(1, 0, &valid_block));
-    cluster.inject_message(0, 2, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 1, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 2, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 1, commit(1, 0, valid_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 2, &[2, 3, 1], &[2, 3, 1]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -306,17 +227,9 @@ fn inject_message_prepare_from_new_validator_after_update_counts_toward_new_quor
         );
     cluster.commit_height_zero_on_node_zero();
     let valid_block = block(1, 2);
-    let valid_block_hash = valid_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 2, pre_prepare(1, 0, &valid_block));
-    cluster.inject_message(0, 2, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 2, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, commit(1, 0, valid_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 2, &[2, 3, 4], &[2, 3, 4]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 2);
@@ -335,19 +248,9 @@ fn inject_message_commit_with_legacy_quorum_after_update_does_not_finalize() {
             updates,
         );
     cluster.commit_height_zero_on_node_zero();
-    let valid_block = block(1, 2);
-    let valid_block_hash = valid_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 2, pre_prepare(1, 0, &valid_block));
-    cluster.inject_message(0, 1, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 5, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 1, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, commit(1, 0, valid_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 2, &[1, 3, 4, 5], &[1, 3, 4]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -367,21 +270,9 @@ fn inject_message_commit_reaches_new_quorum_after_update_to_seven_validators_fin
         );
     cluster.commit_height_zero_on_node_zero();
     let valid_block = block(1, 2);
-    let valid_block_hash = valid_block.compute_hash();
 
     // Act
-    cluster.inject_message(0, 2, pre_prepare(1, 0, &valid_block));
-    cluster.inject_message(0, 1, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 5, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 6, prepare(1, 0, valid_block_hash));
-    cluster.inject_message(0, 1, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 4, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 5, commit(1, 0, valid_block_hash));
-    cluster.inject_message(0, 6, commit(1, 0, valid_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 2, &[1, 3, 4, 5, 6], &[1, 3, 4, 5, 6]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 2);
@@ -402,18 +293,10 @@ fn update_boundary_pre_prepare_message_reordering_old_then_new_results_in_single
     cluster.commit_height_zero_on_node_zero();
     let old_block = block(1, 1);
     let new_block = block(1, 2);
-    let new_block_hash = new_block.compute_hash();
 
     // Act
     cluster.inject_message(0, 1, pre_prepare(1, 0, &old_block));
-    cluster.inject_message(0, 2, pre_prepare(1, 0, &new_block));
-    cluster.inject_message(0, 2, prepare(1, 0, new_block_hash));
-    cluster.inject_message(0, 3, prepare(1, 0, new_block_hash));
-    cluster.inject_message(0, 4, prepare(1, 0, new_block_hash));
-    cluster.inject_message(0, 2, commit(1, 0, new_block_hash));
-    cluster.inject_message(0, 3, commit(1, 0, new_block_hash));
-    cluster.inject_message(0, 4, commit(1, 0, new_block_hash));
-    cluster.drain(0);
+    cluster.finalize_height_on_node_zero(1, 2, &[2, 3, 4], &[2, 3, 4]);
 
     // Assert
     assert_eq!(cluster.node_height(0), 2);
@@ -746,7 +629,7 @@ fn validator_update_long_run_churn_ten_heights_stays_live_and_monotonic() {
                 voter_index += 1;
             }
         }
-        cluster.finalize_height_on_node_zero(height, proposer, voters, voters);
+        cluster.finalize_height_on_node_zero(height, proposer, &voters, &voters);
         assert_eq!(cluster.node_height(0), height + 1);
     }
 

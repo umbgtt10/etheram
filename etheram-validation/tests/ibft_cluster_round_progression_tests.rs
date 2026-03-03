@@ -120,52 +120,7 @@ fn five_consecutive_full_rounds_seen_messages_pruning_does_not_block_future_heig
     for height in 0..5u64 {
         let proposer = (height % 4) as usize;
         let proposed_block = block(height, proposer as u64);
-        let proposed_block_hash = block_hash(&proposed_block);
-        cluster.fire_timer(proposer, TimerEvent::ProposeBlock);
-        cluster.drain(proposer);
-        for receiver in 0..4usize {
-            if receiver != proposer {
-                cluster.inject_message(
-                    receiver,
-                    proposer as u64,
-                    pre_prepare(height, 0, &proposed_block),
-                );
-                cluster.inject_message(
-                    receiver,
-                    proposer as u64,
-                    prepare(height, 0, proposed_block_hash),
-                );
-            }
-        }
-        for receiver in 0..4usize {
-            if receiver != proposer {
-                cluster.drain(receiver);
-            }
-        }
-        for sender in 0..4usize {
-            for receiver in 0..4usize {
-                if receiver != sender {
-                    cluster.inject_message(
-                        receiver,
-                        sender as u64,
-                        prepare(height, 0, proposed_block_hash),
-                    );
-                }
-            }
-        }
-        cluster.drain_all();
-        for sender in 0..4usize {
-            for receiver in 0..4usize {
-                if receiver != sender {
-                    cluster.inject_message(
-                        receiver,
-                        sender as u64,
-                        commit(height, 0, proposed_block_hash),
-                    );
-                }
-            }
-        }
-        cluster.drain_all();
+        finalize_round_after_proposer_timer(&mut cluster, proposer, height, 0, &proposed_block);
 
         for node in 0..4usize {
             assert_eq!(cluster.node_height(node), height + 1);
@@ -182,35 +137,10 @@ fn empty_block_committed_by_all_nodes() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
     let proposed_block = block(0, 0);
-    let proposed_block_hash = block_hash(&proposed_block);
     assert!(proposed_block.transactions.is_empty());
 
     // Act
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &proposed_block));
-        cluster.inject_message(receiver, 0, prepare(0, 0, proposed_block_hash));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 1..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &proposed_block);
 
     // Assert
     for node in 0..4usize {

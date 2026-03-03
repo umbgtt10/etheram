@@ -5,6 +5,7 @@
 use crate::common::ibft_cluster_test_helpers::block;
 use crate::common::ibft_cluster_test_helpers::block_hash;
 use crate::common::ibft_cluster_test_helpers::commit;
+use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
 use crate::common::ibft_cluster_test_helpers::validators;
@@ -371,35 +372,10 @@ fn invalid_then_valid_signature_window_recovers_and_commits() {
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
     cluster.drain(1);
     let proposed_block = block(0, 0);
-    let proposed_block_hash = block_hash(&proposed_block);
 
     // Act
     verify_enabled.store(true, Ordering::SeqCst);
-    cluster.fire_timer(0, TimerEvent::ProposeBlock);
-    cluster.drain(0);
-    for receiver in 1..4usize {
-        cluster.inject_message(receiver, 0, pre_prepare(0, 0, &proposed_block));
-        cluster.inject_message(receiver, 0, prepare(0, 0, proposed_block_hash));
-    }
-    for replica in 1..4usize {
-        cluster.drain(replica);
-    }
-    for sender in 1..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, prepare(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
-    for sender in 0..4usize {
-        for receiver in 0..4usize {
-            if receiver != sender {
-                cluster.inject_message(receiver, sender as u64, commit(0, 0, proposed_block_hash));
-            }
-        }
-    }
-    cluster.drain_all();
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &proposed_block);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
