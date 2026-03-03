@@ -1,0 +1,13 @@
+[package]
+name = "barechain-etheram-variants"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+barechain-core.workspace = true
+barechain-etheram.workspace = true
+ed25519-dalek.workspace = true

@@ -1,0 +1,21 @@
+[package]
+name = "barechain-etheram-validation"
+version = "0.1.0"
+edition = "2021"
+autotests = false
+
+[dependencies]
+barechain-core.workspace = true
+barechain-etheram.workspace = true
+barechain-etheram-variants.workspace = true
+
+indexmap.workspace = true
+rand.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"

@@ -1,0 +1,69 @@
+// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
+use super::transaction::Transaction;
+use super::types::{Hash, Height};
+use alloc::vec::Vec;
+use barechain_core::types::PeerId;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Block {
+    pub height: Height,
+
+    pub proposer: PeerId,
+
+    pub transactions: Vec<Transaction>,
+
+    pub state_root: Hash,
+}
+
+impl Block {
+    pub fn new(
+        height: Height,
+        proposer: PeerId,
+        transactions: Vec<Transaction>,
+        state_root: Hash,
+    ) -> Self {
+        Self {
+            height,
+            proposer,
+            transactions,
+            state_root,
+        }
+    }
+
+    pub fn empty(height: Height, proposer: PeerId, state_root: Hash) -> Self {
+        Self::new(height, proposer, Vec::new(), state_root)
+    }
+
+    pub fn compute_hash(&self) -> Hash {
+        let mut hash = [0u8; 32];
+        let height_bytes = self.height.to_le_bytes();
+        let proposer_bytes = self.proposer.to_le_bytes();
+        hash[0..8].copy_from_slice(&height_bytes);
+        hash[8..16].copy_from_slice(&proposer_bytes);
+        for (i, b) in self.state_root.iter().enumerate() {
+            hash[i] ^= b;
+        }
+        for (tx_idx, tx) in self.transactions.iter().enumerate() {
+            let position = (tx_idx as u8).wrapping_add(1);
+            for (i, b) in tx.from.iter().enumerate() {
+                hash[i % 32] ^= b.wrapping_mul(position);
+            }
+            for (i, b) in tx.to.iter().enumerate() {
+                hash[(i + 20) % 32] ^= b.wrapping_mul(position);
+            }
+            for (i, b) in tx.value.to_le_bytes().iter().enumerate() {
+                hash[(i + 8) % 32] ^= b.wrapping_mul(position);
+            }
+            for (i, b) in tx.gas_limit.to_le_bytes().iter().enumerate() {
+                hash[(i + 16) % 32] ^= b.wrapping_mul(position);
+            }
+            for (i, b) in tx.nonce.to_le_bytes().iter().enumerate() {
+                hash[(i + 24) % 32] ^= b.wrapping_mul(position);
+            }
+        }
+        hash
+    }
+}

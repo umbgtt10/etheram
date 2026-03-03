@@ -1,0 +1,16 @@
+[package]
+name = "barechain-etheram"
+version = "0.1.0"
+edition = "2021"
+autotests = false
+
+[dependencies]
+barechain-core.workspace = true
+
+[lib]
+name = "etheram"
+path = "src/lib.rs"
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"

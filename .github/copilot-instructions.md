@@ -1,0 +1,357 @@
+# BareChain — Copilot Instructions
+
+## Purpose
+
+BareChain is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary focus is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics.
+
+---
+
+## Workspace Structure
+
+```
+core/                       # Shared abstractions (PeerId, base traits)
+etheram/                    # Core node implementation (std Rust)
+etheram-variants/           # Concrete implementations + builder API
+etheram-validation/         # Cluster/integration tests (multi-node)
+etheram-embassy/            # no-std + Embassy embedded port
+examples/
+  tinychain/                # Sequential polling example (proven)
+  embassy-async/            # Async Embassy example (proven)
+```
+
+**The etheram ecosystem is designed to become a standalone repo.** Keep `etheram*` crates self-contained. They depend on `core` only.
+
+---
+
+## The 3-6 Architectural Model
+
+Every node is decomposed across:
+
+### 6 Dimensions (structural — what components exist)
+1. **Protocol** — consensus logic (pure, stateless)
+2. **Storage** — persistent state
+3. **Cache** — volatile working state
+4. **Transport** — peer-to-peer communication
+5. **ExternalInterface** — client request/response
+6. **Timer** — time-based event scheduling
+
+### 3 Spaces (functional — what roles components play)
+1. **Brain Space** — build context, handle message, produce actions
+2. **Scheduler Space** — poll dimensions, select next event, dispatch
+3. **Dimension Space** — data dimensions (Storage, Cache) and I/O dimensions (Transport, ExternalInterface, Timer)
+
+---
+
+## EtheRAM Node Architecture
+
+### `etheram/` — Single Node Logic
+
+```rust
+pub struct EtheramNode {
+    // Infrastructure (dimensions)
+    peer_id: PeerId,
+    incoming: IncomingSources,       // polls Timer, ExternalInterface, Transport
+    state: EtheramState,             // wraps Storage + Cache
+    executor: EtheramExecutor,       // executes output actions
+    // Decision (all swappable via trait objects)
+    context_builder: Box<dyn ContextBuilder>,
+    brain: BoxedProtocol,
+    partitioner: Box<dyn Partitioner>,
+}
+```
+
+**The step loop:**
+```rust
+fn step(&mut self) -> bool {
+    if let Some((source, message)) = self.incoming.poll() {
+        let context = self.context_builder.build(&self.state, self.peer_id, &source, &message);
+        let actions = self.brain.handle_message(&source, &message, &context);
+        let (mutations, outputs) = self.partitioner.partition(&actions);
+        self.state.apply_mutations(&mutations);
+        self.executor.execute_outputs(&outputs);
+        return true;
+    }
+    false
+}
+```
+
+### `etheram-variants/` — Concrete Implementations + Builders
+
+Provides:
+- **`variants.rs`** — enums for each swappable slot (`StorageVariant`, `ProtocolVariant`, `PartitionerVariant`, etc.)
+- **`builders/`** — per-component builders (`StorageBuilder`, `ProtocolBuilder`, `EtheramNodeBuilder`, etc.)
+- **`implementations/`** — concrete types (`InMemoryStorage`, `InMemoryCache`, `InMemoryTransport`, `TypeBasedPartitioner`, `EagerContextBuilder`, `NoOpTransport`, `NoOpProtocol`, etc.)
+
+### `etheram-validation/` — Multi-Node Cluster Testing
+
+- Orchestrates multiple `EtheramNode` instances
+- Contains `EtheramCluster` builder
+- Hosts integration/cluster tests in `tests/`
+- Stage 2 validation: distributed correctness
+
+### `etheram-embassy/` — Embedded Port Structure
+
+The embassy crate organizes all hardware-variant code under two top-level areas under `src/`:
+
+- **`src/infra/`** — the three independently feature-gated implementation axes
+- **`src/configurations/`** — the two wiring configurations that combine the axes
+
+```
+src/
+  infra/
+    external_interface/
+      channel/          ← in-memory channel (channel-external-interface feature)
+        channel_external_interface.rs
+        client_request_hub.rs
+      udp/              ← UDP-backed (udp-external-interface feature)
+        udp_external_interface.rs
+    storage/
+      in_memory/        ← in-memory (in-memory-storage feature)
+        in_memory_storage.rs
+      semihosting/      ← semihosting file I/O (semihosting-storage feature)
+        semihosting_storage.rs
+    transport/
+      channel/          ← Embassy channels (channel-transport feature)
+        channel_transport_hub.rs
+        outbox_transport.rs
+      udp/              ← UDP serialized (udp-transport feature)
+        udp_transport.rs
+        wire_ibft_message.rs
+  configurations/
+    in_memory/
+      setup.rs          ← wires channel transport + in-memory storage + channel EI
+    real/
+      setup.rs          ← wires UDP transport + semihosting storage + UDP EI
+```
+
+Each axis (`transport`, `storage`, `external_interface`) is independently feature-gated. Adding a new variant means adding a subfolder under the relevant `src/infra/` axis and updating only that axis's `mod.rs`. Each axis has mutual-exclusivity `compile_error!` guards in `configurations/mod.rs`.
+
+### `etheram-embassy/` — Two Mandatory Configurations
+
+The embassy project must always maintain exactly two working configurations end-to-end:
+
+| Configuration | Transport | Storage | External Interface | Script |
+|---|---|---|---|---|
+| **all-in-memory** | `channel-transport` | `in-memory-storage` | `channel-external-interface` | `run_channel_in_memory.ps1` |
+| **real** | `udp-transport` | `semihosting-storage` | `udp-external-interface` | `run_udp_semihosting.ps1` |
+
+Both must compile, link, and execute successfully at all times. Do not break either configuration when working on the other.
+
+---
+
+## Naming Conventions
+
+| Concept | Convention | Example |
+|---|---|---|
+| Trait (interface) | Simple noun | `Partitioner`, `ContextBuilder`, `StorageAdapter` |
+| Concrete type | Descriptive prefix | `TypeBasedPartitioner`, `EagerContextBuilder`, `InMemoryStorage` |
+| Boxed trait object | `Box<dyn Trait>` | `Box<dyn Partitioner>` |
+| Named type alias | `Boxed` prefix | `BoxedProtocol` |
+| Enum of variants | `*Variant` suffix | `StorageVariant`, `ProtocolVariant` |
+| Per-component builder | `*Builder` suffix | `StorageBuilder`, `PartitionerBuilder` |
+
+---
+
+## Architectural Principles
+
+### 1. Element-Centered Design
+- `etheram/` implements a **single node** — no cluster concepts in node logic
+- Peer awareness is **protocol-scoped** (validator set as parameter), never global topology knowledge
+- "Cluster" lives only in `etheram-validation/`
+
+### 2. Total Swappability
+Every layer is swappable at runtime:
+- **Infrastructure**: Storage, Cache, Transport, Timer, ExternalInterface
+- **Decision**: ContextBuilder, Protocol (Brain), Partitioner
+- **Future**: Cryptographic primitives (`SignatureScheme` trait — Ed25519 ↔ BLS ↔ Mock)
+
+### 3. Protocol Logic is Pure
+- `brain.handle_message()` takes immutable context, returns declarative actions
+- No I/O in protocol logic
+- Enables exhaustive testing and formal reasoning
+
+### 4. Actions are Partitioned
+- `Partitioner` separates state mutations from output effects
+- `state.apply_mutations()` and `executor.execute_outputs()` are distinct
+- Enforces side-effect isolation
+
+### 5. Testing as Muscle, Not Brain
+- Test by **substituting components**, not scripting scenarios
+- Isolation: swap to mocks/fakes
+- Adversarial: swap to Byzantine implementations
+- Chaos: enumerate component combinations
+- No custom scenario setup required
+
+### 6. All In-Memory for Development
+- Use `InMemoryStorage`, `InMemoryCache`, `NoOpTransport`, `ManualTimer` during development
+- Zero external dependencies, instant startup, deterministic debugging
+- Swap to production implementations (RocksDB, TCP, system timer) only when needed
+
+### 7. Protocol Consistency
+
+**This is a hard pre-feature gate. Before writing a single line of new protocol code, execute the full audit below and confirm every point is green. Skipping this audit is never acceptable.**
+
+#### Pre-Feature IBFT Consistency Audit (run before every feature)
+
+1. Run `cargo test -p barechain-etheram-variants --test all_tests` — all protocol-level tests must pass with zero failures.
+2. Run `cargo test -p barechain-etheram-validation --test all_tests` — all cluster-level tests must pass with zero failures.
+3. Manually verify each invariant below against the current source before touching it:
+
+| # | Invariant | Where to check |
+|---|---|---|
+| 1 | **Quorum** = `⌊2n/3⌋ + 1` | `ValidatorSet::quorum_size()` |
+| 2 | **Locked-block preservation** — `pending_block` not cleared on round change when `PreparedCertificate` is set | `reset_for_new_round()` |
+| 3 | **Locked-block re-propose** — proposer with cert must re-propose the locked block | `handle_timer_propose_block()` |
+| 4 | **Highest-round cert wins** — incoming cert with higher round replaces current; lower or equal round is ignored | `handle_view_change()` |
+| 5 | **NewView is authoritative** — `valid_new_view` guard is the sole gate; no second compat check permitted | `handle_new_view()` |
+
+4. For any invariant whose test coverage is missing or weak, add the tests first — before writing the feature.
+5. Only after all tests are green and all invariants are confirmed in source, begin the feature.
+
+The mandatory invariants (must never be weakened by any change):
+  1. **Quorum** — quorum size is `⌊2n/3⌋ + 1` (integer division). Any other formula is wrong for non-canonical validator counts.
+  2. **Locked-block preservation** — when a node holds a `PreparedCertificate`, `pending_block` must not be cleared on round transitions. The locked block is preserved until a new commit occurs.
+  3. **Locked-block re-propose** — a proposer entering a new round with a valid `PreparedCertificate` must re-propose the locked block (matching `cert.block_hash`), not a fresh block.
+  4. **Highest-round certificate wins** — when processing `ViewChange` or `NewView` messages, an incoming `PreparedCertificate` with a higher round than the locally held one must replace it. Rejecting a certificate because it differs from the local one is a safety violation.
+  5. **NewView is authoritative** — the `valid_new_view` guard is sufficient; no additional compatibility check is permitted after it passes.
+
+### 8. Observability
+- Every new protocol action, mutation, or output must be reflected in the `Observer` trait so it can be logged, traced, or asserted in tests
+- Silent side-effects are not permitted
+
+### 9. EVM Compatibility
+- Every change that touches transaction execution, opcode dispatch, storage access, or account mutation must be cross-checked against the `TinyEvmEngine` and `ValueTransferEngine` implementations
+- New opcodes, new storage mutation kinds, or new `ExecutionEngine` return paths must be reflected in both engines (or explicitly justified as engine-specific)
+- The `ExecutionEngine` trait contract — immutable input, declarative `ExecutionResult`, no I/O — must be preserved by every change
+
+### 10. Gas Metering Consistency
+- Every new opcode added to `TinyEvmEngine` must have a corresponding constant in `tiny_evm_gas.rs` and must deduct that cost before execution inside `execute_bytecode`
+- Every new transaction path in `ValueTransferEngine` must deduct `INTRINSIC_GAS` and return `OutOfGas` when `gas_limit < INTRINSIC_GAS`
+- `TransactionReceipt` must be emitted for every transaction in every committed block — Success and OutOfGas alike — with correct `gas_used` and monotonically increasing `cumulative_gas_used`
+- Gas constants must stay aligned with the post-Istanbul EVM schedule; deviations require an explicit comment in `tiny_evm_gas.rs`
+
+---
+
+## Three-Stage Validation Workflow
+
+All three stages are **mandatory** for every new feature at the `etheram/` or protocol level. Do not mark a feature complete unless all three stages are satisfied.
+
+1. **Stage 1** — Implement in `etheram/` → unit tests in `etheram/tests/` for pure data types; single-node integration tests (`EtheramNode` + concrete protocol) in `etheram-validation/tests/` (required by the dependency direction constraint — `etheram` must never depend on `etheram-variants`)
+   - Logic correctness, isolated component testing
+2. **Stage 2** — Validate in `etheram-validation/` → cluster tests in `etheram-validation/tests/`
+   - Distributed correctness, multi-node scenarios, Byzantine fault injection
+3. **Stage 3** — Exercise in `etheram-embassy/src/main.rs` → QEMU execution
+   - no-std compatibility, Embassy async runtime, resource constraints
+   - The test application must demonstrate the feature end-to-end (even minimally)
+
+---
+
+## Current Implementation Status
+
+### ✅ Implemented
+- Full 6-dimension EtheramNode with step loop
+- `EtheramExecutor` with `new_with_peers()` — `SendMessage` and `BroadcastMessage` actions delivered via transport; `new()` (empty peers) preserved for test harnesses with manual message orchestration
+- InMemoryStorage, InMemoryCache
+- InMemoryTimer (with `schedule` and `push_event` for test driving)
+- InMemoryExternalInterface (with `push_request` / `drain_responses` for test driving)
+- EagerContextBuilder, TypeBasedPartitioner, NoOpProtocol
+- NoOpTransport, NoOpExternalInterface
+- EtheramNodeBuilder (builder pattern for node construction)
+- Per-component builders with `PartitionerVariant`, `StorageVariant`, etc.
+- InMemoryTransport (incoming + outgoing), shared `Arc<Mutex<InMemoryTransportState>>` per cluster
+- etheram-validation cluster harness with `fire_timer`, `submit_request`, `drain_responses`, `step_all`, `push_transport_message`
+- `etheram/tests/block_tests.rs` — 3 tests; `etheram/tests/account_tests.rs` — 4 tests; `etheram/tests/state_root_tests.rs` — 5 tests
+- `etheram-variants/tests/implementations/in_memory_storage_tests.rs` — 7 tests
+- `etheram-variants/tests/implementations/in_memory_timer_tests.rs` — 5 tests
+- `etheram-variants/tests/implementations/in_memory_external_interface_tests.rs` — 5 tests
+- `etheram-variants/tests/implementations/type_based_partitioner_tests.rs` — 3 tests
+- `etheram-variants/tests/implementations/in_memory_transport_tests.rs` — 5 tests
+- IBFT Sprint 1: `ValidatorSet`, `VoteTracker`, `SignatureScheme` trait, `MockSignatureScheme`, `IbftMessage`, `IbftProtocol<S>` — under `etheram-variants/src/implementations/ibft/`
+- `IbftCluster` harness — under `etheram-validation/src/ibft_cluster.rs`
+- `IbftTestNode` harness — under `etheram-validation/src/ibft_test_node.rs`
+- `etheram-variants/tests/implementations/ibft/validator_set_tests.rs` — 4 tests
+- `etheram-variants/tests/implementations/ibft/vote_tracker_tests.rs` — 5 tests
+- `etheram-variants/tests/implementations/ibft/mock_signature_scheme_tests.rs` — 2 tests
+- `etheram-variants/tests/implementations/ibft/ibft_protocol_propose_tests.rs`, `ibft_protocol_pre_prepare_tests.rs`, `ibft_protocol_prepare_tests.rs`, `ibft_protocol_commit_tests.rs`, `ibft_protocol_view_change_tests.rs`, `ibft_protocol_client_tests.rs`, `ibft_protocol_persistence_tests.rs`, `ibft_protocol_replay_tests.rs`, `ibft_protocol_validator_set_update_tests.rs`, `ibft_protocol_dedup_tests.rs`, `ibft_protocol_injection_tests.rs`, `ibft_protocol_malicious_block_tests.rs`, `ibft_protocol_signature_tests.rs`, `ibft_protocol_future_buffer_tests.rs` — per-behaviour protocol test files
+- `etheram-validation/tests/etheram_node_tests.rs` — 3 single-node integration tests (Stage 1+2 bridge)
+- Stage 3 skeleton (Checkpoint 1): initial `no_std` wiring — `ChannelTransportHub`, `OutboxTransport`, `ClientChannelHub` / `EtheramClient` channel API, `node_task` spawning; 5-node IBFT consensus verified via QEMU
+- Stage 3 skeleton (Checkpoint 2): Async Embassy runtime — `ChannelTransportHub` (static `embassy_sync::Channel` arrays), `OutboxTransport` (sync-to-async bridge), `ClientChannelHub` + `EtheramClient` (channel-based client API), `node_task` (`#[embassy_executor::task(pool_size=5)]` with `select4`), `setup::initialize_client()` (spawns 5 async node tasks), ARM cross-compilation verified
+- Stage 3 skeleton (Checkpoint 3): UDP + semihosting infra hardening — `WireIbftMessage` (postcard-serializable mirror types with `From` conversions), `UdpIbftTransport` (serialized message passing), `SemihostingStorage` (mutation-counting with ARM-gated `info!` logging), `SystickDriver` (ARM `embassy-time-driver` with SysTick exception handler), `SemihostingWriter` + `info!` macro (ARM semihosting logging), feature-matrix mutual-exclusivity guards verified
+- Stage 3: `main.rs` follows Create → Start → Reach Quorum → Graceful Shutdown lifecycle; `EtheramClient::shutdown()` triggers `CancellationToken` for node task termination
+- Stage 3 scenario coverage: Act 0 (IBFT warmup/height progression), Act 1 (tx commit + balance update), Act 2 (reverse transfer), Act 3 (overdraft → `InsufficientBalance`), Act 4 (view change via `TimeoutRound`), Act 5 (stale nonce → `InvalidNonce`), Act 6 (gas limit exceeded → `GasLimitExceeded`), Act 7 (validator set update at height 5 — consensus continues with updated set)
+- Real `compute_state_root`: deterministic XOR-mix hash over sorted `BTreeMap<Address, Account>`; `InMemoryStorage` and `SemihostingStorage` auto-recompute on every `UpdateAccount` mutation; genesis accounts set the initial root; `EtheramState::query_state_root()` exposes the value; `EagerContextBuilder` reads from storage rather than re-computing over a partial account map
+- Transaction application on commit: `IbftProtocol::handle_commit` emits `UpdateAccount` (sender balance−value, nonce+1) and `UpdateAccount` (receiver balance+value) plus `UpdateCache { RemovePending }` for each transaction in the committed block, before `StoreBlock` and `IncrementHeight`
+- Extended `Observer` trait: `ActionKind` enum (non-generic projection of `Action<M>` enabling `Box<dyn Observer>` object safety); trait methods replaced — `actions_produced`/`mutations_applied`/`outputs_executed` removed; added `context_built(peer_id, height, state_root, pending_tx_count)`, `action_emitted(peer_id, &ActionKind)`, `mutation_applied(peer_id, &ActionKind)`, `output_executed(peer_id, &ActionKind)`; `EtheramNode::step` calls each per-item; `SemihostingObserver` logs per-item detail at appropriate levels
+- Embassy 7-act scenario: genesis accounts seeded (`sender=[1u8;20]` balance 1000, `receiver=[2u8;20]` balance 200) via `NodeInfraSlot::with_genesis_account`; `EtheramClient::submit_to_all_nodes` broadcasts tx to all 5 nodes (proposer always has the tx regardless of round); Act 1: transfer 300 → balances 700/500; Act 2: reverse 200 → 900/300; Act 3: overdraft 400 → `InsufficientBalance`; Act 4: `TimeoutRound` quorum → view change → height increments; Act 5: stale nonce (nonce=0 after it was already used) → `InvalidNonce`; Act 6: gas_limit=1_000_001 > `MAX_GAS_LIMIT` → `GasLimitExceeded`; Act 7: `ValidatorSetUpdate` scheduled at height 5 in both configurations — consensus continues through the transition
+- `EtheramClient` cfg-free facade: feature-specific dispatch pushed into `infra/external_interface/client_facade.rs`; public functions (`submit_ei_request`, `submit_ei_to_all_nodes`, `await_ei_response`) are unconditional and delegate to private cfg-gated helpers (`submit_impl`, `await_impl`); `etheram_client.rs` contains zero `#[cfg(...)]` attributes
+- Commit signatures: `IbftMessage::Commit` carries `sender_signature: SignatureBytes`; `commit_commitment_payload()` (prefix `2`, height+round+block_hash LE) verified via `SignatureScheme::verify_for_peer()` in `valid_commit()`; `WireIbftMessage::Commit` updated for UDP serialization
+- Future-round message buffer: `IbftProtocol` buffers `PrePrepare`/`Prepare`/`Commit` messages for rounds ahead of `current_round` (up to `MAX_FUTURE_BUFFER_SIZE = 100`); buffering occurs before `accept_peer_message()` to avoid polluting dedup state; replay is triggered in `handle_message()` when `current_round` advances (via `TimeoutRound`, `ViewChange`, or `NewView`)
+- `ValidatorSet.faulty_count` removed (dead code — quorum is computed directly from validator count)
+- `TinyEvmEngine` unknown opcode returns `OutOfGas` (was `Success`)
+- `StoreReceipts` storage mutation kind computes real success/out_of_gas counts from receipt statuses
+
+### 🔄 Next: TBD
+
+---
+
+## Key Constraints
+
+- `etheram/` must compile with no cluster-level dependencies
+- Protocol logic must remain pure (no I/O)
+- **Circular dependencies are forbidden** — no crate may directly or transitively depend on itself, including via `[dev-dependencies]`. Before adding any dependency between crates, verify the full dependency chain contains no cycle.
+- **Dependency direction is one-way** — `etheram-variants` may depend on `etheram`; `etheram` must never depend on `etheram-variants`, not even via `[dev-dependencies]`. This means tests in `etheram/tests/` can only use what `etheram` itself exposes. Integration tests that require concrete implementations from `etheram-variants` (e.g. `IbftProtocol`, `InMemoryStorage`) belong in `etheram-variants/tests/`, not `etheram/tests/`.
+- All new swappable components need a corresponding `*Variant` enum entry and `*Builder` in `etheram-variants/`
+- Trait names: simple nouns. Concrete names: descriptive prefixes
+- `core`, `etheram`, and `etheram-variants` must be `no_std`-compatible — they carry `#![no_std]` and use `alloc` for heap types (`Box`, `Vec`, `String`, `BTreeMap`). No `std`-only types or imports are permitted in these crates
+- `etheram-embassy/` must remain `no_std`-compatible
+- **`etheram-embassy/` must always maintain both configurations** — the all-in-memory configuration (`channel-transport` + `in-memory-storage` + `channel-external-interface`) and the real configuration (`udp-transport` + `semihosting-storage` + `udp-external-interface`) must both compile, link, and run at all times. Every change must be verified against both feature sets before marking complete.
+- **Workspace dependency governance is mandatory** — all dependency versions/features and all local crate links must be declared in the workspace root `Cargo.toml` under `[workspace.dependencies]`. Member crates must reference them via `.workspace = true` and must not declare per-crate `path =`, version, or feature overrides for those dependencies. The only allowed `path =` entries outside root dependency declarations are target declarations such as `[lib] path`, `[[bin]] path`, and `[[test]] path`.
+
+---
+
+## Coding Style Rules
+
+- **File header** — every Rust source file must begin with the Apache 2.0 copyright header:
+  ```rust
+  // Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+  // Licensed under the Apache License, Version 2.0
+  // http://www.apache.org/licenses/LICENSE-2.0
+  ```
+- **No comments in production code** — code should be self-explanatory through naming and structure. The only permitted comments are `// TODO:` and `// FIXME:` (with a description). Doc comments (`///` and `//!`) are not allowed.
+- **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
+- **`use` blocks are compacted and sorted** — all `use` statements must be grouped together with no blank lines between them, and sorted alphabetically. This must be verified before completing any task.
+- **1 empty line after file header** — there must be exactly one blank line between the 3-line Apache 2.0 copyright header and the first `use` statement.
+- **1 empty line between every code block** — there must be exactly one blank line between every top-level code block: between the `use` block and the first item, and between any two consecutive items (struct, enum, trait, impl, fn). No double blank lines.
+- **No code in `mod.rs` files** — `mod.rs` (and `lib.rs`) must contain only `pub mod` declarations. All productive code belongs in a dedicated file named after its primary type or concern. Consumers import directly via the full path:
+  ```rust
+  // common/mod.rs
+  pub mod test_node;
+
+  // node_step.rs
+  mod common;
+  use crate::common::test_node::TestNode;
+  ```
+- **Tests follow AAA** — every test must be structured in three labelled sections: `// Arrange`, `// Act`, `// Assert`. When act and assert collapse into a single expression, use `// Act & Assert`. No other comments are permitted in test bodies. Each section must be separated from the next by exactly one blank line.
+- **Run `cargo fmt` after every change** — always run `cargo fmt` from the workspace root after editing any Rust source file.
+- **No warnings** — the codebase must compile with zero warnings. Every unused import, dead code path, or missing trait implementation that triggers a compiler warning must be fixed before committing. `#[allow(...)]` attributes are not permitted except for `#[allow(clippy::too_many_arguments)]` on builder constructors.
+- **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p barechain-etheram-variants` and `cargo test -p barechain-etheram-validation` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
+- **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate and covers: `cargo fmt` on the whole workspace, `cargo nextest` for `etheram` + `etheram-variants` + `etheram-validation`, the `etheram-variants` no_std gate check, and a full QEMU execution of both embassy configurations (`run_channel_in_memory.ps1` and `run_udp_semihosting.ps1`).
+- **Mandatory Stage 3 no_std gate for variants** — when working on Stage 3 (`etheram-embassy/`), always run an explicit no_std compatibility check for `etheram-variants`: `cargo check -p barechain-etheram-variants --no-default-features`.
+- **Stage 3 test application never sleeps** — `main.rs` must not use fixed-duration sleeps (`Timer::after`) to wait for consensus or protocol progress. Use `EtheramClient::wait_for_height_above` (or an equivalent polling helper with a timeout ceiling) instead. Fixed sleeps are only permitted for non-observable housekeeping (e.g. a brief shutdown drain).
+- **Mandatory dual-layer test updates for productive changes** — every time productive code is added, changed, or fixed, update tests in both layers: protocol-level tests in `etheram-variants` and cluster-level tests in `etheram-validation`. Do not mark work complete unless both layers are updated or explicitly justified as not applicable.
+- **Mandatory test deduplication across files** — when identical or near-identical test setup/logic appears more than twice across test files in the same crate, refactor it into shared test helpers and update all affected files to remove duplication.
+- **No `#[path = "..."]` module imports in tests** — do not import test modules using path attributes. Add the helper module to the corresponding `mod.rs` and import it through the normal module tree.
+- **Method input/output contract** — methods must take immutable input parameters (`&T` for borrowed inputs), return computed results, and must not mutate input parameters. Do not use mutable out-parameters (for example `&mut Vec<_>`, `&mut Option<_>`, `&mut ActionCollection<_>`) to return data. Allowed mutation is limited to receiver state (`&mut self`) and local variables.
+- **Test file naming** — test files are named `<StructName>_tests.rs` (snake_case of the primary struct under test), e.g. `etheram_node_tests.rs` for `EtheramNode`.
+- **Test function naming** — `<method_under_test>_<scenario>_<expected_result>`, e.g. `step_empty_queues_returns_false`, `query_account_genesis_account_returns_balance`.
+- **Test folder mirrors source folder** — the `tests/` directory must mirror the structure of `src/` exactly. For each subdirectory in `src/`, there is a matching subdirectory in `tests/` with a `mod.rs` that lists only `pub mod` declarations. The test root is `tests/all_tests.rs`, which is the single integration test entry point. Example:
+  ```
+  src/implementations/ibft/validator_set.rs
+  src/implementations/ibft/vote_tracker.rs
+
+  tests/all_tests.rs                                         ← declares: pub mod implementations;
+  tests/implementations/mod.rs                               ← declares: pub mod ibft; pub mod ...;
+  tests/implementations/ibft/mod.rs                          ← declares: pub mod validator_set_tests; pub mod vote_tracker_tests;
+  tests/implementations/ibft/validator_set_tests.rs
+  tests/implementations/ibft/vote_tracker_tests.rs
+  ```
