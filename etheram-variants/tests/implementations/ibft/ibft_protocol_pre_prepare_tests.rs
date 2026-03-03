@@ -2,17 +2,20 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::implementations::ibft::common::ibft_protocol_test_helpers::build_block_with_commitments;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
 use barechain_core::collection::Collection;
 use barechain_core::consensus_protocol::ConsensusProtocol;
 use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use barechain_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::common_types::account::Account;
 use etheram::common_types::block::Block;
 use etheram::common_types::transaction::Transaction;
+use std::collections::BTreeMap;
 
 #[test]
 fn handle_message_pre_prepare_from_proposer_broadcasts_prepare() {
@@ -324,7 +327,7 @@ fn handle_message_pre_prepare_gas_limit_exceeds_max_returns_empty() {
 #[test]
 fn handle_message_pre_prepare_contract_out_of_gas_candidate_still_broadcasts_prepare() {
     // Arrange
-    let mut protocol = setup_protocol();
+    let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let mut ctx = setup_context(1, 0);
     let from = [1u8; 20];
     let to = [2u8; 20];
@@ -337,11 +340,21 @@ fn handle_message_pre_prepare_contract_out_of_gas_candidate_still_broadcasts_pre
         0,
         vec![0x60, 0x2a, 0x60, 0x00, 0x55, 0xf3],
     );
+    let contract_storage = BTreeMap::new();
+    let block = build_block_with_commitments(
+        0,
+        0,
+        vec![tx],
+        [0u8; 32],
+        &ctx.accounts,
+        &contract_storage,
+        &TinyEvmEngine,
+    );
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![tx], [0u8; 32]),
+        block,
     });
 
     // Act

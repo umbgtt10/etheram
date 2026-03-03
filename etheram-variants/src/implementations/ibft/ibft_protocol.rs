@@ -359,6 +359,10 @@ impl IbftProtocol {
     }
 
     fn execute_and_compute_commitments(&self, block: &Block, ctx: &Context) -> (Hash, Hash) {
+        if block.transactions.is_empty() {
+            let receipts_root = compute_receipts_root(&[]);
+            return (ctx.state_root, receipts_root);
+        }
         let result = self
             .execution_engine
             .execute(block, &ctx.accounts, &ctx.contract_storage);

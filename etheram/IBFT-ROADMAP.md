@@ -22,6 +22,7 @@
 - View change + new view
 - Replay prevention with per-sender/per-kind sequences
 - Block validation before voting (state root, account checks, nonce, gas constraints)
+- Block re-execution validation before voting (proposer commitments + validator recomputation of `post_state_root` and `receipts_root`)
 - Persistent consensus state (WAL) and restart recovery
 - Message deduplication
 - Malicious conflicting block rejection + malicious sender quarantine behavior

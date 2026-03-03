@@ -151,6 +151,8 @@ fn handle_message_proposer_timer_with_engine_sets_post_state_root_and_receipts_r
     // Arrange
     let mut protocol = setup_protocol().with_execution_engine(Box::new(FakeExecutionEngine));
     let mut ctx = setup_context(0, 0);
+    let tx = Transaction::transfer([1u8; 20], [2u8; 20], 100, 21_000, 0);
+    ctx.pending_txs.push(tx);
     ctx.accounts.insert(
         [1u8; 20],
         Account {

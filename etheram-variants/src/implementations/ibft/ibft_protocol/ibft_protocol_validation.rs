@@ -96,7 +96,8 @@ impl IbftProtocol {
                 },
             );
         }
-        true
+        let (post_state_root, receipts_root) = self.execute_and_compute_commitments(block, ctx);
+        block.post_state_root == post_state_root && block.receipts_root == receipts_root
     }
 
     pub(super) fn valid_prepare(

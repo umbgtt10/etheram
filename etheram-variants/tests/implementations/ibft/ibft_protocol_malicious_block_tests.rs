@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::implementations::ibft::common::ibft_protocol_test_helpers::build_block_with_commitments;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_restored_protocol;
@@ -10,6 +11,7 @@ use barechain_core::collection::Collection;
 use barechain_core::consensus_protocol::ConsensusProtocol;
 use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
 use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use barechain_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::common_types::account::Account;
@@ -338,20 +340,27 @@ fn handle_message_restart_after_invalid_conflict_noise_then_valid_path_progresse
 #[test]
 fn handle_message_malicious_sender_prepare_does_not_help_reach_quorum() {
     // Arrange
-    let mut protocol = setup_protocol();
+    let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert([1u8; 20], Account::new(100));
-    let first = Block::new(
+    let contract_storage = BTreeMap::new();
+    let first = build_block_with_commitments(
         0,
         0,
         vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 0)],
         [0u8; 32],
+        &ctx.accounts,
+        &contract_storage,
+        &TinyEvmEngine,
     );
-    let second = Block::new(
+    let second = build_block_with_commitments(
         0,
         0,
         vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 0)],
         [0u8; 32],
+        &ctx.accounts,
+        &contract_storage,
+        &TinyEvmEngine,
     );
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -450,20 +459,27 @@ fn handle_message_restore_from_wal_malicious_sender_prepare_stays_ignored() {
 #[test]
 fn handle_message_malicious_sender_view_change_does_not_help_reach_new_view_quorum() {
     // Arrange
-    let mut protocol = setup_protocol();
+    let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert([1u8; 20], Account::new(100));
-    let first = Block::new(
+    let contract_storage = BTreeMap::new();
+    let first = build_block_with_commitments(
         0,
         0,
         vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 0)],
         [0u8; 32],
+        &ctx.accounts,
+        &contract_storage,
+        &TinyEvmEngine,
     );
-    let second = Block::new(
+    let second = build_block_with_commitments(
         0,
         0,
         vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 0)],
         [0u8; 32],
+        &ctx.accounts,
+        &contract_storage,
+        &TinyEvmEngine,
     );
     protocol.handle_message(
         &MessageSource::Peer(0),

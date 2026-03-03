@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::ibft_cluster_test_helpers::build_block_with_commitments;
 use crate::common::ibft_cluster_test_helpers::finalize_round_with_block;
 use crate::common::ibft_cluster_test_helpers::validators;
 use barechain_etheram_validation::ibft_cluster::IbftCluster;
@@ -14,10 +15,10 @@ use barechain_etheram_variants::implementations::tiny_evm_gas::GAS_SSTORE_SET;
 use barechain_etheram_variants::implementations::tiny_evm_gas::INTRINSIC_GAS;
 use barechain_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 use etheram::common_types::account::Account;
-use etheram::common_types::block::Block;
 use etheram::common_types::state_root::compute_state_root;
 use etheram::common_types::transaction::Transaction;
 use etheram::common_types::types::Hash;
+use etheram::execution::execution_engine::ExecutionEngine;
 use etheram::execution::transaction_result::TransactionStatus;
 use etheram::incoming::external_interface::client_request::ClientRequest;
 use std::collections::BTreeMap;
@@ -26,9 +27,19 @@ fn finalize_block(
     cluster: &mut IbftCluster,
     transactions: Vec<Transaction>,
     genesis_accounts: BTreeMap<[u8; 20], Account>,
+    engine: &dyn ExecutionEngine,
 ) {
     let state_root = compute_state_root(&genesis_accounts);
-    let proposed_block = Block::new(0, 0, transactions, state_root);
+    let contract_storage = BTreeMap::new();
+    let proposed_block = build_block_with_commitments(
+        0,
+        0,
+        transactions,
+        state_root,
+        &genesis_accounts,
+        &contract_storage,
+        engine,
+    );
 
     finalize_round_with_block(cluster, 0, 0, 0, &proposed_block);
 }
@@ -54,7 +65,12 @@ fn cluster_out_of_gas_transaction_reverts_account_state() {
     cluster.drain(0);
 
     // Act
-    finalize_block(&mut cluster, vec![tx], genesis_accounts);
+    finalize_block(
+        &mut cluster,
+        vec![tx],
+        genesis_accounts,
+        &ValueTransferEngine,
+    );
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -85,7 +101,12 @@ fn cluster_mixed_block_partial_gas_failure() {
     cluster.drain(0);
 
     // Act
-    finalize_block(&mut cluster, vec![tx1, tx2], genesis_accounts);
+    finalize_block(
+        &mut cluster,
+        vec![tx1, tx2],
+        genesis_accounts,
+        &ValueTransferEngine,
+    );
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -124,7 +145,7 @@ fn cluster_gas_exactly_sufficient_succeeds() {
     cluster.drain(0);
 
     // Act
-    finalize_block(&mut cluster, vec![tx], genesis_accounts);
+    finalize_block(&mut cluster, vec![tx], genesis_accounts, &TinyEvmEngine);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -159,7 +180,12 @@ fn cluster_receipts_on_commit_match_tx_execution_results() {
     cluster.drain(0);
 
     // Act
-    finalize_block(&mut cluster, vec![tx1, tx2], genesis_accounts);
+    finalize_block(
+        &mut cluster,
+        vec![tx1, tx2],
+        genesis_accounts,
+        &ValueTransferEngine,
+    );
 
     // Assert
     let receipts = cluster.node_receipts(0, 0);
@@ -203,7 +229,12 @@ fn cluster_three_tx_receipt_cumulative_gas_monotonically_increases() {
     cluster.drain(0);
 
     // Act
-    finalize_block(&mut cluster, vec![tx1, tx2, tx3], genesis_accounts);
+    finalize_block(
+        &mut cluster,
+        vec![tx1, tx2, tx3],
+        genesis_accounts,
+        &ValueTransferEngine,
+    );
 
     // Assert
     let receipts = cluster.node_receipts(0, 0);

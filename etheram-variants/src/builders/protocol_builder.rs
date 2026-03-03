@@ -15,6 +15,7 @@ use etheram::execution::execution_engine::BoxedExecutionEngine;
 pub struct ProtocolBuilder<M> {
     protocol: Option<BoxedProtocol<M>>,
     execution_engine: Option<BoxedExecutionEngine>,
+    missing_component: Option<&'static str>,
 }
 
 impl<M> ProtocolBuilder<M> {
@@ -22,15 +23,20 @@ impl<M> ProtocolBuilder<M> {
         Self {
             protocol: None,
             execution_engine: None,
+            missing_component: None,
         }
     }
 
     pub fn with_protocol(mut self, protocol: BoxedProtocol<M>) -> Self {
         self.protocol = Some(protocol);
+        self.missing_component = None;
         self
     }
 
     pub fn build(self) -> Result<BoxedProtocol<M>, BuildError> {
+        if let Some(component) = self.missing_component {
+            return Err(BuildError::MissingComponent(component));
+        }
         self.protocol
             .ok_or(BuildError::MissingComponent("protocol"))
     }
@@ -57,17 +63,19 @@ impl ProtocolBuilder<IbftMessage> {
     pub fn with_variant(mut self, variant: ProtocolVariant<IbftMessage>) -> Self {
         let protocol: BoxedProtocol<IbftMessage> = match variant {
             ProtocolVariant::Ibft { validators } => {
-                let ibft = IbftProtocol::new(validators, Box::new(MockSignatureScheme::new(0)));
-                let ibft = match self.execution_engine.take() {
-                    Some(engine) => ibft.with_execution_engine(engine),
-                    None => ibft,
+                let Some(engine) = self.execution_engine.take() else {
+                    self.missing_component = Some("execution_engine");
+                    return self;
                 };
+                let ibft = IbftProtocol::new(validators, Box::new(MockSignatureScheme::new(0)));
+                let ibft = ibft.with_execution_engine(engine);
                 Box::new(ibft)
             }
             ProtocolVariant::NoOp => Box::new(NoOpProtocol::<IbftMessage>::new()),
             ProtocolVariant::Custom(custom) => custom,
         };
         self.protocol = Some(protocol);
+        self.missing_component = None;
         self
     }
 }
@@ -77,6 +85,7 @@ impl Default for ProtocolBuilder<()> {
         Self {
             protocol: Some(Box::new(NoOpProtocol::<()>::new())),
             execution_engine: None,
+            missing_component: None,
         }
     }
 }

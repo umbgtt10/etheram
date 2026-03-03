@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::ibft_cluster_test_helpers::build_block_with_commitments;
 use crate::common::ibft_cluster_test_helpers::finalize_round_with_block;
 use crate::common::ibft_cluster_test_helpers::validators;
 use barechain_etheram_validation::ibft_cluster::IbftCluster;
@@ -13,7 +14,6 @@ use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
 use barechain_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 use etheram::common_types::account::Account;
 use etheram::common_types::block::Block;
-use etheram::common_types::state_root::compute_state_root;
 use etheram::common_types::transaction::Transaction;
 use etheram::common_types::types::Address;
 use etheram::common_types::types::Hash;
@@ -28,10 +28,20 @@ fn finalize_first_block_with_transaction(
     cluster: &mut IbftCluster,
     tx: Transaction,
     from: [u8; 20],
+    engine: &dyn ExecutionEngine,
 ) {
     let genesis_accounts = BTreeMap::from([(from, Account::new(1_000))]);
-    let state_root = compute_state_root(&genesis_accounts);
-    let proposed_block = Block::new(0, 0, vec![tx], state_root);
+    let state_root = etheram::common_types::state_root::compute_state_root(&genesis_accounts);
+    let contract_storage = BTreeMap::new();
+    let proposed_block = build_block_with_commitments(
+        0,
+        0,
+        vec![tx],
+        state_root,
+        &genesis_accounts,
+        &contract_storage,
+        engine,
+    );
 
     finalize_round_with_block(cluster, 0, 0, 0, &proposed_block);
 }
@@ -56,7 +66,7 @@ fn cluster_value_transfer_engine_commit_updates_balances_without_contract_storag
     cluster.drain(0);
 
     // Act
-    finalize_first_block_with_transaction(&mut cluster, tx, from);
+    finalize_first_block_with_transaction(&mut cluster, tx, from, &ValueTransferEngine);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -105,8 +115,13 @@ fn cluster_engine_swap_changes_contract_storage_effects_for_same_transaction() {
     tiny_evm_cluster.drain(0);
 
     // Act
-    finalize_first_block_with_transaction(&mut value_transfer_cluster, tx.clone(), from);
-    finalize_first_block_with_transaction(&mut tiny_evm_cluster, tx, from);
+    finalize_first_block_with_transaction(
+        &mut value_transfer_cluster,
+        tx.clone(),
+        from,
+        &ValueTransferEngine,
+    );
+    finalize_first_block_with_transaction(&mut tiny_evm_cluster, tx, from, &TinyEvmEngine);
 
     // Assert
     assert_eq!(value_transfer_cluster.node_height(0), 1);
@@ -149,7 +164,7 @@ fn cluster_tiny_evm_engine_sstore_transaction_persists_contract_storage() {
     cluster.drain(0);
 
     // Act
-    finalize_first_block_with_transaction(&mut cluster, tx, from);
+    finalize_first_block_with_transaction(&mut cluster, tx, from, &TinyEvmEngine);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -179,8 +194,8 @@ fn cluster_engine_swap_does_not_affect_value_transfer_balances() {
     evm_cluster.drain(0);
 
     // Act
-    finalize_first_block_with_transaction(&mut vt_cluster, tx.clone(), from);
-    finalize_first_block_with_transaction(&mut evm_cluster, tx, from);
+    finalize_first_block_with_transaction(&mut vt_cluster, tx.clone(), from, &ValueTransferEngine);
+    finalize_first_block_with_transaction(&mut evm_cluster, tx, from, &TinyEvmEngine);
 
     // Assert
     assert_eq!(
@@ -212,7 +227,7 @@ fn cluster_noop_engine_commit_does_not_update_accounts_or_storage() {
     cluster.drain(0);
 
     // Act
-    finalize_first_block_with_transaction(&mut cluster, tx, from);
+    finalize_first_block_with_transaction(&mut cluster, tx, from, &NoOpExecutionEngine);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);
@@ -263,7 +278,7 @@ fn cluster_out_of_gas_engine_does_not_apply_account_mutations() {
     cluster.drain(0);
 
     // Act
-    finalize_first_block_with_transaction(&mut cluster, tx, from);
+    finalize_first_block_with_transaction(&mut cluster, tx, from, &OutOfGasEngine);
 
     // Assert
     assert_eq!(cluster.node_height(0), 1);

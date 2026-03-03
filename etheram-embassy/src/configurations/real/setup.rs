@@ -116,6 +116,7 @@ impl SpawnedNode {
             Box::new(Ed25519SignatureScheme::new(peer_id)),
             alloc::vec![ValidatorSetUpdate::new(5, (0..MAX_NODES as u64).collect())],
         )
+        .with_execution_engine(Box::new(TinyEvmEngine))
         .with_wal_writer(wal_writer);
 
         let node = EtheramNode::new(

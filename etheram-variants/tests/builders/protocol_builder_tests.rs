@@ -4,6 +4,7 @@
 
 use barechain_etheram_variants::builders::protocol_builder::ProtocolBuilder;
 use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use barechain_etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
 use barechain_etheram_variants::implementations::no_op_protocol::NoOpProtocol;
 use barechain_etheram_variants::variants::ProtocolVariant;
 
@@ -44,13 +45,29 @@ fn default_builds_successfully() {
 }
 
 #[test]
-fn with_variant_ibft_builds_successfully() {
+fn with_variant_ibft_without_execution_engine_returns_error() {
     // Arrange
     let validators = vec![1u64, 2, 3, 4];
     let builder = ProtocolBuilder::<IbftMessage>::new();
 
     // Act
     let result = builder
+        .with_variant(ProtocolVariant::Ibft { validators })
+        .build();
+
+    // Assert
+    assert!(result.is_err());
+}
+
+#[test]
+fn with_variant_ibft_with_execution_engine_builds_successfully() {
+    // Arrange
+    let validators = vec![1u64, 2, 3, 4];
+    let builder = ProtocolBuilder::<IbftMessage>::new();
+
+    // Act
+    let result = builder
+        .with_execution_engine(Box::new(NoOpExecutionEngine))
         .with_variant(ProtocolVariant::Ibft { validators })
         .build();
 

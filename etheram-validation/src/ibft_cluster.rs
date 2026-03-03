@@ -137,6 +137,12 @@ impl IbftCluster {
                 Box::new(InMemoryTransport::new(peer_id, transport_state.clone())),
             );
             let executor = EtheramExecutor::new(outgoing);
+            let protocol = IbftProtocol::new_with_validator_updates(
+                validators.clone(),
+                signature_scheme_factory(peer_id),
+                validator_updates.clone(),
+            )
+            .with_execution_engine(execution_engine_factory());
 
             let node = EtheramNode::new(
                 peer_id,
@@ -144,11 +150,7 @@ impl IbftCluster {
                 state,
                 executor,
                 Box::new(EagerContextBuilder::new()),
-                Box::new(IbftProtocol::new_with_validator_updates(
-                    validators.clone(),
-                    signature_scheme_factory(peer_id),
-                    validator_updates.clone(),
-                )),
+                Box::new(protocol),
                 Box::new(TypeBasedPartitioner::new()),
                 execution_engine_factory(),
                 Box::new(NoOpObserver),

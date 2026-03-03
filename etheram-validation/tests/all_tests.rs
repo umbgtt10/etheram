@@ -13,6 +13,7 @@ pub mod ibft_cluster_gas_tests;
 pub mod ibft_cluster_malicious_block_tests;
 pub mod ibft_cluster_message_validation_tests;
 pub mod ibft_cluster_persistence_tests;
+pub mod ibft_cluster_reexecution_tests;
 pub mod ibft_cluster_replay_tests;
 pub mod ibft_cluster_round_progression_tests;
 pub mod ibft_cluster_transaction_tests;

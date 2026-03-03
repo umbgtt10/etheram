@@ -125,6 +125,7 @@ impl SpawnedNode {
                     Box::new(MockSignatureScheme::new(peer_id)),
                     alloc::vec![ValidatorSetUpdate::new(5, (0..MAX_NODES as u64).collect())],
                 )
+                .with_execution_engine(Box::new(TinyEvmEngine))
                 .with_wal_writer(wal_writer),
             ),
             Box::new(TypeBasedPartitioner::new()),

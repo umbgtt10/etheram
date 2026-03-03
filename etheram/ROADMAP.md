@@ -69,7 +69,7 @@ If any of these are missing, the project does not substantiate its claims.
 
 ---
 
-### 4. Minimal EVM Execution ⚠️ Partial
+### 4. Minimal EVM Execution ✅
 
 **What:**
 - Subset of EVM opcodes (ADD, MUL, SSTORE, SLOAD, CALL, RETURN)
@@ -80,7 +80,7 @@ If any of these are missing, the project does not substantiate its claims.
 - This is where most blockchains collapse architecturally
 - Proves protocol purity under heavy computation
 
-**Status:** Gas accounting and `MAX_GAS_LIMIT` enforcement are implemented. Opcode execution is not — `Transaction` carries value transfer only. The architectural proof (protocol purity under computation) remains unvalidated at the EVM level.
+**Status:** `TinyEvmEngine` opcode execution and gas accounting are implemented, including `SSTORE` behavior and deterministic receipts. IBFT proposer-side commitment construction and validator re-execution validation are integrated, validating protocol purity under computation.
 
 ---
 
@@ -288,12 +288,12 @@ This order minimizes rework and maximizes architectural validation.
 
 ---
 
-### Phase 2 – Execution Semantics ⚠️ Partial
-6. Minimal EVM execution ❌ (gas accounting done; opcode execution missing)
+### Phase 2 – Execution Semantics ✅ Complete
+6. Minimal EVM execution ✅
 7. Gas accounting ✅
 8. Action modeling and execution ✅
 
-**Outcome:** Partial — computation is gated by gas and transaction validation, but no opcode execution engine exists.
+**Outcome:** Complete — computation and gas are validated end-to-end, including proposer commitments and validator re-execution.
 
 ---
 
