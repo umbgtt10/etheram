@@ -26,15 +26,12 @@ use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::collections::action_collection::ActionCollection;
 use etheram::common_types::block::Block;
-use etheram::common_types::state_root::compute_state_root_with_contract_storage;
 use etheram::common_types::types::Gas;
 use etheram::common_types::types::{Hash, Height};
 use etheram::context::context_dto::Context;
+use etheram::execution::block_commitments::compute_block_commitments;
 use etheram::execution::execution_engine::BoxedExecutionEngine;
-use etheram::execution::receipts_root::compute_receipts_root;
-use etheram::execution::transaction_result::TransactionStatus;
 use etheram::state::cache::cache_update::CacheUpdate;
-use etheram::state::storage::storage_mutation::StorageMutation;
 
 pub(crate) const MAX_GAS_LIMIT: Gas = 1_000_000;
 const MAX_FUTURE_BUFFER_SIZE: usize = 100;
@@ -359,38 +356,12 @@ impl IbftProtocol {
     }
 
     fn execute_and_compute_commitments(&self, block: &Block, ctx: &Context) -> (Hash, Hash) {
-        if block.transactions.is_empty() {
-            let receipts_root = compute_receipts_root(&[]);
-            return (ctx.state_root, receipts_root);
-        }
-        let result = self
-            .execution_engine
-            .execute(block, &ctx.accounts, &ctx.contract_storage);
-        let mut post_accounts = ctx.accounts.clone();
-        let mut post_storage = ctx.contract_storage.clone();
-        for tx_result in &result.transaction_results {
-            if tx_result.status == TransactionStatus::Success {
-                for mutation in &tx_result.mutations {
-                    match mutation {
-                        StorageMutation::UpdateAccount(addr, account) => {
-                            post_accounts.insert(*addr, account.clone());
-                        }
-                        StorageMutation::UpdateContractStorage {
-                            address,
-                            slot,
-                            value,
-                        } => {
-                            post_storage.insert((*address, *slot), *value);
-                        }
-                        _ => {}
-                    }
-                }
-            }
-        }
-        let post_state_root =
-            compute_state_root_with_contract_storage(&post_accounts, &post_storage);
-        let receipts_root = compute_receipts_root(&result.transaction_results);
-        (post_state_root, receipts_root)
+        compute_block_commitments(
+            block,
+            &ctx.accounts,
+            &ctx.contract_storage,
+            self.execution_engine.as_ref(),
+        )
     }
 
     fn handle_timer_propose_block(

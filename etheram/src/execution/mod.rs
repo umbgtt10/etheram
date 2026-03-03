@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+pub mod block_commitments;
 pub mod execution_engine;
 pub mod execution_result;
 pub mod receipts_root;

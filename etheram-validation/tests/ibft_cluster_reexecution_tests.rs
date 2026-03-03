@@ -99,7 +99,7 @@ fn cluster_proposer_with_wrong_post_state_root_rejected() {
 }
 
 #[test]
-fn cluster_proposer_with_wrong_receipts_root_rejected() {
+fn cluster_validator_rejects_injected_block_with_wrong_receipts_root() {
     // Arrange
     let from = [5u8; 20];
     let to = [6u8; 20];
@@ -108,6 +108,10 @@ fn cluster_proposer_with_wrong_receipts_root_rejected() {
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
         });
+    for node in 0..4usize {
+        cluster.submit_request(node, 1, ClientRequest::SubmitTransaction(tx.clone()));
+        cluster.drain(node);
+    }
     let accounts = BTreeMap::from([(from, Account::new(1_000))]);
     let contract_storage = BTreeMap::new();
     let state_root = compute_state_root(&accounts);
@@ -265,4 +269,82 @@ fn cluster_view_change_after_invalid_block() {
     assert_eq!(cluster.node_height(1), 0);
     assert_eq!(cluster.node_height(2), 0);
     assert_eq!(cluster.node_height(3), 0);
+}
+
+#[test]
+fn cluster_reexecution_valid_across_two_consecutive_heights() {
+    // Arrange
+    let from = [14u8; 20];
+    let to = [15u8; 20];
+    let tx0 = Transaction::transfer(from, to, 300, 21_000, 0);
+    let tx1 = Transaction::transfer(from, to, 100, 21_000, 1);
+    let mut cluster =
+        IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
+            Box::new(ValueTransferEngine)
+        });
+    let accounts_h0 = BTreeMap::from([(from, Account::new(1_000))]);
+    let contract_storage = BTreeMap::new();
+    let state_root_h0 = compute_state_root(&accounts_h0);
+    let block0 = build_block_with_commitments(
+        0,
+        0,
+        vec![tx0.clone()],
+        state_root_h0,
+        &accounts_h0,
+        &contract_storage,
+        &ValueTransferEngine,
+    );
+    for node in 0..4usize {
+        cluster.submit_request(node, 1, ClientRequest::SubmitTransaction(tx0.clone()));
+        cluster.drain(node);
+    }
+
+    // Act
+    finalize_round_with_block(&mut cluster, 0, 0, 0, &block0);
+
+    // Assert
+    assert_eq!(cluster.node_height(0), 1);
+    assert_eq!(cluster.node_account(0, from).map(|a| a.balance), Some(700));
+    assert_eq!(cluster.node_account(0, to).map(|a| a.balance), Some(300));
+
+    // Arrange
+    let accounts_h1 = BTreeMap::from([
+        (
+            from,
+            Account {
+                balance: 700,
+                nonce: 1,
+            },
+        ),
+        (
+            to,
+            Account {
+                balance: 300,
+                nonce: 0,
+            },
+        ),
+    ]);
+    let state_root_h1 = compute_state_root(&accounts_h1);
+    let block1 = build_block_with_commitments(
+        1,
+        1,
+        vec![tx1.clone()],
+        state_root_h1,
+        &accounts_h1,
+        &contract_storage,
+        &ValueTransferEngine,
+    );
+    for node in 0..4usize {
+        cluster.submit_request(node, 2, ClientRequest::SubmitTransaction(tx1.clone()));
+        cluster.drain(node);
+    }
+
+    // Act
+    finalize_round_with_block(&mut cluster, 1, 1, 0, &block1);
+
+    // Assert
+    assert_eq!(cluster.node_height(0), 2);
+    assert_eq!(cluster.node_height(1), 2);
+    assert_eq!(cluster.node_account(0, from).map(|a| a.balance), Some(600));
+    assert_eq!(cluster.node_account(0, to).map(|a| a.balance), Some(400));
 }

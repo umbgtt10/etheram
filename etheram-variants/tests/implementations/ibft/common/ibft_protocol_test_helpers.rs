@@ -22,11 +22,9 @@ use etheram::common_types::transaction::Transaction;
 use etheram::common_types::types::Address;
 use etheram::common_types::types::Hash;
 use etheram::context::context_dto::Context;
+use etheram::execution::block_commitments::compute_block_commitments;
 use etheram::execution::execution_engine::ExecutionEngine;
-use etheram::execution::receipts_root::compute_receipts_root;
-use etheram::execution::transaction_result::TransactionStatus;
 use etheram::incoming::timer::timer_event::TimerEvent;
-use etheram::state::storage::storage_mutation::StorageMutation;
 use std::collections::BTreeMap;
 
 pub struct AlternateSignatureScheme;
@@ -158,32 +156,9 @@ pub fn build_block_with_commitments(
     engine: &dyn ExecutionEngine,
 ) -> Block {
     let mut block = Block::new(height, proposer, transactions, state_root);
-    let result = engine.execute(&block, accounts, contract_storage);
-    let mut post_accounts = accounts.clone();
-    let mut post_storage = contract_storage.clone();
-
-    for tx_result in &result.transaction_results {
-        if tx_result.status != TransactionStatus::Success {
-            continue;
-        }
-        for mutation in &tx_result.mutations {
-            match mutation {
-                StorageMutation::UpdateAccount(addr, account) => {
-                    post_accounts.insert(*addr, account.clone());
-                }
-                StorageMutation::UpdateContractStorage {
-                    address,
-                    slot,
-                    value,
-                } => {
-                    post_storage.insert((*address, *slot), *value);
-                }
-                _ => {}
-            }
-        }
-    }
-
-    block.post_state_root = compute_state_root_with_contract_storage(&post_accounts, &post_storage);
-    block.receipts_root = compute_receipts_root(&result.transaction_results);
+    let (post_state_root, receipts_root) =
+        compute_block_commitments(&block, accounts, contract_storage, engine);
+    block.post_state_root = post_state_root;
+    block.receipts_root = receipts_root;
     block
 }

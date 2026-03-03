@@ -5,12 +5,15 @@
 use super::super::prepared_certificate::PreparedCertificate;
 use super::super::signature_scheme::SignatureBytes;
 use super::IbftProtocol;
+use alloc::collections::BTreeMap;
 use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
 use barechain_core::types::PeerId;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::common_types::account::Account;
 use etheram::common_types::block::Block;
+use etheram::common_types::transaction::Transaction;
+use etheram::common_types::types::Address;
 use etheram::common_types::types::Hash;
 use etheram::common_types::types::Height;
 use etheram::context::context_dto::Context;
@@ -64,8 +67,19 @@ impl IbftProtocol {
         if block.state_root != ctx.state_root {
             return false;
         }
-        let mut working_accounts = ctx.accounts.clone();
-        for tx in &block.transactions {
+        if !Self::valid_transactions(&block.transactions, &ctx.accounts) {
+            return false;
+        }
+        let (post_state_root, receipts_root) = self.execute_and_compute_commitments(block, ctx);
+        block.post_state_root == post_state_root && block.receipts_root == receipts_root
+    }
+
+    fn valid_transactions(
+        transactions: &[Transaction],
+        accounts: &BTreeMap<Address, Account>,
+    ) -> bool {
+        let mut working_accounts = accounts.clone();
+        for tx in transactions {
             let from_account = match working_accounts.get(&tx.from) {
                 Some(account)
                     if account.balance >= tx.value
@@ -96,8 +110,7 @@ impl IbftProtocol {
                 },
             );
         }
-        let (post_state_root, receipts_root) = self.execute_and_compute_commitments(block, ctx);
-        block.post_state_root == post_state_root && block.receipts_root == receipts_root
+        true
     }
 
     pub(super) fn valid_prepare(

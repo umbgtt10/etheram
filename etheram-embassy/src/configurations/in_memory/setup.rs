@@ -43,11 +43,16 @@ use etheram::common_types::types::Address;
 use etheram::common_types::types::Hash;
 use etheram::common_types::types::Height;
 use etheram::etheram_node::EtheramNode;
+use etheram::execution::execution_engine::BoxedExecutionEngine;
 use etheram::executor::etheram_executor::EtheramExecutor;
 use etheram::executor::outgoing::outgoing_sources::OutgoingSources;
 use etheram::incoming::incoming_sources::IncomingSources;
 use etheram::observer::EventLevel;
 use etheram::state::etheram_state::EtheramState;
+
+fn create_execution_engine() -> BoxedExecutionEngine {
+    Box::new(TinyEvmEngine)
+}
 
 struct NodeTaskContext {
     transport_state: EmbassySharedState<InMemoryTransportState<IbftMessage>>,
@@ -125,11 +130,11 @@ impl SpawnedNode {
                     Box::new(MockSignatureScheme::new(peer_id)),
                     alloc::vec![ValidatorSetUpdate::new(5, (0..MAX_NODES as u64).collect())],
                 )
-                .with_execution_engine(Box::new(TinyEvmEngine))
+                .with_execution_engine(create_execution_engine())
                 .with_wal_writer(wal_writer),
             ),
             Box::new(TypeBasedPartitioner::new()),
-            Box::new(TinyEvmEngine),
+            create_execution_engine(),
             Box::new(SemihostingObserver::new(EventLevel::Essential)),
         );
 
