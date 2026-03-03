@@ -17,6 +17,7 @@ pub struct Context {
     pub current_height: Height,
     pub state_root: Hash,
     pub accounts: BTreeMap<Address, Account>,
+    pub contract_storage: BTreeMap<(Address, Hash), Hash>,
     pub pending_txs: Vec<Transaction>,
 }
 
@@ -27,6 +28,7 @@ impl Context {
             current_height,
             state_root,
             accounts: BTreeMap::new(),
+            contract_storage: BTreeMap::new(),
             pending_txs: Vec::new(),
         }
     }

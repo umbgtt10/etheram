@@ -49,11 +49,13 @@ impl EagerContextBuilder {
             }
         }
         let state_root = state.query_state_root();
+        let contract_storage = state.snapshot_contract_storage();
         Context {
             peer_id,
             current_height,
             state_root,
             accounts,
+            contract_storage,
             pending_txs,
         }
     }
