@@ -1,8 +1,8 @@
-# BareChain — Copilot Instructions
+# EtheRAM — Copilot Instructions
 
 ## Purpose
 
-BareChain is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary focus is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics.
+EtheRAM is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary focus is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics.
 
 ---
 

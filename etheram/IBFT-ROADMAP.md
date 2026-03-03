@@ -1,74 +1,103 @@
-# Istanbul BFT Roadmap (Trimmed)
+# Istanbul BFT — Feature Status
 
-**Purpose:** concise status of IBFT in EtheRAM
-**Target:** Ethereum-like Byzantine Fault Tolerant consensus
+**Scope:** IBFT consensus protocol in EtheRAM
+**Implementation:** `etheram-variants/src/implementations/ibft/`
 **Validation model:**
 - Stage 1: protocol tests in `etheram-variants/tests/implementations/ibft/`
 - Stage 2: cluster tests in `etheram-validation/tests/`
-- Stage 3: embedded compatibility in `etheram-embassy/`
+- Stage 3: embedded end-to-end in `etheram-embassy/`
+
+**Related:** [Chain Roadmap](CHAIN-ROADMAP.md) — Ethereum-like chain features
 
 ---
 
-## Implemented Features
+## Supported Features
 
-### Core consensus
-- Static validator set
-- Round-robin proposer selection
-- Three-phase flow: `PrePrepare` → `Prepare` → `Commit`
-- Quorum computation from validator set (`2f+1` via current `ValidatorSet`/`VoteTracker` semantics)
-- Leader block proposal and commit progression
+### Core Consensus
 
-### Safety and robustness (Phase 2 complete)
-- View change + new view
-- Replay prevention with per-sender/per-kind sequences
-- Block validation before voting (state root, account checks, nonce, gas constraints)
-- Block re-execution validation before voting (proposer commitments + validator recomputation of `post_state_root` and `receipts_root`)
-- Persistent consensus state (WAL) and restart recovery
-- Message deduplication
-- Malicious conflicting block rejection + malicious sender quarantine behavior
-- Graceful validator set updates (height-gated scheduled transitions)
+| Feature | Description | Stage 1 | Stage 2 | Stage 3 |
+|---|---|---|---|---|
+| Static validator set | Fixed set of `n` validators, `f = ⌊(n-1)/3⌋` | ✅ | ✅ | ✅ |
+| Round-robin proposer | Deterministic proposer selection: `proposer = (height + round) % n` | ✅ | ✅ | ✅ |
+| Three-phase commit | PrePrepare → Prepare → Commit flow | ✅ | ✅ | ✅ |
+| Quorum computation | `⌊2n/3⌋ + 1` via `ValidatorSet` / `VoteTracker` | ✅ | ✅ | ✅ |
+| Block proposal | Timer-driven `ProposeBlock` triggers block construction from pending transactions | ✅ | ✅ | ✅ |
+| Block commit | Quorum of commit votes triggers `StoreBlock` + `IncrementHeight` + account updates | ✅ | ✅ | ✅ |
+| Automatic round progression | Timer re-fires after commit to drive next height | ✅ | ✅ | ✅ |
 
-### Crypto abstraction
-- `SignatureScheme` trait with `SignatureBytes` newtype (`[u8; 96]`) integrated across the full protocol flow
-- Every `Prepare` message carries a `sender_signature`; `PreparedCertificate` stores `signed_prepares: Vec<(PeerId, SignatureBytes)>`
-- `valid_prepared_certificate` verifies each signature against the canonical prepare-commitment payload before accepting a cert on `ViewChange` / `NewView` — closes the Byzantine cert forgery attack vector
-- `MockSignatureScheme` (zeroed sigs, always-true verify) for deterministic testing
-- `Ed25519SignatureScheme` (real `ed25519-dalek` signing and verification, hardcoded QEMU keypairs) feature-gated under `ed25519`
-- Injection-based signature testing: `AlternateSignatureScheme` + Byzantine cert forgery tests
+### Safety and Robustness
 
-### Validation coverage
-- Stage 1 protocol coverage across proposer/prepare/commit/view-change/replay/persistence/dedup/malicious/validator-update/signature paths; feature-gated Ed25519 tests covering real sign/verify, cross-peer verification, tampered sig rejection, and forged-cert rejection
-- Stage 2 cluster coverage across round progression/view-change/replay/persistence/malicious behavior/message validation/validator updates; Byzantine cert forgery cluster test
-- Stage 3 embedded coverage (QEMU): 9-act scenario covering multi-round consensus, view change, client transaction submission, overdraft/nonce/gas-limit rejection, validator set update, WAL byte round-trip, and Ed25519 `PreparedCertificate` proof
+| Feature | Description | Stage 1 | Stage 2 | Stage 3 |
+|---|---|---|---|---|
+| View change | `TimeoutRound` → quorum of `ViewChange` → `NewView` → resume | ✅ | ✅ | ✅ |
+| Locked-block preservation | `pending_block` not cleared on round change when `PreparedCertificate` is set | ✅ | ✅ | ✅ |
+| Locked-block re-propose | Proposer with cert re-proposes the locked block, not a fresh block | ✅ | ✅ | ✅ |
+| Highest-round cert wins | Incoming cert with higher round replaces current; lower or equal is ignored | ✅ | ✅ | ✅ |
+| NewView authority | `valid_new_view` guard is the sole gate; no second compatibility check | ✅ | ✅ | ✅ |
+| Message deduplication | Per-sender/per-kind duplicate filtering | ✅ | ✅ | — |
+| Replay prevention | Sequence-based replay detection | ✅ | ✅ | — |
+| Malicious block rejection | Conflicting PrePrepare from same proposer/round quarantines sender | ✅ | ✅ | — |
+| Block validation | State root, account balance, nonce, gas-limit checks before voting | ✅ | ✅ | ✅ |
+| Block re-execution | Validators re-execute transactions and compare `post_state_root` + `receipts_root` | ✅ | ✅ | ✅ |
+| Future-round buffer | PrePrepare/Prepare/Commit for future rounds buffered; replayed on round advance | ✅ | — | — |
+
+### Cryptographic Abstraction
+
+| Feature | Description | Stage 1 | Stage 2 | Stage 3 |
+|---|---|---|---|---|
+| `SignatureScheme` trait | Generic signing/verification interface with `SignatureBytes` newtype | ✅ | ✅ | ✅ |
+| `MockSignatureScheme` | Zeroed sigs, always-true verify (deterministic testing) | ✅ | ✅ | ✅ (in-memory) |
+| `Ed25519SignatureScheme` | Real `ed25519-dalek` signing and verification | ✅ | — | ✅ (real) |
+| Commit signatures | `Commit` messages carry `sender_signature` verified via `commit_commitment_payload` | ✅ | ✅ | ✅ |
+| PreparedCertificate verification | `valid_prepared_certificate` verifies each signature against canonical payload | ✅ | ✅ | ✅ |
+| Injection-based testing | `AlternateSignatureScheme` + Byzantine cert forgery tests | ✅ | ✅ | — |
+
+### Persistence and Recovery
+
+| Feature | Description | Stage 1 | Stage 2 | Stage 3 |
+|---|---|---|---|---|
+| `ConsensusWal` | Write-ahead log serialization (`to_bytes` / `from_bytes`) | ✅ | ✅ | ✅ |
+| `WalWriter` trait | Abstraction for WAL persistence (in-memory, semihosting, etc.) | ✅ | — | ✅ |
+| Restart recovery | `IbftProtocol::from_wal` restores state from WAL bytes | ✅ | ✅ | ✅ |
+| `CapturedWalWriter` | Sticky `last_cert` capture that survives `reset_after_commit` | — | — | ✅ |
+
+### Validator Set Management
+
+| Feature | Description | Stage 1 | Stage 2 | Stage 3 |
+|---|---|---|---|---|
+| `ValidatorSetUpdate` | Height-gated scheduled transitions | ✅ | ✅ | ✅ |
+| Graceful transition | Consensus continues through validator set change | ✅ | ✅ | ✅ |
 
 ---
 
-## Missing Features
+## Planned Features
 
-### Protocol/consensus capabilities (next major scope)
-- Weighted voting / stake-aware quorum
-- Pipelined consensus
-- Signature aggregation (BLS path)
-- Optimistic responsiveness fast path
-- Proposal buffering / speculative execution
-- Dynamic validator discovery
-- Byzantine evidence collection and slashing pipeline
-
-### Operational/productization
-- Metrics and observability (structured metrics/logging dashboards)
-- Production infrastructure swaps and hardening guidance (RocksDB/TCP/system timer/disk WAL)
-
-### Platform parity
-- Stage 3 embedded parity for WAL/restart recovery: WAL byte round-trip verified in QEMU (Act 8), but a full crash-recovery simulation (terminate process mid-consensus, restart, confirm state restored from WAL) is not yet implemented
-- Malicious node injection and message deduplication observability in the embedded scenario
-- Weighted voting, BLS aggregation, and optimistic fast path are not yet wired at Stage 3
+| Feature | Description | Priority | Complexity |
+|---|---|---|---|
+| Weighted voting | Stake-aware quorum (weighted `VoteTracker`) | Medium | Medium |
+| Signature aggregation (BLS) | BLS `SignatureScheme` implementation; aggregate quorum proofs | Medium | High |
+| Pipelined consensus | Overlap proposal of height `h+1` with commit of height `h` | Low | High |
+| Optimistic responsiveness | Fast-path commit when all validators respond within a threshold | Low | Medium |
+| Proposal buffering | Speculative execution of proposed blocks before consensus | Low | Medium |
+| Dynamic validator discovery | Peer discovery without static validator list | Low | High |
+| Byzantine evidence collection | Record and export evidence of Byzantine behavior | Medium | Medium |
+| Slashing pipeline | Economic penalties for provable Byzantine actions | Low | High |
+| Full crash-recovery simulation | Terminate mid-consensus → restart → confirm WAL recovery (Stage 3) | Medium | Medium |
+| Malicious injection in QEMU | Byzantine fault injection in the embedded scenario | Low | Medium |
 
 ---
 
-## Current Status Summary
+## Test Coverage Summary
 
-- Phase 1: complete
-- Phase 2.1–2.7: complete
-- Crypto abstraction with real Ed25519 signatures: complete
-- Stage 3 scenario coverage (Acts 0–9): complete
-- Remaining scope: Phase 3+ protocol features (weighted voting, pipelining, BLS, slashing) and Stage 3 parity (full crash-recovery restart, malicious injection in QEMU)
+| Area | Stage 1 (protocol) | Stage 2 (cluster) | Stage 3 (QEMU) |
+|---|---|---|---|
+| Proposal / PrePrepare / Prepare / Commit | ✅ | ✅ | ✅ (Act 0) |
+| View change / NewView | ✅ | ✅ | ✅ (Act 4) |
+| Client request/response | ✅ | ✅ | ✅ (Acts 1-6) |
+| Deduplication / replay | ✅ | ✅ | — |
+| Persistence / WAL | ✅ | ✅ | ✅ (Act 8) |
+| Malicious blocks / quarantine | ✅ | ✅ | — |
+| Ed25519 signatures | ✅ | — | ✅ (Act 9) |
+| Validator set updates | ✅ | ✅ | ✅ (Act 7) |
+| Block re-execution | ✅ | ✅ | ✅ |
+| Future-round buffer | ✅ | — | — |

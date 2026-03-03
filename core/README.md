@@ -1,69 +1,43 @@
-# Barechain Core
+# core
 
-Core provides the **foundational building blocks** for distributed consensus systems.
+> Foundational traits for distributed node decomposition
 
-## Architectural Evolution
+The core crate defines the minimal, `no_std`-compatible trait surface that all EtheRAM crates build on. It provides the behavioral building blocks — dimension I/O traits, the consensus protocol interface, and the node execution primitive — without prescribing how they are composed.
 
-Barechain's architecture has evolved through several insights:
+**Parent:** [EtheRAM](../README.md)
+**Dependents:** [etheram](../etheram/README.md) → [etheram-variants](../etheram-variants/README.md) → [etheram-validation](../etheram-validation/README.md), [etheram-embassy](../etheram-embassy/README.md)
 
-### Phase 1: Six Dimensions (Original)
-Initially conceived as six orthogonal concerns:
-1. Protocol - Consensus algorithm
-2. Storage - Persistent state
-3. Cache - Volatile state
-4. Transport - P2P communication
-5. ExternalInterface - Client communication
-6. Timer - Time-based events
+---
 
-### Phase 2: Input/Output Split (Logical Separation)
-Each dimension naturally splits by data flow direction:
-- Timer → TimerInput + TimerOutput
-- ExternalInterface → ExternalInterfaceInput + ExternalInterfaceOutput
-- Transport → TransportInput + TransportOutput
-- Storage (read queries vs write mutations)
-- Cache (read queries vs write updates)
+## Constraints
 
-**Result: 10 directional traits instead of 6 combined ones**
+- `#![no_std]` — no standard library dependency
+- No `alloc` — core uses only stack-allocated types and references
+- Traits define behavior, not structure — consumers compose them freely
 
-### Phase 3: Infrastructure vs Decision (Current Understanding)
+---
 
-Two orthogonal concerns emerged:
+## Contents
 
-**Infrastructure (Fixed Structure):**
-- Input polling (3 input dimensions aggregated)
-- State management (owns storage + cache)
-- Output execution (3 output dimensions aggregated)
-- Every node needs these, structure is constant
+### Dimension I/O Traits
 
-**Decision (Variable Strategy):**
-- Context building (prepare decision inputs)
-- Protocol logic (consensus algorithm)
-- Action partitioning (classify outputs)
-- Number and type of components varies by scheduling approach
+Each of the six architectural dimensions is split into input and output halves:
 
-**Key Insight:** Infrastructure is about HOW we execute, Decision is about WHAT we execute. These are mutually orthogonal - you can swap scheduling strategies without touching dimensions, and swap dimensions without touching decision logic.
+| Trait | Dimension | Direction | Key method |
+|---|---|---|---|
+| `TimerInput` | Timer | In | `poll() → Option<Event>` |
+| `TimerOutput` | Timer | Out | `schedule(event, delay)` |
+| `TransportIncoming` | Transport | In | `poll() → Option<(PeerId, Message)>` |
+| `TransportOutgoing` | Transport | Out | `send(peer_id, message)`, `broadcast(message)` |
+| `ExternalInterfaceIncoming` | ExternalInterface | In | `poll() → Option<Request>` |
+| `ExternalInterfaceOutgoing` | ExternalInterface | Out | `respond(response)` |
+| `Storage` | Storage | Read/Write | `query()`, `apply_mutation()` |
+| `Cache` | Cache | Read/Write | `query()`, `apply_mutation()` |
 
-## What Belongs in Core?
+All traits use associated types for protocol-specific messages, events, and queries. No trait prescribes a specific data format.
 
-Core contains **behavioral building blocks**, not prescriptive blueprints:
+### Consensus Protocol Trait
 
-### Individual Dimension Traits ✅
-```rust
-pub trait TimerInput {
-    type Event;
-    fn poll(&self) -> Option<Self::Event>;
-}
-
-pub trait TimerOutput {
-    type Event;
-    type Duration;
-    fn schedule(&self, event: Self::Event, delay: Self::Duration);
-}
-```
-
-These are simple, composable interfaces that define behavior without prescribing structure.
-
-### Consensus Protocol Trait ✅
 ```rust
 pub trait ConsensusProtocol {
     type Message;
@@ -72,113 +46,61 @@ pub trait ConsensusProtocol {
     type Context;
     type ActionCollection: Collection<Item = Self::Action>;
 
-    fn handle_message(&self, source: &Self::MessageSource,
-                     message: &Self::Message,
-                     ctx: &Self::Context) -> Self::ActionCollection;
+    fn handle_message(
+        &self,
+        source: &Self::MessageSource,
+        message: &Self::Message,
+        ctx: &Self::Context,
+    ) -> Self::ActionCollection;
 }
 ```
 
-Defines the decision interface without dictating implementation.
+Pure function: immutable input, declarative output. No I/O, no side effects. This is the Brain Space interface.
 
-### Minimal Node Trait ✅
+### Node Trait
+
 ```rust
 pub trait Node {
     type Id: Copy;
-    fn step(&mut self) -> bool;  // Returns true if work was done
+    fn step(&mut self) -> bool;
     fn id(&self) -> Self::Id;
 }
 ```
 
-For multi-chain orchestration - defines behavior (execute steps), not structure (how components are organized).
+Minimal execution primitive for multi-node orchestration. `step()` returns `true` if work was done.
 
-### Prescriptive Structure Traits ❌
-The old 6-dimension Node trait with all associated types was removed because:
-- Too prescriptive (dictates HOW, not just WHAT)
-- Only one implementation used it (TinyChain)
-- Prevented architectural evolution
-- Mixed concerns (building blocks vs blueprints)
+### Supporting Types
 
-## Core Execution Model
+| Type | Purpose |
+|---|---|
+| `PeerId` | 4-byte node identifier |
+| `Collection` | Trait for iterable action containers (enables `no_std` action collections) |
 
-All nodes share the same execution primitive: **`step()`**
+---
 
-```rust
-fn step(&mut self) -> bool {
-    // Infrastructure: Poll inputs
-    if let Some((source, message)) = self.input.poll() {
-        // Decision: Build context
-        let context = self.context_builder.build(&self.state, &source, &message);
+## Source Layout
 
-        // Decision: Apply logic
-        let actions = self.brain.handle_message(&source, &message, &context);
-
-        // Decision: Partition actions
-        let (mutations, outputs) = self.partitioner.partition(actions);
-
-        // Infrastructure: Apply mutations
-        self.state.apply_mutations(&mutations);
-
-        // Infrastructure: Execute outputs
-        self.executor.execute_outputs(&outputs);
-
-        return true;
-    }
-    false
-}
+```
+src/
+  lib.rs                          #![no_std], pub mod declarations only
+  types.rs                        PeerId
+  consensus_protocol.rs           ConsensusProtocol trait
+  node.rs                         Node trait
+  collection.rs                   Collection trait
+  timer_input.rs                  TimerInput trait
+  timer_output.rs                 TimerOutput trait
+  transport_incoming.rs           TransportIncoming trait
+  transport_outgoing.rs           TransportOutgoing trait
+  external_interface_incoming.rs  ExternalInterfaceIncoming trait
+  external_interface_outgoing.rs  ExternalInterfaceOutgoing trait
+  storage.rs                      Storage trait
+  cache.rs                        Cache trait
 ```
 
-**Properties:**
-- **Non-blocking** - Returns immediately
-- **Deterministic** - Same events → same state transitions
-- **Testable** - Can be called step-by-step
-- **Composable** - Foundation for all execution patterns
+---
 
-## Implementation Examples
+## Design Rationale
 
-### EtheramNode (Infrastructure/Decision Split)
-```rust
-pub struct EtheramNode<TiIn, EIn, TrIn, TiOut, EOut, TrOut> {
-    // === Infrastructure: Orchestration and execution ===
-    node_id: NodeId,
-    input: InputSources<TiIn, EIn, TrIn>,
-    state: EtheramState<Storage, Cache>,
-    executor: EtheramExecutor<TiOut, EOut, TrOut>,
+Core was originally a prescriptive 6-dimension Node trait with all associated types. That was removed because it dictated HOW (structure), not just WHAT (behavior). The current design provides composable building blocks: consumers wire them into whatever node structure fits their needs.
 
-    // === Decision: Context → Logic → Partition ===
-    context_builder: ContextBuilder,
-    brain: EtheramProtocol,
-    partitioner: ActionPartitioner,
-}
-```
-
-Type parameters are for **testing flexibility** (swap in test doubles), not abstraction. The architecture is explicit in the code structure.
-
-### TinyChain (Original 6-Dimension Pattern)
-Still follows the six-dimension concept but with its own node structure. Uses dimension traits from core as building blocks.
-
-## Current Status
-
-**Architecture is evolving, not finished.** Key insights:
-- ✅ Infrastructure vs Decision orthogonality is real and valuable
-- ✅ Input/Output splits make logical sense
-- ✅ Core should provide building blocks, not blueprints
-- ⚠️ Storage/Cache could be split into Read/Write (not yet done)
-- ⚠️ BFT implementation will reveal more patterns
-- ⚠️ Scheduler abstraction decision deferred
-
-## Design Philosophy
-
-1. **Traits define behavior, not structure** - Tell WHAT, not HOW
-2. **Orthogonality enables independent evolution** - Change one concern without affecting others
-3. **Let implementations discover patterns** - Abstract after understanding, not before
-4. **Keep core minimal** - Only truly universal building blocks belong here
-
-## When to Use Core Traits
-
-Use Core's dimension traits when you need:
-- **Shared implementations** across multiple projects (e.g., TestTimer)
-- **Pluggable dimensions** for testing or deployment flexibility
-- **Type-enforced separation** of concerns
-- **Zero-cost abstractions** with compile-time optimization
-
-Don't use them as a rigid blueprint - compose them into whatever structure fits your needs.
+See [ADR-001](../docs/adr/001-six-dimension-node-decomposition.md) for the full rationale.

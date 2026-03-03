@@ -1,158 +1,137 @@
-# BareChain
+# EtheRAM
 
 > **A research framework for blockchain node decomposition and abstraction**
 
-BareChain explores how distributed system nodes can be abstracted, validated, and deployed across diverse environments—from in-memory simulation to no-std embedded targets. Built on lessons from MetalRaft and Fluxion, it emphasizes explicit semantics, deterministic validation, and pluggable components.
+EtheRAM explores how distributed system nodes can be decomposed, validated, and deployed across diverse environments — from in-memory simulation to `no_std` embedded targets running on ARM Cortex-M. Built on lessons from MetalRaft and Fluxion, it emphasizes explicit semantics, deterministic validation, and fully swappable components.
 
-## Status Overview
-
-### ✅ Achieved
-
-- **6-dimension node model** - Complete decomposition proven ([ADR-001](docs/adr/001-six-dimension-node-decomposition.md))
-- **Sequential execution** - TinyChain with polling-based `step()` ([TinyChain README](examples/tinychain/README.md))
-- **Async execution** - Embassy async with event-driven architecture ([Embassy README](examples/embassy-async/README.md))
-- **Adversarial testing** - 20 deterministic tests with full control
-
-### 🔄 Starting
-
-- **EtheRAM** - Byzantine Ethereum on embedded hardware
-  - Phase 0: Project skeleton with minimal abstractions
-  - Next: Simplest BFT consensus algorithm
-
-([EtheRAM README](etheram/README.md))
-([EtheRAM ROADMAP](etheram/ROADMAP.md))
-
-### 📋 Planned
-
-- BFT consensus with full Byzantine test harness
-- Ethereum semantics (accounts, state roots, gas, merkle trees)
-- 6-dimension + 3-space formalization
-- Dual builder APIs (structural vs functional views)
-- Physical hardware deployment (RP2040/STM32)
-- Cryptographic algorithm swap validation
+The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that validates the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum execution semantics.
 
 ---
 
-## Overview
+## Project at a Glance
 
-### The 6-Dimension Model
-
-BareChain decomposes blockchain nodes into **six orthogonal dimensions**:
-
-1. **Protocol** — Consensus algorithm (stateless, pure functions)
-2. **Storage** — Persistent state (crash recovery)
-3. **Cache** — Volatile working state (algorithm-specific)
-4. **Transport** — Peer-to-peer communication
-5. **ExternalInterface** — Client request/response
-6. **Timer** — Time-based event scheduling
-
-**Key insight:** Each dimension can be swapped independently. Protocol logic remains pure, infrastructure adapts.
-
-### Core Principles
-
-- **Maximal abstraction** - Define WHAT, not HOW
-- **Protocol-specific types** - Infrastructure uses protocol types, not generic events
-- **Validation first** - Deterministic, adversarial testing without real I/O
-- **Execution model independence** - Same logic works sequential, async, embedded
-
-**[Complete architectural analysis](docs/ARCHITECTURE.md)**
+| Metric | Value |
+|---|---|
+| Crates | 5 (`core`, `etheram`, `etheram-variants`, `etheram-validation`, `etheram-embassy`) |
+| Production Rust files / LOC | ~190 / ~9 000 |
+| Test files / LOC | ~75 / ~15 000 |
+| Automated tests | 557 (21 + 391 + 145) |
+| Consensus protocol | Istanbul BFT (PrePrepare → Prepare → Commit + View Change) |
+| Execution engines | `TinyEvmEngine`, `ValueTransferEngine`, `NoOpExecutionEngine` |
+| Embedded target | ARM Cortex-M4 via QEMU, 5-node async cluster, two hardware configurations |
+| Cryptographic schemes | `MockSignatureScheme`, `Ed25519SignatureScheme` (runtime-swappable) |
 
 ---
 
-## Examples
+## Status
 
-### TinyChain: Sequential Polling
+### Achieved
 
-**[TinyChain](examples/tinychain/)** validates the 6-dimension model through minimal blockchain implementation.
+- **Full IBFT consensus** — three-phase commit, view change, quorum via `⌊2n/3⌋ + 1`, prepared certificate with cryptographic proof ([IBFT Roadmap](etheram/IBFT-ROADMAP.md))
+- **Ethereum-like chain** — accounts, nonces, balances, gas metering, state roots, transaction receipts, block re-execution validation ([Chain Roadmap](etheram/CHAIN-ROADMAP.md))
+- **TinyEVM** — subset EVM with opcode execution (`PUSH`, `ADD`, `MUL`, `SSTORE`, `SLOAD`, `RETURN`), per-opcode gas accounting, contract storage
+- **557 automated tests** — protocol-level, cluster-level (Byzantine fault injection, deduplication, replay, malicious blocks, validator set updates), and QEMU end-to-end
+- **Embedded port** — 5-node IBFT cluster on ARM Cortex-M4 (Embassy async, `no_std`, real Ed25519 signatures, semihosting storage, UDP transport)
+- **Total component swappability** — storage, cache, transport, timer, external interface, context builder, partitioner, execution engine, signature scheme, observer — all swappable at construction time
+- **Ed25519 cryptographic signatures** — real signing/verification integrated into consensus flow; `PreparedCertificate` carries quorum proof
+- **WAL crash-recovery** — `ConsensusWal` serialization/deserialization with restart recovery
 
-**Objectives:**
-- ✅ Six-dimension decomposition
-- ✅ Adversarial test harness (easy setup, deterministic, repeatable)
-- ✅ Lazy sequential execution (`step()` primitive)
-- ✅ Static instantiation (no dynamic dispatch)
+### Planned
 
-**Features:**
-- Simple leader rotation consensus
-- 20 deterministic validation tests
-- Zero mutable getters
-- In-memory simulation
+- Second consensus protocol (Raft or HotStuff) to prove decomposition generality
+- Physical hardware deployment (STM32 / RP2040)
+- Property-based testing (`proptest`)
+- Merkle Patricia Trie state root
+- Formal specification (TLA+)
 
-```bash
-cd examples/tinychain
-cargo test  # All 20 tests pass
+---
+
+## The 3-6 Architectural Model
+
+Every node is decomposed along two orthogonal axes:
+
+### 6 Dimensions (structural — what components exist)
+
+| # | Dimension | Role |
+|---|---|---|
+| 1 | **Protocol** | Consensus logic (pure, stateless) |
+| 2 | **Storage** | Persistent state |
+| 3 | **Cache** | Volatile working state |
+| 4 | **Transport** | Peer-to-peer communication |
+| 5 | **ExternalInterface** | Client request/response |
+| 6 | **Timer** | Time-based event scheduling |
+
+### 3 Spaces (functional — what roles components play)
+
+| # | Space | Responsibility |
+|---|---|---|
+| 1 | **Brain Space** | Build context → handle message → produce actions |
+| 2 | **Scheduler Space** | Poll dimensions → select next event → dispatch |
+| 3 | **Dimension Space** | Data dimensions (Storage, Cache) and I/O dimensions (Transport, ExternalInterface, Timer) |
+
+**Key insight:** Every dimension can be swapped independently. Protocol logic is a pure function — no I/O, no side effects. The `Partitioner` separates state mutations from output effects. This enables exhaustive testing through component substitution, not scenario scripting.
+
+---
+
+## Workspace Structure
+
+```
+core/                       Shared abstractions (PeerId, dimension traits, ConsensusProtocol)
+etheram/                    Core node implementation (no_std, single-node logic)
+etheram-variants/           Concrete implementations + builder API
+etheram-validation/         Cluster/integration tests (multi-node, std)
+etheram-embassy/            no_std + Embassy embedded port (ARM Cortex-M4)
+docs/                       Architecture docs and ADRs
+scripts/                    CI gate script (test.ps1)
 ```
 
-**[→ TinyChain README](examples/tinychain/README.md)**
+### Crate Dependency Graph
 
----
-
-### Embassy-Async: Event-Driven Execution
-
-**[Embassy-Async](examples/embassy-async/)** proves the same architecture works with async runtime on embedded hardware.
-
-**Objectives:**
-- ✅ Blockchain on no-std + Embassy
-- ✅ Dynamic dimension injection (trait objects)
-- ✅ Async select event multiplexing
-- ✅ QEMU ARM Cortex-M simulation
-
-**Features:**
-- 3-node consensus cluster
-- Event-driven with `select4`
-- In-memory channels and TCP transport
-- Embassy async executor
-
-```bash
-cd examples/embassy-async
-cargo run  # QEMU simulation
+```
+core ←── etheram ←── etheram-variants ←── etheram-validation
+                                     ←── etheram-embassy
 ```
 
-**[→ Embassy-Async README](examples/embassy-async/README.md)**
+Dependencies are strictly one-way. `etheram` never depends on `etheram-variants`. All crates except `etheram-validation` are `no_std`-compatible.
+
+### Per-Crate Documentation
+
+| Crate | README | Purpose |
+|---|---|---|
+| `core` | [core/README.md](core/README.md) | Foundational traits (`ConsensusProtocol`, `Node`, dimension I/O) |
+| `etheram` | [etheram/README.md](etheram/README.md) | Core node types, step loop, execution engine trait, observer |
+| `etheram-variants` | [etheram-variants/README.md](etheram-variants/README.md) | Concrete implementations, IBFT protocol, builders |
+| `etheram-validation` | [etheram-validation/README.md](etheram-validation/README.md) | Multi-node cluster harness and integration tests |
+| `etheram-embassy` | [etheram-embassy/README.md](etheram-embassy/README.md) | `no_std` + Embassy ARM port with QEMU validation |
+
+### Roadmaps
+
+| Document | Scope |
+|---|---|
+| [IBFT-ROADMAP.md](etheram/IBFT-ROADMAP.md) | Consensus protocol features (supported + planned) |
+| [CHAIN-ROADMAP.md](etheram/CHAIN-ROADMAP.md) | Ethereum-like chain features (supported + planned) |
 
 ---
 
-### EtheRAM: Byzantine Ethereum (In Development)
+## Core Execution Model
 
-**[EtheRAM](etheram/)** validates the architecture under production constraints: Byzantine consensus, Ethereum semantics, and embedded deployment.
+All nodes share one execution primitive — **`step()`**:
 
-**Objectives:**
-- 🔄 Simplest BFT consensus algorithm
-- 🔄 Ethereum state machine (accounts, gas, merkle trees)
-- 🔄 6-dimension + 3-space formalization
-- 🔄 Dual builder APIs (structural vs functional)
-- 🔄 Simulated embedded hardware (5-node cluster on QEMU)
-- 🔄 Crypto algorithm swap validation
+```rust
+fn step(&mut self) -> bool {
+    if let Some((source, message)) = self.incoming.poll() {
+        let context = self.context_builder.build(&self.state, self.peer_id, &source, &message);
+        let actions = self.brain.handle_message(&source, &message, &context);
+        let (mutations, outputs) = self.partitioner.partition(&actions);
+        self.state.apply_mutations(&mutations);
+        self.executor.execute_outputs(&outputs);
+        return true;
+    }
+    false
+}
+```
 
-**Current Phase:** Project skeleton with minimal abstractions
-
-**[→ EtheRAM README](etheram/README.md)**
-
----
-
-## Key Discoveries
-
-### 1. Dual Architectural Views
-
-The architecture can be viewed through two lenses:
-
-**6-Dimension View (Structural)** - What components exist
-- Protocol, Storage, Cache, Transport, ExternalInterface, Timer
-
-**3-Space View (Functional)** - What roles components play
-- Brain Space (build_context, handle_message, execute_actions)
-- Scheduler Space (event selection strategy)
-- Dimension Space (I/O vs data dimensions)
-
-**EtheRAM will formalize the relationship** between these views and prove equivalence through dual builder APIs.
-
-### 2. Execution Model Independence
-
-The same `step()` primitive supports:
-- Sequential polling (TinyChain)
-- Async select (Embassy)
-- Any other execution strategy
-
-**Scheduler is orthogonal to protocol logic** - proven by two working implementations.
+**Properties:** non-blocking, deterministic, runtime-agnostic. The same `step()` drives sequential polling, async select (Embassy), and multi-node cluster harnesses.
 
 ---
 
@@ -160,18 +139,26 @@ The same `step()` primitive supports:
 
 ### Architecture Decision Records
 
-- **[ADR-001: Six-Dimension Node Decomposition](docs/adr/001-six-dimension-node-decomposition.md)** - Rationale for the 6-dimension model
-- **[ADR-002: step() as Single Execution Primitive](docs/adr/002-step-as-single-execution-primitive.md)** - Why one method suffices
-
-### Implementation Guides
-
-- **[TinyChain README](examples/tinychain/README.md)** - Sequential polling implementation
-- **[Embassy-Async README](examples/embassy-async/README.md)** - Async event-driven implementation
-- **[EtheRAM README](etheram/README.md)** - Byzantine Ethereum roadmap
+- **[ADR-001: Six-Dimension Node Decomposition](docs/adr/001-six-dimension-node-decomposition.md)**
+- **[ADR-002: step() as Single Execution Primitive](docs/adr/002-step-as-single-execution-primitive.md)**
 
 ### Design Documentation
 
-- **[Architecture Overview](docs/ARCHITECTURE.md)** - Complete architectural analysis
+- **[Architecture Overview](docs/ARCHITECTURE.md)**
+
+---
+
+## Three-Stage Validation
+
+Every feature is validated across three stages:
+
+| Stage | Where | What |
+|---|---|---|
+| 1 | `etheram-variants/tests/` | Protocol-level unit tests (pure logic, isolated components) |
+| 2 | `etheram-validation/tests/` | Cluster-level integration tests (multi-node, Byzantine fault injection) |
+| 3 | `etheram-embassy/` (QEMU) | Embedded end-to-end (ARM Cortex-M4, `no_std`, async, real crypto) |
+
+The CI gate script (`scripts/test.ps1`) runs all three stages plus `cargo fmt` and `no_std` compatibility checks.
 
 ---
 
@@ -179,31 +166,10 @@ The same `step()` primitive supports:
 
 ### Beyond Blockchain
 
-The Node abstraction (of which blockchain nodes are a specific instantiation) generalizes to:
-- UAV swarms
-- Autonomous vehicles
-- Distributed control systems
-- Robot coordination
-
-Each agent executes a coordination protocol with the same six dimensions:
-- Protocol (swarm coordination algorithm)
-- Storage (mission state, waypoints)
-- Cache (neighbor positions, local sensor data)
-- Transport (radio, mesh network)
-- ExternalInterface (ground control)
-- Timer (waypoint scheduling, heartbeats)
-
----
-
-## Philosophy
-
-BareChain is not a product. It's a **research-grade engineering exploration** focused on:
-- Abstraction
-- Validation
-- Correctness
-- Deployability
-
-The goal: separate **what must be correct** from **what may vary**.
+The 6-dimension decomposition generalizes to any distributed agent:
+- UAV swarms (Protocol = coordination algorithm, Transport = radio mesh)
+- Autonomous vehicles (Storage = map state, Timer = waypoint scheduling)
+- Distributed control systems (ExternalInterface = ground control, Cache = sensor data)
 
 ---
 

@@ -1,4 +1,4 @@
-# BareChain Architecture
+# EtheRAM Architecture
 
 > Maximal abstraction for distributed system nodes
 
@@ -6,7 +6,7 @@
 
 ## Core Philosophy
 
-BareChain is built on a single principle:
+EtheRAM is built on a single principle:
 
 **Define WHAT is required, not HOW it is implemented.**
 
@@ -315,7 +315,7 @@ Monolithic implementation
 - Validation requires running actual node
 - One implementation per blockchain
 
-### BareChain Node
+### EtheRAM Node
 ```
 Abstraction over six dimensions
 ├─ Any Storage (trait-based)
@@ -349,7 +349,7 @@ The Node abstraction is actually a specialization of a more general **SystemEnti
 - Can fail and recover
 
 **Applies to:**
-- Blockchain validators (BareChain focus)
+- Blockchain validators (EtheRAM focus)
 - Raft nodes
 - UAV swarms
 - Autonomous vehicles

@@ -1,10 +1,15 @@
 # etheram-embassy
 
+> `no_std` + Embassy embedded port — 5-node IBFT on ARM Cortex-M4
+
 `no_std` + Embassy port of the EtheRAM node. Runs a five-node IBFT cluster on ARM
 Cortex-M4 (QEMU `mps2-an386`) across two independently feature-gated hardware
 configurations. Validates the full 3-6 architectural model under embedded constraints:
-Byzantine consensus, real Ed25519 signatures, durable WAL, and async async task isolation —
+Byzantine consensus, real Ed25519 signatures, durable WAL, and async task isolation —
 all without the standard library.
+
+**Parent:** [EtheRAM](../README.md)
+**Depends on:** [core](../core/README.md), [etheram](../etheram/README.md), [etheram-variants](../etheram-variants/README.md)
 
 ---
 
