@@ -91,6 +91,8 @@ fn handle_message_pre_prepare_wrong_height_returns_empty() {
         proposer: 1,
         transactions: Vec::new(),
         state_root: [0u8; 32],
+        post_state_root: [0u8; 32],
+        receipts_root: [0u8; 32],
     };
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
@@ -136,6 +138,8 @@ fn handle_message_pre_prepare_block_height_mismatch_returns_empty() {
         proposer: 0,
         transactions: Vec::new(),
         state_root: [0u8; 32],
+        post_state_root: [0u8; 32],
+        receipts_root: [0u8; 32],
     };
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
@@ -161,6 +165,8 @@ fn handle_message_pre_prepare_locked_block_different_original_proposer_broadcast
         proposer: 2,
         transactions: Vec::new(),
         state_root: [0u8; 32],
+        post_state_root: [0u8; 32],
+        receipts_root: [0u8; 32],
     };
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,

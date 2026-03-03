@@ -59,6 +59,8 @@ pub struct WireBlock {
     pub proposer: u64,
     pub transactions: Vec<WireTransaction>,
     pub state_root: Hash,
+    pub post_state_root: Hash,
+    pub receipts_root: Hash,
 }
 
 impl From<Block> for WireBlock {
@@ -72,6 +74,8 @@ impl From<Block> for WireBlock {
                 .map(WireTransaction::from)
                 .collect(),
             state_root: block.state_root,
+            post_state_root: block.post_state_root,
+            receipts_root: block.receipts_root,
         }
     }
 }
@@ -87,6 +91,8 @@ impl From<WireBlock> for Block {
                 .map(Transaction::from)
                 .collect(),
             state_root: wire.state_root,
+            post_state_root: wire.post_state_root,
+            receipts_root: wire.receipts_root,
         }
     }
 }

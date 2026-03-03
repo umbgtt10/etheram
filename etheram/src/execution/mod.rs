@@ -4,5 +4,6 @@
 
 pub mod execution_engine;
 pub mod execution_result;
+pub mod receipts_root;
 pub mod transaction_receipt;
 pub mod transaction_result;

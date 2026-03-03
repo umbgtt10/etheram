@@ -1,47 +1,30 @@
-$failed = @()
-
-Write-Host "Formatting..." -ForegroundColor Cyan
-cargo fmt
-
-$crates = @(
-    "barechain-etheram",
-    "barechain-etheram-variants",
-    "barechain-etheram-validation"
-)
-
-foreach ($crate in $crates) {
-    Write-Host "Testing $crate..." -ForegroundColor Cyan
-    cargo nextest run -p $crate
+function Invoke-Step {
+    param([string]$Label, [scriptblock]$Command)
+    Write-Host "$Label..." -ForegroundColor Cyan
+    & $Command
     if ($LASTEXITCODE -ne 0) {
-        $failed += $crate
+        Write-Host "`nFailed: $Label" -ForegroundColor Red
+        exit 1
     }
 }
 
-Write-Host "Checking barechain-etheram-variants (no_std gate)..." -ForegroundColor Cyan
-cargo check -p barechain-etheram-variants --no-default-features
-if ($LASTEXITCODE -ne 0) {
-    $failed += "barechain-etheram-variants (no_std gate)"
+Invoke-Step "Formatting" { cargo fmt }
+
+foreach ($crate in @("barechain-etheram", "barechain-etheram-variants", "barechain-etheram-validation")) {
+    Invoke-Step "Testing $crate" { cargo nextest run -p $crate }
 }
 
-Write-Host "Running barechain-etheram-embassy (channel-transport)..." -ForegroundColor Cyan
-powershell -File "$PSScriptRoot\..\etheram-embassy\scripts\run_channel_in_memory.ps1"
-if ($LASTEXITCODE -ne 0) {
-    $failed += "barechain-etheram-embassy (channel-transport)"
+Invoke-Step "Checking barechain-etheram-variants (no_std gate)" {
+    cargo check -p barechain-etheram-variants --no-default-features
 }
 
-Write-Host "Running barechain-etheram-embassy (udp-transport)..." -ForegroundColor Cyan
-powershell -File "$PSScriptRoot\..\etheram-embassy\scripts\run_udp_semihosting.ps1"
-if ($LASTEXITCODE -ne 0) {
-    $failed += "barechain-etheram-embassy (udp-transport)"
+Invoke-Step "Running barechain-etheram-embassy (channel-transport)" {
+    powershell -File "$PSScriptRoot\..\etheram-embassy\scripts\run_channel_in_memory.ps1"
 }
 
-if ($failed.Count -gt 0) {
-    Write-Host "`nFailed:" -ForegroundColor Red
-    foreach ($crate in $failed) {
-        Write-Host "  - $crate" -ForegroundColor Red
-    }
-    exit 1
-} else {
-    Write-Host "`nAll tests passed." -ForegroundColor Green
-    exit 0
+Invoke-Step "Running barechain-etheram-embassy (udp-transport)" {
+    powershell -File "$PSScriptRoot\..\etheram-embassy\scripts\run_udp_semihosting.ps1"
 }
+
+Write-Host "`nFull success!" -ForegroundColor Green
+exit 0

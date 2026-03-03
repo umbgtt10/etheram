@@ -10,12 +10,11 @@ use barechain_core::types::PeerId;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
     pub height: Height,
-
     pub proposer: PeerId,
-
     pub transactions: Vec<Transaction>,
-
     pub state_root: Hash,
+    pub post_state_root: Hash,
+    pub receipts_root: Hash,
 }
 
 impl Block {
@@ -30,6 +29,8 @@ impl Block {
             proposer,
             transactions,
             state_root,
+            post_state_root: [0u8; 32],
+            receipts_root: [0u8; 32],
         }
     }
 
@@ -63,6 +64,12 @@ impl Block {
             for (i, b) in tx.nonce.to_le_bytes().iter().enumerate() {
                 hash[(i + 24) % 32] ^= b.wrapping_mul(position);
             }
+        }
+        for (i, b) in self.post_state_root.iter().enumerate() {
+            hash[(i + 3) % 32] ^= *b;
+        }
+        for (i, b) in self.receipts_root.iter().enumerate() {
+            hash[(i + 7) % 32] ^= *b;
         }
         hash
     }
