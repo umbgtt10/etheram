@@ -5,8 +5,8 @@
 use crate::brain::protocol::action::Action;
 use crate::executor::outgoing::outgoing_sources::OutgoingSources;
 use alloc::vec::Vec;
-use barechain_core::collection::Collection;
-use barechain_core::types::PeerId;
+use etheram_core::collection::Collection;
+use etheram_core::types::PeerId;
 
 pub struct EtheramExecutor<M> {
     outgoing_sources: OutgoingSources<M>,

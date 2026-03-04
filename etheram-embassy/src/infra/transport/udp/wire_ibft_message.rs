@@ -3,9 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram::common_types::block::Block;
 use etheram::common_types::transaction::Transaction;
 use etheram::common_types::types::Address;
@@ -14,6 +11,9 @@ use etheram::common_types::types::Gas;
 use etheram::common_types::types::Hash;
 use etheram::common_types::types::Height;
 use etheram::common_types::types::Nonce;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 use serde::Deserialize;
 use serde::Serialize;
 

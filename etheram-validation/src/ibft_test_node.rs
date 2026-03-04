@@ -3,23 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::std_shared_state::StdSharedState;
-use barechain_core::types::ClientId;
-use barechain_etheram_variants::implementations::eager_context_builder::EagerContextBuilder;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use barechain_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use barechain_etheram_variants::implementations::in_memory_cache::InMemoryCache;
-use barechain_etheram_variants::implementations::in_memory_external_interface::InMemoryExternalInterface;
-use barechain_etheram_variants::implementations::in_memory_external_interface::InMemoryExternalInterfaceState;
-use barechain_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
-use barechain_etheram_variants::implementations::in_memory_timer::InMemoryTimer;
-use barechain_etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
-use barechain_etheram_variants::implementations::in_memory_transport::InMemoryTransport;
-use barechain_etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
-use barechain_etheram_variants::implementations::no_op_observer::NoOpObserver;
-use barechain_etheram_variants::implementations::shared_state::SharedState;
-use barechain_etheram_variants::implementations::type_based_partitioner::TypeBasedPartitioner;
-use barechain_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 use etheram::common_types::account::Account;
 use etheram::common_types::types::{Address, Hash};
 use etheram::etheram_node::EtheramNode;
@@ -30,6 +13,23 @@ use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram::incoming::incoming_sources::IncomingSources;
 use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::state::etheram_state::EtheramState;
+use etheram_core::types::ClientId;
+use etheram_etheram_variants::implementations::eager_context_builder::EagerContextBuilder;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_etheram_variants::implementations::in_memory_cache::InMemoryCache;
+use etheram_etheram_variants::implementations::in_memory_external_interface::InMemoryExternalInterface;
+use etheram_etheram_variants::implementations::in_memory_external_interface::InMemoryExternalInterfaceState;
+use etheram_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
+use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimer;
+use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
+use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransport;
+use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
+use etheram_etheram_variants::implementations::no_op_observer::NoOpObserver;
+use etheram_etheram_variants::implementations::shared_state::SharedState;
+use etheram_etheram_variants::implementations::type_based_partitioner::TypeBasedPartitioner;
+use etheram_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 
 pub const PEER_ID: u64 = 0;
 

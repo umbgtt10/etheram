@@ -3,8 +3,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common::ibft_cluster_test_helpers::validators;
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
 
 #[test]
 fn new_given_four_validators_returns_four_nodes() {

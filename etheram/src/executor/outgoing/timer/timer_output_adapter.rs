@@ -4,7 +4,7 @@
 
 use crate::common_types::timer_output_adapter::TimerOutputAdapter;
 use alloc::boxed::Box;
-use barechain_core::timer_output::TimerOutput;
+use etheram_core::timer_output::TimerOutput;
 
 impl<E, D> TimerOutput for Box<dyn TimerOutputAdapter<E, D>>
 where

@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use barechain_core::collection::Collection;
+use etheram_core::collection::Collection;
 
 #[derive(Debug, Clone)]
 pub struct ActionCollection<T> {

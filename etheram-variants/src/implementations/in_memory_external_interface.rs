@@ -5,11 +5,11 @@
 use crate::implementations::shared_state::SharedState;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use barechain_core::external_interface_incoming::ExternalInterfaceIncoming;
-use barechain_core::external_interface_outgoing::ExternalInterfaceOutgoing;
-use barechain_core::types::ClientId;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
+use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::types::ClientId;
 
 pub struct InMemoryExternalInterfaceState {
     requests: BTreeMap<u64, Vec<(ClientId, ClientRequest)>>,

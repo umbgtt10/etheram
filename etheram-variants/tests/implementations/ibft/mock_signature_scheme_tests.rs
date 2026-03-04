@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureScheme;
+use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureScheme;
 
 #[test]
 fn sign_any_data_returns_zeroed_signature_bytes() {

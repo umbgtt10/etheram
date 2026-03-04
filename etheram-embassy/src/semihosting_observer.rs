@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::types::PeerId;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::common_types::types::{Hash, Height};
 use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::observer::{ActionKind, EventLevel, Observer};
+use etheram_core::types::PeerId;
 
 pub struct SemihostingObserver {
     level: EventLevel,

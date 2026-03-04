@@ -3,9 +3,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::sync::Arc;
-use barechain_etheram_variants::implementations::shared_state::SharedState;
 use core::cell::RefCell;
 use critical_section::Mutex;
+use etheram_etheram_variants::implementations::shared_state::SharedState;
 
 pub struct EmbassySharedState<T> {
     state: Arc<Mutex<RefCell<T>>>,

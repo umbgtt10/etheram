@@ -7,11 +7,11 @@ use crate::common::ibft_cluster_test_helpers::commit;
 use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use barechain_etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 
 trait IbftClusterValidatorUpdateOps {
     fn commit_height_zero_on_node_zero(&mut self);
@@ -82,7 +82,7 @@ fn inject_message_pre_prepare_old_proposer_before_future_update_height_commits_b
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(2, vec![2, 3, 4, 5])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -104,7 +104,7 @@ fn inject_message_pre_prepare_duplicate_validator_update_old_proposer_commits_bl
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 1, 2, 3])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -126,7 +126,7 @@ fn inject_message_pre_prepare_old_proposer_after_validator_update_height_does_no
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -149,7 +149,7 @@ fn inject_message_pre_prepare_new_proposer_after_validator_update_height_commits
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -174,7 +174,7 @@ fn inject_message_pre_prepare_second_update_old_proposer_is_rejected_and_new_pro
         ValidatorSetUpdate::new(2, vec![2, 3, 4, 5]),
     ];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -199,7 +199,7 @@ fn inject_message_prepare_from_removed_validator_after_update_does_not_help_reac
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![0, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -220,7 +220,7 @@ fn inject_message_prepare_from_new_validator_after_update_counts_toward_new_quor
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![0, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -242,7 +242,7 @@ fn inject_message_commit_with_legacy_quorum_after_update_does_not_finalize() {
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4, 5, 6, 7])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -263,7 +263,7 @@ fn inject_message_commit_reaches_new_quorum_after_update_to_seven_validators_fin
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4, 5, 6, 7])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -285,7 +285,7 @@ fn update_boundary_pre_prepare_message_reordering_old_then_new_results_in_single
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -309,7 +309,7 @@ fn validator_update_full_round_all_nodes_commit_same_block_without_forks() {
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![0, 1, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -363,7 +363,7 @@ fn validator_updates_committed_blocks_have_proposers_in_active_set_per_height() 
         ValidatorSetUpdate::new(2, vec![2, 3, 4, 5]),
     ];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -424,7 +424,7 @@ fn validator_update_timeout_view_change_boundary_new_round_proposer_commits_bloc
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -525,7 +525,7 @@ fn validator_update_old_set_replay_storm_does_not_block_new_set_commit() {
     let validators = vec![0, 1, 2, 3];
     let updates = vec![ValidatorSetUpdate::new(1, vec![1, 2, 3, 4])];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,
@@ -599,7 +599,7 @@ fn validator_update_long_run_churn_ten_heights_stays_live_and_monotonic() {
         ValidatorSetUpdate::new(9, vec![9, 10, 11, 12]),
     ];
     let mut cluster =
-        barechain_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
+        etheram_etheram_validation::ibft_cluster::IbftCluster::new_with_validator_updates(
             validators,
             vec![],
             updates,

@@ -9,7 +9,7 @@ use crate::common_types::{
 };
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use barechain_core::types::PeerId;
+use etheram_core::types::PeerId;
 
 #[derive(Debug, Clone)]
 pub struct Context {

@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::timer_output::TimerOutput;
+use etheram_core::timer_output::TimerOutput;
 
 pub trait TimerOutputAdapter<E, D>: TimerOutput<Event = E, Duration = D> {}
 

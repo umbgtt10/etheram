@@ -1,11 +1,11 @@
 [package]
-name = "barechain-etheram"
+name = "etheram-etheram"
 version = "0.1.0"
 edition = "2021"
 autotests = false
 
 [dependencies]
-barechain-core.workspace = true
+etheram-core.workspace = true
 
 [lib]
 name = "etheram"

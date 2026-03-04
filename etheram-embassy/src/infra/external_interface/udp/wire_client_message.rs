@@ -3,7 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use barechain_core::types::ClientId;
 use etheram::common_types::transaction::Transaction;
 use etheram::common_types::types::Address;
 use etheram::common_types::types::Balance;
@@ -13,6 +12,7 @@ use etheram::common_types::types::Nonce;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_core::types::ClientId;
 use serde::Deserialize;
 use serde::Serialize;
 

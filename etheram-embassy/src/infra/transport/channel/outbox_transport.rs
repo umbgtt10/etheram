@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use barechain_core::transport_outgoing::TransportOutgoing;
-use barechain_core::types::PeerId;
-use barechain_etheram_variants::implementations::shared_state::SharedState;
 use core::marker::PhantomData;
+use etheram_core::transport_outgoing::TransportOutgoing;
+use etheram_core::types::PeerId;
+use etheram_etheram_variants::implementations::shared_state::SharedState;
 
 pub struct OutboxTransport<M, S>
 where

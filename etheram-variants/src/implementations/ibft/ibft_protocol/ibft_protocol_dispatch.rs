@@ -6,7 +6,6 @@ use super::super::ibft_message::IbftMessage;
 use super::super::prepared_certificate::PreparedCertificate;
 use super::super::signature_scheme::SignatureBytes;
 use super::IbftProtocol;
-use barechain_core::collection::Collection;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
@@ -20,6 +19,7 @@ use etheram::executor::outgoing::external_interface::client_response::Transactio
 use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::state::cache::cache_update::CacheUpdate;
+use etheram_core::collection::Collection;
 
 impl IbftProtocol {
     fn empty_actions() -> ActionCollection<Action<IbftMessage>> {

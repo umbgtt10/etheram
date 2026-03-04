@@ -4,7 +4,7 @@
 
 use crate::common_types::transport_outgoing_adapter::TransportOutputAdapter;
 use alloc::boxed::Box;
-use barechain_core::{transport_outgoing::TransportOutgoing, types::PeerId};
+use etheram_core::{transport_outgoing::TransportOutgoing, types::PeerId};
 
 impl<Msg> TransportOutgoing for Box<dyn TransportOutputAdapter<Msg>>
 where

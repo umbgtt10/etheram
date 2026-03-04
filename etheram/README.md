@@ -26,16 +26,16 @@ This crate is `#![no_std]` and uses `alloc` for heap types. It contains **no con
 The central struct that wires infrastructure (dimensions) and decision (brain, context, partitioner) together:
 
 ```rust
-pub struct EtheramNode {
+pub struct EtheramNode<M: Clone + 'static> {
     peer_id: PeerId,
-    incoming: IncomingSources,       // polls Timer, ExternalInterface, Transport
-    state: EtheramState,             // wraps Storage + Cache
-    executor: EtheramExecutor,       // executes output actions
-    context_builder: Box<dyn ContextBuilder>,
-    brain: BoxedProtocol,
-    partitioner: Box<dyn Partitioner>,
-    observer: Box<dyn Observer>,
+    incoming: IncomingSources<M>,       // polls Timer, ExternalInterface, Transport
+    state: EtheramState,                // wraps Storage + Cache
+    executor: EtheramExecutor<M>,       // executes output actions
+    context_builder: Box<dyn ContextBuilder<M>>,
+    brain: BoxedProtocol<M>,
+    partitioner: Box<dyn Partitioner<M>>,
     execution_engine: BoxedExecutionEngine,
+    observer: Box<dyn Observer>,
 }
 ```
 
@@ -48,9 +48,10 @@ fn step(&mut self) -> bool {
     if let Some((source, message)) = self.incoming.poll() {
         let context = self.context_builder.build(&self.state, self.peer_id, &source, &message);
         let actions = self.brain.handle_message(&source, &message, &context);
-        let (mutations, outputs) = self.partitioner.partition(&actions);
+        let (mutations, outputs, executions) = self.partitioner.partition(&actions);
         self.state.apply_mutations(&mutations);
         self.executor.execute_outputs(&outputs);
+        // executions trigger ExecutionEngine for transaction processing
         return true;
     }
     false
@@ -70,7 +71,7 @@ Protocol logic is pure: `handle_message` takes immutable context, returns declar
 | `Account` | `account.rs` | Balance + nonce |
 | `Block` | `block.rs` | Height, proposer, transactions, state_root, post_state_root, receipts_root; `compute_hash()` |
 | `Transaction` | `transaction.rs` | From, to, value, gas_limit, nonce, data |
-| `Address`, `Hash`, `PeerId` | `types.rs` | `[u8; 20]`, `[u8; 32]`, `u8` type aliases |
+| `Address`, `Hash` | `types.rs` | `[u8; 20]`, `[u8; 32]` type aliases |
 
 State root computation: deterministic XOR-mix hash over sorted `BTreeMap<Address, Account>`, implemented in `state_root.rs`.
 
@@ -118,9 +119,9 @@ Contains the `Protocol` type alias (`BoxedProtocol = Box<dyn ConsensusProtocol<.
 
 | Type | File | Purpose |
 |---|---|---|
-| `Partitioner` trait | `partition.rs` | `partition(actions) → (mutations, outputs)` |
+| `Partitioner` trait | `partition.rs` | `partition(actions) → (mutations, outputs, executions)` |
 
-Separates state mutations from output effects. Enforces side-effect isolation.
+Separates state mutations from output effects and block executions. Enforces side-effect isolation.
 
 ### State (`state/`)
 

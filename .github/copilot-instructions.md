@@ -14,9 +14,6 @@ etheram/                    # Core node implementation (std Rust)
 etheram-variants/           # Concrete implementations + builder API
 etheram-validation/         # Cluster/integration tests (multi-node)
 etheram-embassy/            # no-std + Embassy embedded port
-examples/
-  tinychain/                # Sequential polling example (proven)
-  embassy-async/            # Async Embassy example (proven)
 ```
 
 **The etheram ecosystem is designed to become a standalone repo.** Keep `etheram*` crates self-contained. They depend on `core` only.
@@ -193,8 +190,8 @@ Every layer is swappable at runtime:
 
 #### Pre-Feature IBFT Consistency Audit (run before every feature)
 
-1. Run `cargo test -p barechain-etheram-variants --test all_tests` — all protocol-level tests must pass with zero failures.
-2. Run `cargo test -p barechain-etheram-validation --test all_tests` — all cluster-level tests must pass with zero failures.
+1. Run `cargo test -p etheram-etheram-variants --test all_tests` — all protocol-level tests must pass with zero failures.
+2. Run `cargo test -p etheram-etheram-validation --test all_tests` — all cluster-level tests must pass with zero failures.
 3. Manually verify each invariant below against the current source before touching it:
 
 | # | Invariant | Where to check |
@@ -334,9 +331,9 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - **Tests follow AAA** — every test must be structured in three labelled sections: `// Arrange`, `// Act`, `// Assert`. When act and assert collapse into a single expression, use `// Act & Assert`. No other comments are permitted in test bodies. Each section must be separated from the next by exactly one blank line.
 - **Run `cargo fmt` after every change** — always run `cargo fmt` from the workspace root after editing any Rust source file.
 - **No warnings** — the codebase must compile with zero warnings. Every unused import, dead code path, or missing trait implementation that triggers a compiler warning must be fixed before committing. `#[allow(...)]` attributes are not permitted except for `#[allow(clippy::too_many_arguments)]` on builder constructors.
-- **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p barechain-etheram-variants` and `cargo test -p barechain-etheram-validation` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
+- **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p etheram-etheram-variants` and `cargo test -p etheram-etheram-validation` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
 - **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate and covers: `cargo fmt` on the whole workspace, `cargo nextest` for `etheram` + `etheram-variants` + `etheram-validation`, the `etheram-variants` no_std gate check, and a full QEMU execution of both embassy configurations (`run_channel_in_memory.ps1` and `run_udp_semihosting.ps1`).
-- **Mandatory Stage 3 no_std gate for variants** — when working on Stage 3 (`etheram-embassy/`), always run an explicit no_std compatibility check for `etheram-variants`: `cargo check -p barechain-etheram-variants --no-default-features`.
+- **Mandatory Stage 3 no_std gate for variants** — when working on Stage 3 (`etheram-embassy/`), always run an explicit no_std compatibility check for `etheram-variants`: `cargo check -p etheram-etheram-variants --no-default-features`.
 - **Stage 3 test application never sleeps** — `main.rs` must not use fixed-duration sleeps (`Timer::after`) to wait for consensus or protocol progress. Use `EtheramClient::wait_for_height_above` (or an equivalent polling helper with a timeout ceiling) instead. Fixed sleeps are only permitted for non-observable housekeeping (e.g. a brief shutdown drain).
 - **Mandatory dual-layer test updates for productive changes** — every time productive code is added, changed, or fixed, update tests in both layers: protocol-level tests in `etheram-variants` and cluster-level tests in `etheram-validation`. Do not mark work complete unless both layers are updated or explicitly justified as not applicable.
 - **Mandatory test deduplication across files** — when identical or near-identical test setup/logic appears more than twice across test files in the same crate, refactor it into shared test helpers and update all affected files to remove duplication.

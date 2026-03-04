@@ -3,11 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common::ibft_cluster_test_helpers::validators;
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram::common_types::block::Block;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 
 fn block(height: u64, proposer: u64) -> Block {
     Block::new(height, proposer, vec![], [0u8; 32])

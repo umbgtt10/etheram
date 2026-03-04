@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::boxed::Box;
-use barechain_core::types::PeerId;
+use etheram_core::types::PeerId;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SignatureBytes([u8; 96]);

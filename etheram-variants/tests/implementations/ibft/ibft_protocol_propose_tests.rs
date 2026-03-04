@@ -4,9 +4,6 @@
 
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
-use barechain_core::collection::Collection;
-use barechain_core::consensus_protocol::ConsensusProtocol;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
@@ -21,6 +18,9 @@ use etheram::execution::transaction_result::TransactionResult;
 use etheram::execution::transaction_result::TransactionStatus;
 use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::state::storage::storage_mutation::StorageMutation;
+use etheram_core::collection::Collection;
+use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
 use std::collections::BTreeMap;
 
 struct FakeExecutionEngine;

@@ -4,7 +4,7 @@
 
 use crate::common_types::timer_input_adapter::TimerInputAdapter;
 use alloc::boxed::Box;
-use barechain_core::timer_input::TimerInput;
+use etheram_core::timer_input::TimerInput;
 
 impl<E> TimerInput for Box<dyn TimerInputAdapter<E>>
 where

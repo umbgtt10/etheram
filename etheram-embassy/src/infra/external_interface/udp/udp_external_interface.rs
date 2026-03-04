@@ -7,14 +7,14 @@ use crate::infra::external_interface::udp::wire_client_message::deserialize_ei_r
 use crate::infra::external_interface::udp::wire_client_message::serialize_ei_request;
 use crate::infra::external_interface::udp::wire_client_message::serialize_ei_response;
 use alloc::vec::Vec;
-use barechain_core::external_interface_incoming::ExternalInterfaceIncoming;
-use barechain_core::external_interface_outgoing::ExternalInterfaceOutgoing;
-use barechain_core::types::ClientId;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embassy_sync::channel::Receiver;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
+use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::types::ClientId;
 
 const EI_CAPACITY: usize = 16;
 

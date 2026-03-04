@@ -8,7 +8,7 @@ use crate::brain::protocol::message_source::MessageSource;
 use crate::collections::action_collection::ActionCollection;
 use crate::context::context_dto::Context;
 use alloc::boxed::Box;
-use barechain_core::consensus_protocol::ConsensusProtocol;
+use etheram_core::consensus_protocol::ConsensusProtocol;
 
 pub type BoxedProtocol<M> = Box<
     dyn ConsensusProtocol<

@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::type_based_partitioner::TypeBasedPartitioner;
 use etheram::brain::protocol::action::Action;
 use etheram::collections::action_collection::ActionCollection;
 use etheram::common_types::block::Block;
 use etheram::partitioner::partition::Partitioner;
+use etheram_etheram_variants::implementations::type_based_partitioner::TypeBasedPartitioner;
 
 #[test]
 fn partition_mutation_action_goes_to_mutations_only() {

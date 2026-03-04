@@ -17,8 +17,8 @@ use crate::state::etheram_state::EtheramState;
 use crate::state::storage::storage_mutation::StorageMutation;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use barechain_core::collection::Collection;
-use barechain_core::types::PeerId;
+use etheram_core::collection::Collection;
+use etheram_core::types::PeerId;
 
 pub struct EtheramNode<M: Clone + 'static> {
     peer_id: PeerId,

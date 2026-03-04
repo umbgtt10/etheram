@@ -7,7 +7,7 @@ use crate::state::cache::cache_query::CacheQuery;
 use crate::state::cache::cache_query_result::CacheQueryResult;
 use crate::state::cache::cache_update::CacheUpdate;
 use alloc::boxed::Box;
-use barechain_core::cache::Cache;
+use etheram_core::cache::Cache;
 
 pub trait CacheAdapter:
     Cache<Query = CacheQuery, QueryResult = CacheQueryResult, Update = CacheUpdate>

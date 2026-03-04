@@ -8,9 +8,6 @@ use crate::infra::external_interface::client_facade::await_ei_response;
 use crate::infra::external_interface::client_facade::submit_ei_request;
 use crate::infra::external_interface::client_facade::submit_ei_to_all_nodes;
 use crate::spawned_node::SpawnedNode;
-use barechain_core::types::ClientId;
-use barechain_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use barechain_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
 use embassy_time::with_timeout;
 use embassy_time::Duration;
 use embassy_time::Timer;
@@ -19,6 +16,9 @@ use etheram::common_types::types::{Address, Hash};
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_core::types::ClientId;
+use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
 
 pub struct EtheramClient {
     cancel: &'static CancellationToken,

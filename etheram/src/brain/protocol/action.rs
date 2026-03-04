@@ -9,7 +9,7 @@ use crate::{
     state::cache::cache_update::CacheUpdate,
 };
 use alloc::string::String;
-use barechain_core::types::{ClientId, PeerId};
+use etheram_core::types::{ClientId, PeerId};
 
 #[derive(Debug, Clone)]
 pub enum Action<M> {

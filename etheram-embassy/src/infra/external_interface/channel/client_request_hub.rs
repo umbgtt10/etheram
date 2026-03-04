@@ -3,12 +3,12 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::config::MAX_NODES;
-use barechain_core::types::ClientId;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embassy_sync::channel::Receiver;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_core::types::ClientId;
 
 const REQUEST_CAPACITY: usize = 16;
 const RESPONSE_CAPACITY: usize = 16;

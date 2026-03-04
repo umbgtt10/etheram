@@ -3,13 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common::ibft_cluster_test_helpers::validators;
-use barechain_core::collection::Collection;
-use barechain_core::consensus_protocol::ConsensusProtocol;
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use barechain_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::common_types::block::Block;
@@ -17,6 +10,13 @@ use etheram::common_types::transaction::Transaction;
 use etheram::common_types::types::{Address, Balance};
 use etheram::context::context_dto::Context;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_core::collection::Collection;
+use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 
 fn block(height: u64, proposer: u64, state_root: [u8; 32]) -> Block {
     Block::new(height, proposer, vec![], state_root)

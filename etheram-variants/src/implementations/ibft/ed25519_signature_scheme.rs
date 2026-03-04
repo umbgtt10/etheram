@@ -4,10 +4,10 @@
 
 use crate::implementations::ibft::signature_scheme::SignatureBytes;
 use crate::implementations::ibft::signature_scheme::SignatureScheme;
-use barechain_core::types::PeerId;
 use ed25519_dalek::Signature;
 use ed25519_dalek::Signer;
 use ed25519_dalek::SigningKey;
+use etheram_core::types::PeerId;
 
 pub struct Ed25519SignatureScheme {
     signing_key: SigningKey,

@@ -5,8 +5,6 @@
 use alloc::collections::BTreeMap;
 use alloc::format;
 use alloc::vec::Vec;
-use barechain_core::storage::Storage;
-use barechain_core::types::PeerId;
 use etheram::common_types::account::Account;
 use etheram::common_types::block::Block;
 use etheram::common_types::state_root::compute_state_root_with_contract_storage;
@@ -17,6 +15,8 @@ use etheram::execution::transaction_receipt::TransactionReceipt;
 use etheram::state::storage::storage_mutation::StorageMutation;
 use etheram::state::storage::storage_query::StorageQuery;
 use etheram::state::storage::storage_query_result::StorageQueryResult;
+use etheram_core::storage::Storage;
+use etheram_core::types::PeerId;
 
 pub struct SemihostingStorage {
     node_id: PeerId,

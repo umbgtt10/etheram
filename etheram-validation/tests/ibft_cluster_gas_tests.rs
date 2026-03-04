@@ -5,15 +5,6 @@
 use crate::common::ibft_cluster_test_helpers::build_block_with_commitments;
 use crate::common::ibft_cluster_test_helpers::finalize_round_with_block;
 use crate::common::ibft_cluster_test_helpers::validators;
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
-use barechain_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
-use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
-use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
-use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
-use barechain_etheram_variants::implementations::tiny_evm_gas::GAS_PUSH1;
-use barechain_etheram_variants::implementations::tiny_evm_gas::GAS_SSTORE_SET;
-use barechain_etheram_variants::implementations::tiny_evm_gas::INTRINSIC_GAS;
-use barechain_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 use etheram::common_types::account::Account;
 use etheram::common_types::state_root::compute_state_root;
 use etheram::common_types::transaction::Transaction;
@@ -21,6 +12,15 @@ use etheram::common_types::types::Hash;
 use etheram::execution::execution_engine::ExecutionEngine;
 use etheram::execution::transaction_result::TransactionStatus;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
+use etheram_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
+use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
+use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
+use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
+use etheram_etheram_variants::implementations::tiny_evm_gas::GAS_PUSH1;
+use etheram_etheram_variants::implementations::tiny_evm_gas::GAS_SSTORE_SET;
+use etheram_etheram_variants::implementations::tiny_evm_gas::INTRINSIC_GAS;
+use etheram_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 use std::collections::BTreeMap;
 
 fn finalize_block(

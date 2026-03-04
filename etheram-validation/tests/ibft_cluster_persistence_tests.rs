@@ -2,20 +2,20 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::collection::Collection;
-use barechain_core::consensus_protocol::ConsensusProtocol;
-use barechain_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use barechain_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use barechain_etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::common_types::block::Block;
 use etheram::context::context_dto::Context;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_core::collection::Collection;
+use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use std::collections::VecDeque;
 
 struct MiniNode {

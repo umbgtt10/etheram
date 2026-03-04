@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
 use etheram::common_types::account::Account;
 use etheram::common_types::block::Block;
 use etheram::common_types::transaction::Transaction;
 use etheram::execution::execution_engine::ExecutionEngine;
+use etheram_etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
 use std::collections::BTreeMap;
 
 #[test]

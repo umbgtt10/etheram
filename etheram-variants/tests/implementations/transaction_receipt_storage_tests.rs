@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::storage::Storage;
-use barechain_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
 use etheram::execution::transaction_receipt::TransactionReceipt;
 use etheram::execution::transaction_result::TransactionStatus;
 use etheram::state::storage::storage_mutation::StorageMutation;
 use etheram::state::storage::storage_query::StorageQuery;
 use etheram::state::storage::storage_query_result::StorageQueryResult;
+use etheram_core::storage::Storage;
+use etheram_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
 
 #[test]
 fn store_receipts_and_query_returns_stored_receipts() {

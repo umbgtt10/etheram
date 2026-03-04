@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::builders::storage_builder::StorageBuilder;
-use barechain_etheram_variants::variants::StorageVariant;
+use etheram_etheram_variants::builders::storage_builder::StorageBuilder;
+use etheram_etheram_variants::variants::StorageVariant;
 
 #[test]
 fn build_without_variant_returns_error() {

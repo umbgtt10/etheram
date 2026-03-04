@@ -57,7 +57,7 @@ Supporting files:
 | `InMemoryTransport` | `in_memory_transport.rs` | Shared-state transport via `Arc<Mutex<...>>` |
 | `InMemoryExternalInterface` | `in_memory_external_interface.rs` | Push/drain request/response queues |
 | `EagerContextBuilder` | `eager_context_builder.rs` | Reads full account map + state root from storage |
-| `TypeBasedPartitioner` | `type_based_partitioner.rs` | Classifies actions by variant (mutation vs output) |
+| `TypeBasedPartitioner` | `type_based_partitioner.rs` | Classifies actions by variant (mutation vs output vs execution) |
 | `SharedState` | `shared_state.rs` | `Arc<Mutex<...>>` transport state for cluster wiring |
 
 #### No-Op Implementations (testing stubs)

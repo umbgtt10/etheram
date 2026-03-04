@@ -3,11 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::infra::external_interface::channel::client_request_hub::CLIENT_REQUEST_HUB;
-use barechain_core::external_interface_incoming::ExternalInterfaceIncoming;
-use barechain_core::external_interface_outgoing::ExternalInterfaceOutgoing;
-use barechain_core::types::ClientId;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
+use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::types::ClientId;
 
 pub struct ChannelExternalInterface {
     node_index: usize,

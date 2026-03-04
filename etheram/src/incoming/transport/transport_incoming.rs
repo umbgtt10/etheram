@@ -4,7 +4,7 @@
 
 use crate::common_types::transport_incoming_adapter::TransportInputAdapter;
 use alloc::boxed::Box;
-use barechain_core::{transport_incoming::TransportIncoming, types::PeerId};
+use etheram_core::{transport_incoming::TransportIncoming, types::PeerId};
 
 impl<Msg> TransportIncoming for Box<dyn TransportInputAdapter<Msg>>
 where

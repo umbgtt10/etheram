@@ -4,7 +4,7 @@
 
 use crate::implementations::ibft::signature_scheme::SignatureBytes;
 use crate::implementations::ibft::signature_scheme::SignatureScheme;
-use barechain_core::types::PeerId;
+use etheram_core::types::PeerId;
 
 pub struct MockSignatureScheme {
     _peer_id: PeerId,

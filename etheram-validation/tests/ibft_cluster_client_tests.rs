@@ -5,11 +5,11 @@
 use crate::common::ibft_cluster_test_helpers::block;
 use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::validators;
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
 use etheram::common_types::transaction::Transaction;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
 
 #[test]
 fn get_height_at_genesis_returns_height_zero() {

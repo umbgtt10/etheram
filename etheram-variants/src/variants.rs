@@ -4,7 +4,6 @@
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use barechain_core::types::PeerId;
 use etheram::{
     brain::protocol::boxed_protocol::BoxedProtocol,
     common_types::{
@@ -23,6 +22,7 @@ use etheram::{
     observer::Observer,
     partitioner::partition::Partitioner,
 };
+use etheram_core::types::PeerId;
 
 pub enum StorageVariant {
     InMemory,

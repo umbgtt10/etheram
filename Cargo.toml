@@ -34,7 +34,7 @@ serde = { version = "1.0", default-features = false, features = ["derive", "allo
 spin = { version = "0.10.0", default-features = false, features = ["mutex", "spin_mutex"] }
 ed25519-dalek = { version = "2", default-features = false }
 
-barechain-core = { path = "core" }
-barechain-etheram = { path = "etheram" }
-barechain-etheram-variants = { path = "etheram-variants", default-features = false }
-barechain-etheram-validation = { path = "etheram-validation" }
+etheram-core = { path = "core" }
+etheram-etheram = { path = "etheram" }
+etheram-etheram-variants = { path = "etheram-variants", default-features = false }
+etheram-etheram-validation = { path = "etheram-validation" }

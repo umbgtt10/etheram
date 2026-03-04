@@ -5,10 +5,10 @@
 use crate::implementations::shared_state::SharedState;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use barechain_core::transport_incoming::TransportIncoming;
-use barechain_core::transport_outgoing::TransportOutgoing;
-use barechain_core::types::PeerId;
 use core::marker::PhantomData;
+use etheram_core::transport_incoming::TransportIncoming;
+use etheram_core::transport_outgoing::TransportOutgoing;
+use etheram_core::types::PeerId;
 
 pub struct InMemoryTransportState<M> {
     inboxes: BTreeMap<u64, Vec<(PeerId, M)>>,

@@ -69,7 +69,7 @@ Every node is decomposed along two orthogonal axes:
 | 2 | **Scheduler Space** | Poll dimensions → select next event → dispatch |
 | 3 | **Dimension Space** | Data dimensions (Storage, Cache) and I/O dimensions (Transport, ExternalInterface, Timer) |
 
-**Key insight:** Every dimension can be swapped independently. Protocol logic is a pure function — no I/O, no side effects. The `Partitioner` separates state mutations from output effects. This enables exhaustive testing through component substitution, not scenario scripting.
+**Key insight:** Every dimension can be swapped independently. Protocol logic is a pure function — no I/O, no side effects. The `Partitioner` separates state mutations from output effects and block executions. This enables exhaustive testing through component substitution, not scenario scripting.
 
 ---
 
@@ -122,9 +122,10 @@ fn step(&mut self) -> bool {
     if let Some((source, message)) = self.incoming.poll() {
         let context = self.context_builder.build(&self.state, self.peer_id, &source, &message);
         let actions = self.brain.handle_message(&source, &message, &context);
-        let (mutations, outputs) = self.partitioner.partition(&actions);
+        let (mutations, outputs, executions) = self.partitioner.partition(&actions);
         self.state.apply_mutations(&mutations);
         self.executor.execute_outputs(&outputs);
+        // executions trigger ExecutionEngine for transaction processing
         return true;
     }
     false
@@ -139,8 +140,8 @@ fn step(&mut self) -> bool {
 
 ### Architecture Decision Records
 
-- **[ADR-001: Six-Dimension Node Decomposition](docs/adr/001-six-dimension-node-decomposition.md)**
-- **[ADR-002: step() as Single Execution Primitive](docs/adr/002-step-as-single-execution-primitive.md)**
+- **[ADR-001: Six-Dimension Node Decomposition](docs/ADR/001-six-dimension-node-decomposition.md)**
+- **[ADR-002: step() as Single Execution Primitive](docs/ADR/002-step-as-single-execution-primitive.md)**
 
 ### Design Documentation
 

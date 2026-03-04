@@ -6,10 +6,6 @@ use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_afte
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_after_propose_with_tx;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
-use barechain_core::collection::Collection;
-use barechain_core::consensus_protocol::ConsensusProtocol;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
@@ -18,6 +14,10 @@ use etheram::common_types::block::Block;
 use etheram::common_types::transaction::Transaction;
 use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::state::cache::cache_update::CacheUpdate;
+use etheram_core::collection::Collection;
+use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 
 #[test]
 fn handle_message_commit_quorum_reached_stores_block() {

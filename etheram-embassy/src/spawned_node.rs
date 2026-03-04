@@ -5,9 +5,6 @@
 use crate::config::TIMER_COMMAND_CAPACITY;
 use crate::embassy_shared_state::EmbassySharedState;
 use alloc::collections::BTreeMap;
-use barechain_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use barechain_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use barechain_etheram_variants::implementations::shared_state::SharedState;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Receiver;
 use embassy_sync::channel::Sender;
@@ -15,6 +12,9 @@ use etheram::common_types::types::Address;
 use etheram::common_types::types::Hash;
 use etheram::common_types::types::Height;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_etheram_variants::implementations::shared_state::SharedState;
 
 pub type TimerSender = Sender<'static, CriticalSectionRawMutex, TimerEvent, TIMER_COMMAND_CAPACITY>;
 

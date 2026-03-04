@@ -1,5 +1,5 @@
 [package]
-name = "barechain-etheram-embassy"
+name = "etheram-etheram-embassy"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,9 +13,9 @@ channel-external-interface = []
 udp-external-interface = []
 
 [dependencies]
-barechain-core.workspace = true
-barechain-etheram.workspace = true
-barechain-etheram-variants.workspace = true
+etheram-core.workspace = true
+etheram-etheram.workspace = true
+etheram-etheram-variants.workspace = true
 
 postcard.workspace = true
 serde.workspace = true

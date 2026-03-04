@@ -5,7 +5,6 @@
 use crate::builders::error::BuildError;
 use crate::implementations::value_transfer_engine::ValueTransferEngine;
 use alloc::boxed::Box;
-use barechain_core::types::PeerId;
 use etheram::brain::protocol::boxed_protocol::BoxedProtocol;
 use etheram::common_types::account::Account;
 use etheram::common_types::cache_adapter::CacheAdapter;
@@ -30,6 +29,7 @@ use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::observer::Observer;
 use etheram::partitioner::partition::Partitioner;
 use etheram::state::etheram_state::EtheramState;
+use etheram_core::types::PeerId;
 
 pub struct EtheramNodeBuilder {
     peer_id: Option<PeerId>,

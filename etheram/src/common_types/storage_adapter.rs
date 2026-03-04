@@ -8,7 +8,7 @@ use crate::state::storage::storage_mutation::StorageMutation;
 use crate::state::storage::storage_query::StorageQuery;
 use crate::state::storage::storage_query_result::StorageQueryResult;
 use alloc::boxed::Box;
-use barechain_core::storage::Storage;
+use etheram_core::storage::Storage;
 
 pub trait StorageAdapter:
     Storage<Query = StorageQuery, QueryResult = StorageQueryResult, Mutation = StorageMutation>

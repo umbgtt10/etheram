@@ -6,7 +6,7 @@ use crate::brain::protocol::message::Message;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::context::context_dto::Context;
 use crate::state::etheram_state::EtheramState;
-use barechain_core::types::PeerId;
+use etheram_core::types::PeerId;
 
 pub trait ContextBuilder<M> {
     fn build(

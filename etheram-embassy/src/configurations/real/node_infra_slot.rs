@@ -7,11 +7,11 @@ use crate::infra::storage::semihosting::semihosting_storage::SemihostingStorage;
 use crate::infra::transport::udp::udp_transport::IbftMessageReceiver;
 use crate::infra::transport::udp::udp_transport::UdpInboundTransport;
 use crate::infra::transport::udp::udp_transport::UdpOutboundTransport;
-use barechain_core::types::PeerId;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
-use barechain_etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
 use etheram::common_types::types::Address;
+use etheram_core::types::PeerId;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
+use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
 
 pub struct NodeInfraSlot {
     pub(super) storage: SemihostingStorage,

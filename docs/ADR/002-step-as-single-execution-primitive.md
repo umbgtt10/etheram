@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted** - Validated by TinyChain implementation (January 2026)
+**Accepted** — Validated by Etheram implementation (January–March 2026)
 
 ## Context
 
@@ -25,19 +25,19 @@ We need a **minimal, universal primitive** that works in all environments while 
 We define **`step()`** as the single required execution method:
 
 ```rust
-pub trait Node {
-    /// Execute one unit of work
-    /// Returns true if work was done, false if idle
-    fn step(&mut self) -> bool;
-}
+pub fn step(&mut self) -> bool;
 ```
 
 **Semantics:**
-1. Polls all event sources (transport, external_interface, timer) in deterministic order
+1. Polls all event sources (transport, external_interface, timer) in deterministic order via `IncomingSources::poll()`
 2. Processes exactly one event (if available)
-3. Applies resulting actions to dimensions
-4. Returns immediately (no blocking, no async)
-5. Returns `true` if work was done, `false` if idle
+3. Builds context via `ContextBuilder` (immutable snapshot of current state)
+4. Passes event to protocol (`brain.handle_message()`) which returns declarative actions
+5. Partitions actions into mutations, outputs, and executions via `Partitioner`
+6. Applies mutations to state, dispatches outputs to executor, runs execution engine for block executions
+7. Notifies `Observer` at each phase (context built, action emitted, mutation applied, output executed)
+8. Returns immediately (no blocking, no async)
+9. Returns `true` if work was done, `false` if idle
 
 **All execution patterns build on step():**
 
@@ -55,74 +55,88 @@ while node.step() {
 }
 ```
 
-### Async Wrapper (future work)
+### Deterministic Test Orchestration
 ```rust
-async fn run_async(mut node: Node) {
+cluster.fire_timer(0, TimerEvent::ProposeBlock);
+cluster.step_all();  // calls step() on each node until idle
+cluster.step(1);     // step a single node
+```
+
+### Embassy Embedded (Validated)
+```rust
+#[embassy_executor::task(pool_size = 5)]
+async fn node_task(mut node: EtheramNode<IbftMessage>, ...) {
     loop {
-        if !node.step() {
-            tokio::time::sleep(Duration::from_millis(10)).await;
+        match select4(
+            cancel.wait(),
+            transport_receiver.receive(),
+            timer_receiver.receive(),
+            ei_notify.receive(),
+        ).await {
+            Either4::First(()) => break,
+            Either4::Second((from, msg)) => {
+                transport_state.push_message(peer_id, from, msg);
+                while node.step() {}
+            }
+            Either4::Third(timer_event) => {
+                timer_state.push_event(peer_id, timer_event);
+                while node.step() {}
+            }
+            Either4::Fourth(()) => {
+                while node.step() {}
+            }
         }
     }
 }
 ```
 
-### Embassy Wrapper (future work)
-```rust
-#[embassy_executor::task]
-async fn run_embassy(mut node: Node) {
-    loop {
-        if !node.step() {
-            Timer::after(Duration::from_millis(10)).await;
-        }
-    }
-}
-```
-
-**Key Insight:** Execution model becomes an **implementation detail**, not a core abstraction.
+**Key Insight:** Execution model becomes an **implementation detail**, not a core abstraction. The three validated environments (sequential test loop, cluster orchestrator, Embassy async task) all use the same `EtheramNode::step()` method with zero changes to the node logic.
 
 ## Consequences
 
 ### Positive
 
-1. **Environment Agnostic** - Same primitive works everywhere (std, no-std, async, sync)
-2. **Deterministic Testing** - Call `step()` explicitly in tests, full control over ordering
-3. **Debuggable** - Step through one event at a time, inspect state between steps
-4. **Composable** - Build any execution pattern (loops, async, reactors) from `step()`
-5. **Simple Contract** - One method, clear semantics, easy to implement
-6. **No Runtime Lock-in** - Not tied to tokio, Embassy, OS threads, or any framework
+1. **Environment Agnostic** — Same primitive works everywhere: std tests, cluster validation, no_std ARM Cortex-M4 via QEMU
+2. **Deterministic Testing** — Call `step()` explicitly in tests, full control over event ordering and interleaving across 557 tests
+3. **Debuggable** — Step through one event at a time, inspect state between steps; Observer trait provides per-step visibility
+4. **Composable** — Build any execution pattern from `step()`: blocking loops, run-until-idle, async event-driven (Embassy `select4`), cluster orchestration
+5. **Simple Contract** — One method, clear semantics, easy to implement
+6. **No Runtime Lock-in** — Not tied to tokio, Embassy, OS threads, or any framework; proven across std and no_std
+7. **Reactive Integration** — Embassy wrapper uses `select4` to await on transport/timer/EI channels, then drives `step()` reactively — no busy-waiting, no polling overhead
 
 ### Negative
 
-1. **Polling Overhead** - Busy-waiting if not wrapped carefully (mitigated by wrappers)
-2. **No Built-in Backpressure** - Caller must implement rate limiting (flexibility vs convenience)
-3. **Manual Orchestration** - No automatic scheduling (intentional - caller controls)
+1. **Polling Overhead** — If called without events, returns immediately with `false` (mitigated by event-driven wrappers like Embassy `select4`)
+2. **No Built-in Backpressure** — Caller must implement rate limiting (flexibility vs convenience)
+3. **Manual Orchestration** — No automatic scheduling (intentional — caller controls execution order for determinism)
 
 ### Validation Evidence
 
-TinyChain demonstrates:
-- ✅ 20 tests execute deterministically via explicit `step()` calls
-- ✅ Sequential execution pattern works perfectly
-- ✅ No async/await needed for core logic
-- ✅ Test cluster controls exact execution order: `cluster.step(0)`, `cluster.step(1)`, etc.
-- ✅ `run_until_idle()` utility built naturally from `step()`
+Etheram validates `step()` as the universal execution primitive across three environments:
 
-Example test pattern:
-```rust
-cluster.inject_timer_event(1, TimerEvent::ProposeBlock);
-cluster.step(1);  // Leader processes timer, creates block
-cluster.step(0);  // Follower receives and accepts block
-cluster.step(2);  // Another follower accepts
-// Deterministic, repeatable, debuggable
-```
+**Environment 1 — Sequential testing (std):**
+- 557 tests execute deterministically via explicit `step()` calls
+- `IbftCluster::step_all()` calls `step()` on each node in sequence until all are idle
+- `IbftCluster::step(node_index)` enables per-node stepping for fine-grained interleaving tests
+- `IbftTestNode` wraps a single `EtheramNode` and drives `step()` for isolated protocol testing
+- Run-until-idle (`while node.step() {}`) is the standard test execution pattern
 
-### Future Work
+**Environment 2 — Cluster orchestration (std):**
+- `IbftCluster` with 4–7 validator nodes, all using shared in-memory transport
+- Byzantine fault injection, message interception, round progression — all driven by `step()`
+- Event injection (`fire_timer`, `submit_request`, `push_transport_message`) followed by `step_all()` — no async, no threads
 
-- Async wrapper for tokio runtime
-- Embassy wrapper for embedded async
-- Demonstrate same Node running in all three environments
+**Environment 3 — Embedded async (no_std, ARM Cortex-M4, QEMU):**
+- `#[embassy_executor::task(pool_size = 5)]` spawns 5 concurrent IBFT node tasks
+- Each task wraps `step()` inside a `select4` reactor: awaits transport inbound, timer events, EI notifications, or cancellation
+- On event arrival, injects event into the synchronous dimension, then calls `while node.step() {}` to drain all resulting work
+- Two independently maintained configurations (all-in-memory and UDP+semihosting) both use the same `step()` contract
+- 12-act scenario (transfers, view changes, overdrafts, gas limits, validator set updates, WAL persistence, Ed25519 signatures, TinyEVM contract execution) validates real protocol behaviour end-to-end
+- Graceful shutdown via `CancellationToken` — `select4` returns `Either4::First(())` to break the loop
+
+**The step() primitive is unchanged across all three environments.** Only the wrapper — how events are produced and when `step()` is called — varies.
 
 ## Related
 
 - [ADR-001: Six-Dimension Node Decomposition](001-six-dimension-node-decomposition.md)
 - [Architecture Documentation](../ARCHITECTURE.md)
-- TinyChain validation: `examples/tinychain/tests/validation.rs`

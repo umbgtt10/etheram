@@ -73,7 +73,7 @@ Minimal execution primitive for multi-node orchestration. `step()` returns `true
 
 | Type | Purpose |
 |---|---|
-| `PeerId` | 4-byte node identifier |
+| `PeerId` | `u64` node identifier |
 | `Collection` | Trait for iterable action containers (enables `no_std` action collections) |
 
 ---
@@ -103,4 +103,4 @@ src/
 
 Core was originally a prescriptive 6-dimension Node trait with all associated types. That was removed because it dictated HOW (structure), not just WHAT (behavior). The current design provides composable building blocks: consumers wire them into whatever node structure fits their needs.
 
-See [ADR-001](../docs/adr/001-six-dimension-node-decomposition.md) for the full rationale.
+See [ADR-001](../docs/ADR/001-six-dimension-node-decomposition.md) for the full rationale.

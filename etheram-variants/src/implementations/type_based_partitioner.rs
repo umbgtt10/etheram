@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::collection::Collection;
 use etheram::brain::protocol::action::Action;
 use etheram::collections::action_collection::ActionCollection;
 use etheram::partitioner::partition::Partitioner;
+use etheram_core::collection::Collection;
 
 pub struct TypeBasedPartitioner;
 

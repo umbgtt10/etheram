@@ -23,13 +23,6 @@ mod time_driver;
 use crate::cancellation_token::CancellationToken;
 use crate::config::MAX_NODES;
 use crate::etheram_client::EtheramClient;
-use barechain_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
-use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
-use barechain_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
-use barechain_etheram_variants::implementations::tiny_evm_gas::GAS_PUSH1;
-use barechain_etheram_variants::implementations::tiny_evm_gas::GAS_SSTORE_SET;
-use barechain_etheram_variants::implementations::tiny_evm_gas::INTRINSIC_GAS;
 use cortex_m::Peripherals;
 use cortex_m_semihosting::debug;
 use embassy_executor::Spawner;
@@ -41,6 +34,13 @@ use etheram::common_types::types::Address;
 use etheram::common_types::types::Hash;
 use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
+use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
+use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
+use etheram_etheram_variants::implementations::tiny_evm_gas::GAS_PUSH1;
+use etheram_etheram_variants::implementations::tiny_evm_gas::GAS_SSTORE_SET;
+use etheram_etheram_variants::implementations::tiny_evm_gas::INTRINSIC_GAS;
 
 static CANCEL: CancellationToken = CancellationToken::new();
 

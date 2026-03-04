@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::builders::observer_builder::ObserverBuilder;
-use barechain_etheram_variants::variants::ObserverVariant;
 use etheram::observer::EventLevel;
+use etheram_etheram_variants::builders::observer_builder::ObserverBuilder;
+use etheram_etheram_variants::variants::ObserverVariant;
 
 #[test]
 fn build_missing_variant_returns_error() {

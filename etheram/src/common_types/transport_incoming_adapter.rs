@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::transport_incoming::TransportIncoming;
+use etheram_core::transport_incoming::TransportIncoming;
 
 pub trait TransportInputAdapter<Msg>: TransportIncoming<Message = Msg> {}
 

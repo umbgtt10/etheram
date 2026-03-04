@@ -3,15 +3,15 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
-use barechain_core::external_interface_incoming::ExternalInterfaceIncoming;
-use barechain_core::external_interface_outgoing::ExternalInterfaceOutgoing;
-use barechain_core::types::ClientId;
-use barechain_etheram_variants::implementations::in_memory_external_interface::{
-    InMemoryExternalInterface, InMemoryExternalInterfaceState,
-};
-use barechain_etheram_variants::implementations::shared_state::SharedState;
 use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram::incoming::external_interface::client_request::ClientRequest;
+use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
+use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::types::ClientId;
+use etheram_etheram_variants::implementations::in_memory_external_interface::{
+    InMemoryExternalInterface, InMemoryExternalInterfaceState,
+};
+use etheram_etheram_variants::implementations::shared_state::SharedState;
 
 #[test]
 fn poll_request_empty_queue_returns_none() {

@@ -2,9 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::eager_context_builder::EagerContextBuilder;
-use barechain_etheram_variants::implementations::in_memory_cache::InMemoryCache;
-use barechain_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
@@ -16,6 +13,9 @@ use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram::state::cache::cache_update::CacheUpdate;
 use etheram::state::etheram_state::EtheramState;
+use etheram_etheram_variants::implementations::eager_context_builder::EagerContextBuilder;
+use etheram_etheram_variants::implementations::in_memory_cache::InMemoryCache;
+use etheram_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
 
 fn state_with_storage(storage: InMemoryStorage) -> EtheramState {
     EtheramState::new(Box::new(storage), Box::new(InMemoryCache::new()))

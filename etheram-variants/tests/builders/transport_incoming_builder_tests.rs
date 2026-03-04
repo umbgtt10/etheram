@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::builders::transport_incoming_builder::TransportIncomingBuilder;
-use barechain_etheram_variants::variants::IncomingTransportVariant;
+use etheram_etheram_variants::builders::transport_incoming_builder::TransportIncomingBuilder;
+use etheram_etheram_variants::variants::IncomingTransportVariant;
 
 #[test]
 fn build_without_variant_returns_error() {

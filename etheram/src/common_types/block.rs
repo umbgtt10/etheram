@@ -5,7 +5,7 @@
 use super::transaction::Transaction;
 use super::types::{Hash, Height};
 use alloc::vec::Vec;
-use barechain_core::types::PeerId;
+use etheram_core::types::PeerId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {

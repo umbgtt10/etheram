@@ -5,7 +5,7 @@
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::types::{Address, Hash, Height};
 use crate::incoming::timer::timer_event::TimerEvent;
-use barechain_core::types::{ClientId, PeerId};
+use etheram_core::types::{ClientId, PeerId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EventLevel {

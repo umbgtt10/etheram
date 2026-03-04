@@ -3,12 +3,12 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
-use barechain_core::transport_incoming::TransportIncoming;
-use barechain_core::transport_outgoing::TransportOutgoing;
-use barechain_etheram_variants::implementations::in_memory_transport::{
+use etheram_core::transport_incoming::TransportIncoming;
+use etheram_core::transport_outgoing::TransportOutgoing;
+use etheram_etheram_variants::implementations::in_memory_transport::{
     InMemoryTransport, InMemoryTransportState,
 };
-use barechain_etheram_variants::implementations::shared_state::SharedState;
+use etheram_etheram_variants::implementations::shared_state::SharedState;
 
 #[test]
 fn poll_empty_inbox_returns_none() {

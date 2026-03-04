@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::ibft::validator_set::ValidatorSet;
+use etheram_etheram_variants::implementations::ibft::validator_set::ValidatorSet;
 
 #[test]
 fn quorum_size_four_validators_returns_three() {

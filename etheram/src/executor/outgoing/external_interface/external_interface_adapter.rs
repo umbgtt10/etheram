@@ -4,8 +4,8 @@
 
 use crate::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use alloc::boxed::Box;
-use barechain_core::external_interface_outgoing::ExternalInterfaceOutgoing;
-use barechain_core::types::ClientId;
+use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::types::ClientId;
 
 impl<Resp> ExternalInterfaceOutgoing for Box<dyn ExternalInterfaceOutgoingAdapter<Resp>>
 where

@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::no_op_observer::NoOpObserver;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::observer::{ActionKind, EventLevel, Observer};
+use etheram_etheram_variants::implementations::no_op_observer::NoOpObserver;
 
 #[test]
 fn min_level_returns_none() {

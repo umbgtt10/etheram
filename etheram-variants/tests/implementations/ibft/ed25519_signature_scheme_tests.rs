@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::ibft::ed25519_signature_scheme::Ed25519SignatureScheme;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureScheme;
+use etheram_etheram_variants::implementations::ibft::ed25519_signature_scheme::Ed25519SignatureScheme;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureScheme;
 
 #[test]
 fn sign_produces_non_zeroed_signature() {

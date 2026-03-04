@@ -5,8 +5,8 @@
 use crate::implementations::shared_state::SharedState;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use barechain_core::{timer_input::TimerInput, timer_output::TimerOutput};
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_core::{timer_input::TimerInput, timer_output::TimerOutput};
 
 pub struct InMemoryTimerState {
     events: BTreeMap<u64, Vec<TimerEvent>>,

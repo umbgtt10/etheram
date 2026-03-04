@@ -2,10 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_validation::ibft_cluster::IbftCluster;
-use barechain_etheram_variants::implementations::ibft::{
-    ibft_message::IbftMessage, signature_scheme::SignatureBytes,
-};
 use etheram::common_types::account::Account;
 use etheram::common_types::block::Block;
 use etheram::common_types::transaction::Transaction;
@@ -14,6 +10,10 @@ use etheram::common_types::types::Hash;
 use etheram::execution::block_commitments::compute_block_commitments;
 use etheram::execution::execution_engine::ExecutionEngine;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_etheram_validation::ibft_cluster::IbftCluster;
+use etheram_etheram_variants::implementations::ibft::{
+    ibft_message::IbftMessage, signature_scheme::SignatureBytes,
+};
 use std::collections::BTreeMap;
 
 fn sequence(height: u64, round: u64, phase: u64) -> u64 {

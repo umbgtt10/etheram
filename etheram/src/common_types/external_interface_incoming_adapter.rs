@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_core::external_interface_incoming::ExternalInterfaceIncoming;
+use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 
 pub trait ExternalInterfaceIncomingAdapter<Req>: ExternalInterfaceIncoming<Request = Req> {}
 

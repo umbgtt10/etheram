@@ -4,14 +4,14 @@
 
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::AlternateSignatureScheme;
-use barechain_core::collection::Collection;
-use barechain_core::consensus_protocol::ConsensusProtocol;
-use barechain_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use barechain_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
 use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_core::collection::Collection;
+use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
 
 #[test]
 fn handle_message_proposer_timer_with_injected_signature_scheme_broadcasts_pre_prepare_and_prepare()

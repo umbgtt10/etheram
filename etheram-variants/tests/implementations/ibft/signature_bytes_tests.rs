@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use barechain_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 
 #[test]
 fn from_slice_shorter_than_96_bytes_copies_and_zero_pads() {

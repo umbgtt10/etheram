@@ -4,8 +4,6 @@
 
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
-use barechain_core::collection::Collection;
-use barechain_core::consensus_protocol::ConsensusProtocol;
 use etheram::brain::protocol::action::Action;
 use etheram::brain::protocol::message::Message;
 use etheram::brain::protocol::message_source::MessageSource;
@@ -15,6 +13,8 @@ use etheram::executor::outgoing::external_interface::client_response::ClientResp
 use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
 use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram::state::cache::cache_update::CacheUpdate;
+use etheram_core::collection::Collection;
+use etheram_core::consensus_protocol::ConsensusProtocol;
 
 #[test]
 fn handle_message_get_height_client_request_returns_height_response() {

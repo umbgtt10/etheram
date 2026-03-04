@@ -91,7 +91,7 @@ and is silently dropped.
 The in-memory configuration retains `MockSignatureScheme` (always-true verify, zeroed sigs)
 to keep development fast and deterministic.
 
-### 9-act QEMU scenario
+### 12-act QEMU scenario
 
 `main.rs` runs a structured lifecycle that exercises every major protocol path:
 
@@ -106,6 +106,8 @@ to keep development fast and deterministic.
 | 7 — Validator set update | Height-gated transition at height 5; consensus continues with updated validator set |
 | 8 — WAL round-trip | `ConsensusWal::to_bytes` → `from_bytes` verified in-process |
 | 9 — Ed25519 cert proof | `PreparedCertificate.signed_prepares` count equals quorum; real config sigs are non-zero |
+| 10 — TinyEVM SSTORE | Contract storage demonstration; SSTORE opcode persists key-value in contract storage |
+| 11 — TinyEVM OutOfGas | Gas failure demonstration; transaction with insufficient gas reverts with OutOfGas |
 
 ---
 
@@ -118,8 +120,9 @@ Each node follows the EtheRAM 3-6 model on every `step()` call:
 1. Poll incoming sources (timer, external interface, transport) for the next event.
 2. Build context from current state via `EagerContextBuilder`.
 3. Pass event to `IbftProtocol::handle_message()` → list of `Action<IbftMessage>`.
-4. `TypeBasedPartitioner` splits actions into state mutations and output effects.
+4. `TypeBasedPartitioner` splits actions into state mutations, output effects, and block executions.
 5. Mutations applied to storage/cache. Output effects dispatched by `EtheramExecutor`.
+6. Block executions trigger `ExecutionEngine` for transaction processing, receipts, and contract storage updates.
 
 No I/O occurs inside the protocol. The executor handles all side effects after the protocol
 returns.
@@ -160,7 +163,7 @@ that axis's `mod.rs`. Wiring happens in `src/configurations/in_memory/setup.rs` 
 
 ```
 src/
-  main.rs                       # lifecycle: init → start → 9-act scenario → shutdown
+  main.rs                       # lifecycle: init → start → 12-act scenario → shutdown
   config.rs                     # MAX_NODES = 5
   cancellation_token.rs
   etheram_client.rs             # submit_request, node_height, node_wal, node_last_cert, shutdown
