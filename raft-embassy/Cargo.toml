@@ -1,0 +1,43 @@
+[package]
+name = "raft-raft-embassy"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["channel-transport", "in-memory-storage", "channel-external-interface"]
+channel-transport = []
+udp-transport = []
+in-memory-storage = []
+semihosting-storage = []
+channel-external-interface = []
+udp-external-interface = []
+
+[dependencies]
+etheram-core.workspace = true
+raft-raft-node.workspace = true
+raft-raft-variants.workspace = true
+
+postcard.workspace = true
+serde.workspace = true
+
+cortex-m.workspace = true
+cortex-m-rt.workspace = true
+cortex-m-semihosting.workspace = true
+defmt.workspace = true
+embassy-executor.workspace = true
+embassy-futures.workspace = true
+embassy-net-driver.workspace = true
+embassy-net.workspace = true
+embassy-sync.workspace = true
+embassy-time-driver.workspace = true
+embassy-time.workspace = true
+embedded-alloc.workspace = true
+embedded-io-async.workspace = true
+embedded-io.workspace = true
+heapless.workspace = true
+panic-semihosting.workspace = true
+critical-section.workspace = true
+
+[[bin]]
+name = "raft-embassy"
+path = "src/main.rs"
