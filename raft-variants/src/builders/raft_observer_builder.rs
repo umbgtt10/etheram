@@ -34,3 +34,11 @@ impl RaftObserverBuilder {
             .ok_or(BuildError::MissingComponent("observer"))
     }
 }
+
+impl Default for RaftObserverBuilder {
+    fn default() -> Self {
+        Self {
+            observer: Some(Box::new(NoOpRaftObserver)),
+        }
+    }
+}

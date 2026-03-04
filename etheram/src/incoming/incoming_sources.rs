@@ -6,7 +6,8 @@ use crate::{
     brain::protocol::{message::Message, message_source::MessageSource},
     common_types::{
         external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter,
-        timer_input_adapter::TimerInputAdapter, transport_incoming_adapter::TransportInputAdapter,
+        timer_input_adapter::TimerInputAdapter,
+        transport_incoming_adapter::TransportIncomingAdapter,
     },
     incoming::{external_interface::client_request::ClientRequest, timer::timer_event::TimerEvent},
 };
@@ -15,14 +16,14 @@ use alloc::boxed::Box;
 pub struct IncomingSources<M> {
     timer: Box<dyn TimerInputAdapter<TimerEvent>>,
     external_interface: Box<dyn ExternalInterfaceIncomingAdapter<ClientRequest>>,
-    transport: Box<dyn TransportInputAdapter<M>>,
+    transport: Box<dyn TransportIncomingAdapter<M>>,
 }
 
 impl<M: 'static> IncomingSources<M> {
     pub fn new(
         timer: Box<dyn TimerInputAdapter<TimerEvent>>,
         external_interface: Box<dyn ExternalInterfaceIncomingAdapter<ClientRequest>>,
-        transport: Box<dyn TransportInputAdapter<M>>,
+        transport: Box<dyn TransportIncomingAdapter<M>>,
     ) -> Self {
         Self {
             timer,

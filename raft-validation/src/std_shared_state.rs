@@ -6,11 +6,11 @@ use raft_variants::implementations::shared_state::SharedState;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-pub struct StdRaftSharedState<T> {
+pub struct StdSharedState<T> {
     state: Arc<Mutex<T>>,
 }
 
-impl<T> Clone for StdRaftSharedState<T> {
+impl<T> Clone for StdSharedState<T> {
     fn clone(&self) -> Self {
         Self {
             state: Arc::clone(&self.state),
@@ -18,7 +18,7 @@ impl<T> Clone for StdRaftSharedState<T> {
     }
 }
 
-impl<T> StdRaftSharedState<T> {
+impl<T> StdSharedState<T> {
     pub fn new(value: T) -> Self {
         Self {
             state: Arc::new(Mutex::new(value)),
@@ -26,7 +26,7 @@ impl<T> StdRaftSharedState<T> {
     }
 }
 
-impl<T> SharedState<T> for StdRaftSharedState<T> {
+impl<T> SharedState<T> for StdSharedState<T> {
     type Lock = Mutex<T>;
 
     fn with<R, F>(&self, operation: F) -> R

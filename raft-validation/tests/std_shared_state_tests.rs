@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use raft_raft_validation::std_raft_shared_state::StdRaftSharedState;
+use raft_raft_validation::std_shared_state::StdSharedState;
 use raft_variants::implementations::shared_state::SharedState;
 
 #[test]
 fn with_mut_then_with_returns_updated_value() {
     // Arrange
-    let state = StdRaftSharedState::new(10u64);
+    let state = StdSharedState::new(10u64);
 
     // Act
     state.with_mut(|value| *value = 42);
@@ -21,7 +21,7 @@ fn with_mut_then_with_returns_updated_value() {
 #[test]
 fn clone_shares_same_underlying_state() {
     // Arrange
-    let state = StdRaftSharedState::new(1u64);
+    let state = StdSharedState::new(1u64);
     let cloned = state.clone();
 
     // Act

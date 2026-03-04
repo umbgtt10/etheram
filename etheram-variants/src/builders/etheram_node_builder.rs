@@ -14,8 +14,8 @@ use etheram::common_types::storage_adapter::StorageAdapter;
 use etheram::common_types::timer_input_adapter::TimerInputAdapter;
 use etheram::common_types::timer_output_adapter::TimerOutputAdapter;
 use etheram::common_types::transaction::Transaction;
-use etheram::common_types::transport_incoming_adapter::TransportInputAdapter;
-use etheram::common_types::transport_outgoing_adapter::TransportOutputAdapter;
+use etheram::common_types::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram::common_types::types::Address;
 use etheram::context::context_builder::ContextBuilder;
 use etheram::etheram_node::EtheramNode;
@@ -36,8 +36,8 @@ pub struct EtheramNodeBuilder<M: Clone + 'static> {
 
     timer_input: Option<Box<dyn TimerInputAdapter<TimerEvent>>>,
     timer_output: Option<Box<dyn TimerOutputAdapter<TimerEvent, u64>>>,
-    transport_incoming: Option<Box<dyn TransportInputAdapter<M>>>,
-    transport_outgoing: Option<Box<dyn TransportOutputAdapter<M>>>,
+    transport_incoming: Option<Box<dyn TransportIncomingAdapter<M>>>,
+    transport_outgoing: Option<Box<dyn TransportOutgoingAdapter<M>>>,
     external_interface_incoming: Option<Box<dyn ExternalInterfaceIncomingAdapter<ClientRequest>>>,
     external_interface_outgoing: Option<Box<dyn ExternalInterfaceOutgoingAdapter<ClientResponse>>>,
     storage: Option<Box<dyn StorageAdapter<Key = Address, Value = Account>>>,
@@ -88,14 +88,17 @@ impl<M: Clone + 'static> EtheramNodeBuilder<M> {
         self
     }
 
-    pub fn with_transport_incoming(mut self, transport: Box<dyn TransportInputAdapter<M>>) -> Self {
+    pub fn with_transport_incoming(
+        mut self,
+        transport: Box<dyn TransportIncomingAdapter<M>>,
+    ) -> Self {
         self.transport_incoming = Some(transport);
         self
     }
 
     pub fn with_transport_outgoing(
         mut self,
-        transport: Box<dyn TransportOutputAdapter<M>>,
+        transport: Box<dyn TransportOutgoingAdapter<M>>,
     ) -> Self {
         self.transport_outgoing = Some(transport);
         self

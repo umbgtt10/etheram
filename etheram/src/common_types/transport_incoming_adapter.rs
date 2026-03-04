@@ -4,6 +4,6 @@
 
 use etheram_core::transport_incoming::TransportIncoming;
 
-pub trait TransportInputAdapter<Msg>: TransportIncoming<Message = Msg> {}
+pub trait TransportIncomingAdapter<Msg>: TransportIncoming<Message = Msg> {}
 
-impl<T, Msg> TransportInputAdapter<Msg> for T where T: TransportIncoming<Message = Msg> {}
+impl<T, Msg> TransportIncomingAdapter<Msg> for T where T: TransportIncoming<Message = Msg> {}

@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::brain::protocol::action::Action;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::types::{Address, Hash, Height};
 use crate::incoming::timer::timer_event::TimerEvent;
@@ -75,4 +76,25 @@ pub trait Observer {
     fn output_executed(&mut self, peer_id: PeerId, kind: &ActionKind);
 
     fn step_completed(&mut self, peer_id: PeerId, processed: bool);
+}
+
+pub fn action_kind<M>(action: &Action<M>) -> ActionKind {
+    match action {
+        Action::BroadcastMessage { .. } => ActionKind::BroadcastMessage,
+        Action::SendMessage { to, .. } => ActionKind::SendMessage { to: *to },
+        Action::SendClientResponse { client_id, .. } => ActionKind::SendClientResponse {
+            client_id: *client_id,
+        },
+        Action::UpdateAccount { address, .. } => ActionKind::UpdateAccount { address: *address },
+        Action::UpdateCache { .. } => ActionKind::UpdateCache,
+        Action::StoreBlock { block } => ActionKind::StoreBlock {
+            height: block.height,
+        },
+        Action::ExecuteBlock { block } => ActionKind::ExecuteBlock {
+            height: block.height,
+        },
+        Action::IncrementHeight => ActionKind::IncrementHeight,
+        Action::ScheduleTimeout { event, .. } => ActionKind::ScheduleTimeout { event: *event },
+        Action::Log { .. } => ActionKind::Log,
+    }
 }

@@ -10,6 +10,7 @@ use crate::execution::transaction_receipt::TransactionReceipt;
 use crate::execution::transaction_result::TransactionStatus;
 use crate::executor::etheram_executor::EtheramExecutor;
 use crate::incoming::incoming_sources::IncomingSources;
+use crate::observer::action_kind;
 use crate::observer::ActionKind;
 use crate::observer::Observer;
 use crate::partitioner::partition::Partitioner;
@@ -155,27 +156,6 @@ impl<M: Clone + 'static> EtheramNode<M> {
     }
     pub fn state(&self) -> &EtheramState {
         &self.state
-    }
-}
-
-fn action_kind<M>(action: &Action<M>) -> ActionKind {
-    match action {
-        Action::BroadcastMessage { .. } => ActionKind::BroadcastMessage,
-        Action::SendMessage { to, .. } => ActionKind::SendMessage { to: *to },
-        Action::SendClientResponse { client_id, .. } => ActionKind::SendClientResponse {
-            client_id: *client_id,
-        },
-        Action::UpdateAccount { address, .. } => ActionKind::UpdateAccount { address: *address },
-        Action::UpdateCache { .. } => ActionKind::UpdateCache,
-        Action::StoreBlock { block } => ActionKind::StoreBlock {
-            height: block.height,
-        },
-        Action::ExecuteBlock { block } => ActionKind::ExecuteBlock {
-            height: block.height,
-        },
-        Action::IncrementHeight => ActionKind::IncrementHeight,
-        Action::ScheduleTimeout { event, .. } => ActionKind::ScheduleTimeout { event: *event },
-        Action::Log { .. } => ActionKind::Log,
     }
 }
 

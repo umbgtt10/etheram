@@ -4,6 +4,6 @@
 
 use etheram_core::transport_outgoing::TransportOutgoing;
 
-pub trait TransportOutputAdapter<Msg>: TransportOutgoing<Message = Msg> {}
+pub trait TransportOutgoingAdapter<Msg>: TransportOutgoing<Message = Msg> {}
 
-impl<T, Msg> TransportOutputAdapter<Msg> for T where T: TransportOutgoing<Message = Msg> {}
+impl<T, Msg> TransportOutgoingAdapter<Msg> for T where T: TransportOutgoing<Message = Msg> {}

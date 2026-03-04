@@ -182,7 +182,7 @@ Etheram uses dynamic dispatch (`Box<dyn Trait>`) for maximum swappability:
 - Protocol: `BoxedProtocol<M>` — swap `IbftProtocol<MockSignatureScheme>` ↔ `IbftProtocol<Ed25519SignatureScheme>` ↔ `NoOpProtocol`
 - Storage: `Box<dyn StorageAdapter>` — swap `InMemoryStorage` ↔ `SemihostingStorage`
 - Cache: `Box<dyn CacheAdapter>` — swap `InMemoryCache`
-- Transport: `Box<dyn TransportInputAdapter>` / `Box<dyn TransportOutputAdapter>` — swap `InMemoryTransport` ↔ `OutboxTransport` ↔ `UdpIbftTransport` ↔ `NoOpTransport`
+- Transport: `Box<dyn TransportIncomingAdapter>` / `Box<dyn TransportOutgoingAdapter>` — swap `InMemoryTransport` ↔ `OutboxTransport` ↔ `UdpIbftTransport` ↔ `NoOpTransport`
 - ExternalInterface: `Box<dyn ExternalInterfaceIncomingAdapter>` — swap `InMemoryExternalInterface` ↔ channel-based ↔ UDP-based
 - Timer: `Box<dyn TimerInputAdapter>` — swap `InMemoryTimer` ↔ Embassy timer receivers
 - Execution Engine: `BoxedExecutionEngine` — swap `ValueTransferEngine` ↔ `TinyEvmEngine`
@@ -197,7 +197,7 @@ EtheramNode (current):
   protocol: BoxedProtocol<IbftMessage>           (dynamic - swap signature scheme)
   storage: Box<dyn StorageAdapter>               (dynamic - InMemory vs Semihosting)
   cache: Box<dyn CacheAdapter>                   (dynamic)
-  transport: Box<dyn TransportInputAdapter>      (dynamic - InMemory vs UDP vs channel)
+  transport: Box<dyn TransportIncomingAdapter>      (dynamic - InMemory vs UDP vs channel)
   external_interface: Box<dyn ExternalInterface>  (dynamic - InMemory vs channel vs UDP)
   timer: Box<dyn TimerInputAdapter>              (dynamic)
   execution_engine: BoxedExecutionEngine         (dynamic - ValueTransfer vs TinyEvm)
@@ -297,7 +297,7 @@ Seven traits defining capabilities:
 - `ConsensusProtocol` — Stateless protocol logic (`handle_message() → ActionCollection`)
 - `StorageAdapter` — Persistent state (query/mutate with protocol-specific types)
 - `CacheAdapter` — Volatile state (query/update/invalidate)
-- `TransportInputAdapter` / `TransportOutputAdapter` — Peer communication (poll/send)
+- `TransportIncomingAdapter` / `TransportOutgoingAdapter` — Peer communication (poll/send)
 - `ExternalInterfaceIncomingAdapter` — Client communication (poll requests)
 - `TimerInputAdapter` / `TimerOutputAdapter` — Time-based events (poll/schedule)
 - `Collection` — Generic sequence abstraction (iteration, length, indexing)

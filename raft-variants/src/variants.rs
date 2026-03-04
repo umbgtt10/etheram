@@ -3,8 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::boxed::Box;
-use alloc::vec::Vec;
-use etheram_core::types::PeerId;
 use raft_node::{
     brain::protocol::{boxed_protocol::BoxedRaftProtocol, message::RaftMessage},
     common_types::{
@@ -36,11 +34,7 @@ pub enum RaftCacheVariant {
 }
 
 pub enum RaftProtocolVariant<P: Clone + 'static> {
-    Raft {
-        validator_set: Vec<PeerId>,
-        election_timeout_ms: u64,
-        heartbeat_interval_ms: u64,
-    },
+    Raft,
     Custom(BoxedRaftProtocol<P>),
 }
 

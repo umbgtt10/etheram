@@ -34,3 +34,11 @@ impl<P: Clone + 'static> RaftPartitionerBuilder<P> {
             .ok_or(BuildError::MissingComponent("partitioner"))
     }
 }
+
+impl<P: Clone + 'static> Default for RaftPartitionerBuilder<P> {
+    fn default() -> Self {
+        Self {
+            partitioner: Some(Box::new(TypeBasedRaftPartitioner::new())),
+        }
+    }
+}

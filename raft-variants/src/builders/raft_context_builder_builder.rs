@@ -56,3 +56,9 @@ impl<P: Clone + 'static> RaftContextBuilderBuilder<P> {
             .ok_or(BuildError::MissingComponent("context_builder"))
     }
 }
+
+impl<P: Clone + 'static> Default for RaftContextBuilderBuilder<P> {
+    fn default() -> Self {
+        Self::new()
+    }
+}

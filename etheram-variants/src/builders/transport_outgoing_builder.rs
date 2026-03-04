@@ -6,10 +6,10 @@ use crate::builders::error::BuildError;
 use crate::implementations::no_op_transport::NoOpTransport;
 use crate::variants::OutgoingTransportVariant;
 use alloc::boxed::Box;
-use etheram::common_types::transport_outgoing_adapter::TransportOutputAdapter;
+use etheram::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 
 pub struct TransportOutgoingBuilder {
-    transport: Option<Box<dyn TransportOutputAdapter<()>>>,
+    transport: Option<Box<dyn TransportOutgoingAdapter<()>>>,
 }
 
 impl TransportOutgoingBuilder {
@@ -19,14 +19,14 @@ impl TransportOutgoingBuilder {
     pub fn with_variant(mut self, variant: OutgoingTransportVariant) -> Self {
         let transport = match variant {
             OutgoingTransportVariant::NoOp => {
-                Box::new(NoOpTransport) as Box<dyn TransportOutputAdapter<()>>
+                Box::new(NoOpTransport) as Box<dyn TransportOutgoingAdapter<()>>
             }
             OutgoingTransportVariant::Custom(custom) => custom,
         };
         self.transport = Some(transport);
         self
     }
-    pub fn build(self) -> Result<Box<dyn TransportOutputAdapter<()>>, BuildError> {
+    pub fn build(self) -> Result<Box<dyn TransportOutgoingAdapter<()>>, BuildError> {
         self.transport
             .ok_or(BuildError::MissingComponent("transport_outgoing"))
     }

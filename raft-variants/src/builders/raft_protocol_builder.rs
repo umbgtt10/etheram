@@ -19,8 +19,7 @@ impl<P: Clone + From<alloc::vec::Vec<u8>> + AsRef<[u8]> + 'static> RaftProtocolB
 
     pub fn with_variant(mut self, variant: RaftProtocolVariant<P>) -> Self {
         match variant {
-            RaftProtocolVariant::Raft { .. } => {
-                // TODO: Pass configuration (validators, timeouts) to RaftProtocol once supported
+            RaftProtocolVariant::Raft => {
                 self.brain = Some(Box::new(RaftProtocol::new()));
             }
             RaftProtocolVariant::Custom(custom) => {
@@ -32,5 +31,15 @@ impl<P: Clone + From<alloc::vec::Vec<u8>> + AsRef<[u8]> + 'static> RaftProtocolB
 
     pub fn build(self) -> Result<BoxedRaftProtocol<P>, BuildError> {
         self.brain.ok_or(BuildError::MissingComponent("protocol"))
+    }
+}
+
+impl<P: Clone + From<alloc::vec::Vec<u8>> + AsRef<[u8]> + 'static> Default
+    for RaftProtocolBuilder<P>
+{
+    fn default() -> Self {
+        Self {
+            brain: Some(Box::new(RaftProtocol::new())),
+        }
     }
 }

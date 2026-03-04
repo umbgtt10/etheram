@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::common_types::transport_outgoing_adapter::TransportOutputAdapter;
+use crate::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use alloc::boxed::Box;
 use etheram_core::{transport_outgoing::TransportOutgoing, types::PeerId};
 
-impl<Msg> TransportOutgoing for Box<dyn TransportOutputAdapter<Msg>>
+impl<Msg> TransportOutgoing for Box<dyn TransportOutgoingAdapter<Msg>>
 where
     Msg: 'static,
 {

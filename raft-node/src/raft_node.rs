@@ -7,6 +7,7 @@ use crate::brain::protocol::boxed_protocol::BoxedRaftProtocol;
 use crate::collections::action_collection::ActionCollection;
 use crate::common_types::state_machine::RaftStateMachine;
 use crate::context::context_builder::RaftContextBuilder;
+use crate::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use crate::executor::raft_executor::RaftExecutor;
 use crate::incoming::incoming_sources::RaftIncomingSources;
 use crate::observer::action_kind;
@@ -121,7 +122,7 @@ impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
                 let mut responses = ActionCollection::new();
                 responses.push(RaftAction::SendClientResponse {
                     client_id: *client_id,
-                    response: crate::executor::outgoing::external_interface::client_response::RaftClientResponse::QueryResult(value),
+                    response: RaftClientResponse::QueryResult(value),
                 });
                 self.executor.execute_outputs(&responses);
             }

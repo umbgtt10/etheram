@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::std_raft_shared_state::StdRaftSharedState;
+use crate::std_shared_state::StdSharedState;
 use etheram_core::types::ClientId;
 use etheram_core::types::PeerId;
 use raft_node::brain::protocol::boxed_protocol::BoxedRaftProtocol;
@@ -47,17 +47,17 @@ use std::vec::Vec;
 pub struct RaftCluster {
     peer_ids: Vec<PeerId>,
     nodes: Vec<RaftNode<Vec<u8>>>,
-    timer_state: StdRaftSharedState<InMemoryRaftTimerState>,
-    transport_state: StdRaftSharedState<InMemoryRaftTransportState<Vec<u8>>>,
-    ei_state: StdRaftSharedState<InMemoryRaftExternalInterfaceState>,
+    timer_state: StdSharedState<InMemoryRaftTimerState>,
+    transport_state: StdSharedState<InMemoryRaftTransportState<Vec<u8>>>,
+    ei_state: StdSharedState<InMemoryRaftExternalInterfaceState>,
 }
 
 impl RaftCluster {
     pub fn new(node_count: usize) -> Self {
         let peer_ids: Vec<PeerId> = (1..=(node_count as u64)).collect();
-        let timer_state = StdRaftSharedState::new(InMemoryRaftTimerState::new());
-        let transport_state = StdRaftSharedState::new(InMemoryRaftTransportState::<Vec<u8>>::new());
-        let ei_state = StdRaftSharedState::new(InMemoryRaftExternalInterfaceState::new());
+        let timer_state = StdSharedState::new(InMemoryRaftTimerState::new());
+        let transport_state = StdSharedState::new(InMemoryRaftTransportState::<Vec<u8>>::new());
+        let ei_state = StdSharedState::new(InMemoryRaftExternalInterfaceState::new());
 
         let mut nodes = Vec::new();
         for &peer_id in &peer_ids {

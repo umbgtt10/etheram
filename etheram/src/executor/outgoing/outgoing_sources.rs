@@ -4,7 +4,7 @@
 
 use crate::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use crate::common_types::timer_output_adapter::TimerOutputAdapter;
-use crate::common_types::transport_outgoing_adapter::TransportOutputAdapter;
+use crate::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use crate::executor::outgoing::external_interface::client_response::ClientResponse;
 use crate::incoming::timer::timer_event::TimerEvent;
 use alloc::boxed::Box;
@@ -12,14 +12,14 @@ use alloc::boxed::Box;
 pub struct OutgoingSources<M> {
     timer: Box<dyn TimerOutputAdapter<TimerEvent, u64>>,
     external_interface: Box<dyn ExternalInterfaceOutgoingAdapter<ClientResponse>>,
-    transport: Box<dyn TransportOutputAdapter<M>>,
+    transport: Box<dyn TransportOutgoingAdapter<M>>,
 }
 
 impl<M: 'static> OutgoingSources<M> {
     pub fn new(
         timer: Box<dyn TimerOutputAdapter<TimerEvent, u64>>,
         external_interface: Box<dyn ExternalInterfaceOutgoingAdapter<ClientResponse>>,
-        transport: Box<dyn TransportOutputAdapter<M>>,
+        transport: Box<dyn TransportOutgoingAdapter<M>>,
     ) -> Self {
         Self {
             timer,

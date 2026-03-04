@@ -12,8 +12,8 @@ use etheram::{
         external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter,
         storage_adapter::StorageAdapter, timer_input_adapter::TimerInputAdapter,
         timer_output_adapter::TimerOutputAdapter, transaction::Transaction,
-        transport_incoming_adapter::TransportInputAdapter,
-        transport_outgoing_adapter::TransportOutputAdapter, types::Address,
+        transport_incoming_adapter::TransportIncomingAdapter,
+        transport_outgoing_adapter::TransportOutgoingAdapter, types::Address,
     },
     context::context_builder::ContextBuilder,
     execution::execution_engine::BoxedExecutionEngine,
@@ -69,12 +69,12 @@ pub enum TimerOutputVariant {
 
 pub enum IncomingTransportVariant {
     NoOp,
-    Custom(Box<dyn TransportInputAdapter<()>>),
+    Custom(Box<dyn TransportIncomingAdapter<()>>),
 }
 
 pub enum OutgoingTransportVariant {
     NoOp,
-    Custom(Box<dyn TransportOutputAdapter<()>>),
+    Custom(Box<dyn TransportOutgoingAdapter<()>>),
 }
 
 pub enum IncomingExternalInterfaceVariant {

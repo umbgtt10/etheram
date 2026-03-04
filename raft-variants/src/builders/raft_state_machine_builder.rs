@@ -33,3 +33,11 @@ impl RaftStateMachineBuilder {
         self.sm.ok_or(BuildError::MissingComponent("state_machine"))
     }
 }
+
+impl Default for RaftStateMachineBuilder {
+    fn default() -> Self {
+        Self {
+            sm: Some(Box::new(InMemoryRaftStateMachine::new())),
+        }
+    }
+}

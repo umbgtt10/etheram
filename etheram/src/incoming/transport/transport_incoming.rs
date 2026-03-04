@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::common_types::transport_incoming_adapter::TransportInputAdapter;
+use crate::common_types::transport_incoming_adapter::TransportIncomingAdapter;
 use alloc::boxed::Box;
 use etheram_core::{transport_incoming::TransportIncoming, types::PeerId};
 
-impl<Msg> TransportIncoming for Box<dyn TransportInputAdapter<Msg>>
+impl<Msg> TransportIncoming for Box<dyn TransportIncomingAdapter<Msg>>
 where
     Msg: 'static,
 {
