@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::builders::error::BuildError;
 use crate::implementations::eager_raft_context_builder::EagerRaftContextBuilder;
 use crate::implementations::in_memory_raft_cache::InMemoryRaftCache;
 use crate::implementations::in_memory_raft_state_machine::InMemoryRaftStateMachine;
@@ -156,24 +157,30 @@ impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn build(self) -> RaftNode<P> {
-        let peer_id = self.peer_id.expect("peer_id required");
+    pub fn build(self) -> Result<RaftNode<P>, BuildError> {
+        let peer_id = self
+            .peer_id
+            .ok_or(BuildError::MissingComponent("peer_id"))?;
         let peers = self.peers;
 
-        let timer_in: Box<dyn TimerInputAdapter<RaftTimerEvent>> =
-            self.timer_input.expect("timer_input required");
-        let timer_out: Box<dyn TimerOutputAdapter<RaftTimerEvent, u64>> =
-            self.timer_output.expect("timer_output required");
+        let timer_in: Box<dyn TimerInputAdapter<RaftTimerEvent>> = self
+            .timer_input
+            .ok_or(BuildError::MissingComponent("timer_input"))?;
+        let timer_out: Box<dyn TimerOutputAdapter<RaftTimerEvent, u64>> = self
+            .timer_output
+            .ok_or(BuildError::MissingComponent("timer_output"))?;
         let transport_in: Box<dyn TransportIncomingAdapter<RaftMessage<P>>> = self
             .transport_incoming
             .unwrap_or_else(|| Box::new(NoOpRaftTransport::<P>::new()));
         let transport_out: Box<dyn TransportOutgoingAdapter<RaftMessage<P>>> = self
             .transport_outgoing
             .unwrap_or_else(|| Box::new(NoOpRaftTransport::<P>::new()));
-        let ei_in: Box<dyn ExternalInterfaceIncomingAdapter<RaftClientRequest>> =
-            self.ei_incoming.expect("ei_incoming required");
-        let ei_out: Box<dyn ExternalInterfaceOutgoingAdapter<RaftClientResponse>> =
-            self.ei_outgoing.expect("ei_outgoing required");
+        let ei_in: Box<dyn ExternalInterfaceIncomingAdapter<RaftClientRequest>> = self
+            .ei_incoming
+            .ok_or(BuildError::MissingComponent("ei_incoming"))?;
+        let ei_out: Box<dyn ExternalInterfaceOutgoingAdapter<RaftClientResponse>> = self
+            .ei_outgoing
+            .ok_or(BuildError::MissingComponent("ei_outgoing"))?;
 
         let storage: Box<dyn StorageAdapter<P, Key = (), Value = ()>> = self
             .storage
@@ -207,7 +214,7 @@ impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
         let executor = RaftExecutor::new_with_peers(outgoing, peers.clone());
         let state = RaftState::new(storage, cache);
 
-        RaftNode::new(
+        Ok(RaftNode::new(
             peer_id,
             incoming,
             state,
@@ -217,7 +224,7 @@ impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
             partitioner,
             state_machine,
             observer,
-        )
+        ))
     }
 }
 

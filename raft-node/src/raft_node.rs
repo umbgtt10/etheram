@@ -114,6 +114,7 @@ impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
             }
             if let RaftAction::RestoreFromSnapshot(data) = action {
                 self.state_machine.restore(data);
+                self.state.set_last_applied(self.state.query_commit_index());
             }
         }
     }

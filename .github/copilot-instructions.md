@@ -353,7 +353,7 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
 - All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
 
-### ✅ Raft Sprints 0–4 Implemented
+### ✅ Raft Sprints 0–5 Implemented
 - `raft-node/` crate created with `#![no_std]` from day one
 - All Sprint 0 types: `RaftMessage<P>` (8 variants), `RaftAction<P>` (17 variants inc. `RestoreFromSnapshot`), `RaftContext<P>`, `RaftTimerEvent`, `RaftClientRequest`, `RaftClientResponse`, `RaftStorageQuery`, `RaftStorageMutation<P>`, `RaftStorageQueryResult<P>`, `RaftCacheQuery`, `RaftCacheUpdate`, `RaftCacheQueryResult`, `NodeRole`, `LogEntry<P>`, `RaftSnapshot`, `RaftStateMachine` trait
 - Sprint 1 `RaftNode<P>` with full 6-dimension struct and step loop matching `EtheramNode::step()` structure

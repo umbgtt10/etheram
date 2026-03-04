@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod builders;
-pub mod common;
-pub mod implementations;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BuildError {
+    MissingComponent(&'static str),
+}

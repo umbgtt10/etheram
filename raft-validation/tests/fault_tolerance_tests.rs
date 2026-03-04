@@ -7,6 +7,7 @@ use crate::common::raft_cluster_helpers::replicate_one;
 use crate::common::raft_cluster_helpers::setup_elected_5_node_cluster;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 use raft_raft_validation::raft_cluster::RaftCluster;
+use raft_variants::implementations::raft_protocol::common::quorum_size;
 
 #[test]
 fn one_node_crash_in_5_node_cluster_continues_replication() {
@@ -98,10 +99,27 @@ fn new_leader_has_higher_term_after_old_leader_isolated() {
 #[test]
 fn quorum_size_is_majority_plus_one_for_5_nodes() {
     // Arrange
-    let cluster = RaftCluster::new(5);
+    let peer_count = 4;
 
     // Act & Assert
-    assert_eq!(cluster.node_count(), 5);
+    assert_eq!(quorum_size(peer_count), 3);
+}
+
+#[test]
+fn concurrent_election_timeouts_then_cluster_recovers_single_leader() {
+    // Arrange
+    let mut cluster = RaftCluster::new(5);
+
+    // Act
+    cluster.fire_timer(0, RaftTimerEvent::ElectionTimeout);
+    cluster.fire_timer(1, RaftTimerEvent::ElectionTimeout);
+    cluster.drain_all();
+
+    // Assert
+    let leader_count = (0..cluster.node_count())
+        .filter(|&i| cluster.node_role(i) == raft_node::common_types::node_role::NodeRole::Leader)
+        .count();
+    assert_eq!(leader_count, 1);
 }
 
 #[test]

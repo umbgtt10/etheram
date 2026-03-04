@@ -56,7 +56,7 @@ fn inject_install_snapshot_advances_last_applied() {
     cluster.drain(receiver);
 
     // Assert
-    assert_eq!(cluster.node_commit_index(receiver), 7);
+    assert_eq!(cluster.node_last_applied(receiver), 7);
 }
 
 #[test]
