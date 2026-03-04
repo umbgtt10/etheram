@@ -52,3 +52,18 @@ fn send_response_then_drain_responses_returns_response() {
     assert_eq!(responses.len(), 1);
     assert!(matches!(responses[0], (7, RaftClientResponse::Timeout)));
 }
+
+#[test]
+fn send_response_then_drain_client_responses_returns_response() {
+    // Arrange
+    let state = StdSharedState::new(InMemoryRaftExternalInterfaceState::new());
+    let ei = InMemoryRaftExternalInterface::new(1, state.clone());
+
+    // Act
+    ei.send_response(11, RaftClientResponse::Timeout);
+    let responses = state.with_mut(|s| s.drain_client_responses(11));
+
+    // Assert
+    assert_eq!(responses.len(), 1);
+    assert!(matches!(responses[0], RaftClientResponse::Timeout));
+}

@@ -116,6 +116,15 @@ impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
                 self.state_machine.restore(data);
                 self.state.set_last_applied(self.state.query_commit_index());
             }
+            if let RaftAction::QueryStateMachine { client_id, key } = action {
+                let value = self.state_machine.query_raw(key.as_bytes());
+                let mut responses = ActionCollection::new();
+                responses.push(RaftAction::SendClientResponse {
+                    client_id: *client_id,
+                    response: crate::executor::outgoing::external_interface::client_response::RaftClientResponse::QueryResult(value),
+                });
+                self.executor.execute_outputs(&responses);
+            }
         }
     }
 }

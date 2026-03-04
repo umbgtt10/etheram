@@ -14,6 +14,7 @@ use raft_node::incoming::external_interface::client_request::RaftClientRequest;
 pub struct InMemoryRaftExternalInterfaceState {
     inboxes: BTreeMap<u64, Vec<(ClientId, RaftClientRequest)>>,
     outboxes: BTreeMap<u64, Vec<(ClientId, RaftClientResponse)>>,
+    responses_by_client: BTreeMap<ClientId, Vec<RaftClientResponse>>,
 }
 
 impl InMemoryRaftExternalInterfaceState {
@@ -21,6 +22,7 @@ impl InMemoryRaftExternalInterfaceState {
         Self {
             inboxes: BTreeMap::new(),
             outboxes: BTreeMap::new(),
+            responses_by_client: BTreeMap::new(),
         }
     }
 
@@ -33,6 +35,12 @@ impl InMemoryRaftExternalInterfaceState {
 
     pub fn drain_responses(&mut self, node_id: u64) -> Vec<(ClientId, RaftClientResponse)> {
         self.outboxes.remove(&node_id).unwrap_or_default()
+    }
+
+    pub fn drain_client_responses(&mut self, client_id: ClientId) -> Vec<RaftClientResponse> {
+        self.responses_by_client
+            .remove(&client_id)
+            .unwrap_or_default()
     }
 }
 
@@ -92,7 +100,11 @@ where
             s.outboxes
                 .entry(self.node_id)
                 .or_default()
-                .push((client_id, response));
+                .push((client_id, response.clone()));
+            s.responses_by_client
+                .entry(client_id)
+                .or_default()
+                .push(response);
         });
     }
 }

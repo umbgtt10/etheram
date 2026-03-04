@@ -254,3 +254,18 @@ fn action_kind_restore_from_snapshot_action_returns_restore_from_snapshot_kind()
     // Assert
     assert_eq!(kind, RaftActionKind::RestoreFromSnapshot);
 }
+
+#[test]
+fn action_kind_query_state_machine_action_returns_query_state_machine_kind() {
+    // Arrange
+    let action = RaftAction::<()>::QueryStateMachine {
+        client_id: 7,
+        key: "k".to_string(),
+    };
+
+    // Act
+    let kind = action_kind(&action);
+
+    // Assert
+    assert_eq!(kind, RaftActionKind::QueryStateMachine);
+}

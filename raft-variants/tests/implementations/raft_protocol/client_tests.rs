@@ -59,12 +59,12 @@ fn handle_client_command_leader_records_pending_entry() {
 }
 
 #[test]
-fn handle_client_query_always_returns_not_leader() {
+fn handle_client_query_follower_returns_not_leader() {
     // Arrange
-    let ctx = make_ctx(1, vec![2, 3], NodeRole::Leader);
+    let ctx = make_ctx(1, vec![2, 3], NodeRole::Follower);
 
     // Act
-    let actions = client::handle_client_query(&ctx, 77);
+    let actions = client::handle_client_query(&ctx, 77, "k");
 
     // Assert
     assert_eq!(actions.len(), 1);
@@ -74,5 +74,24 @@ fn handle_client_query_always_returns_not_leader() {
             client_id: 77,
             response: RaftClientResponse::NotLeader(_),
         }
+    ));
+}
+
+#[test]
+fn handle_client_query_leader_emits_query_state_machine_action() {
+    // Arrange
+    let ctx = make_ctx(1, vec![2, 3], NodeRole::Leader);
+
+    // Act
+    let actions = client::handle_client_query(&ctx, 77, "k");
+
+    // Assert
+    assert_eq!(actions.len(), 1);
+    assert!(matches!(
+        &actions[0],
+        RaftAction::QueryStateMachine {
+            client_id: 77,
+            key,
+        } if key == "k"
     ));
 }

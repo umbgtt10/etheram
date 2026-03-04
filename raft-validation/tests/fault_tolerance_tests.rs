@@ -191,3 +191,21 @@ fn network_partition_heals_and_isolated_node_catches_up() {
     // Assert
     assert_eq!(cluster.node_commit_index(isolated), leader_commit);
 }
+
+#[test]
+fn follower_timeout_in_healthy_cluster_does_not_block_progress() {
+    // Arrange
+    let (mut cluster, leader_idx) = setup_elected_5_node_cluster();
+    let follower_idx = (leader_idx + 1) % 5;
+
+    // Act
+    cluster.fire_timer(follower_idx, RaftTimerEvent::ElectionTimeout);
+    cluster.drain_all();
+
+    let active_leader = cluster.elect_leader();
+    cluster.submit_command(active_leader, 77, make_kv_command("k", b"v"));
+    cluster.drain_all();
+
+    // Assert
+    assert!(cluster.node_commit_index(active_leader) > 0);
+}

@@ -207,6 +207,11 @@ impl RaftCluster {
             .with_mut(|state| state.drain_responses(self.peer_ids[node_index]))
     }
 
+    pub fn drain_client_responses(&self, client_id: ClientId) -> Vec<RaftClientResponse> {
+        self.ei_state
+            .with_mut(|state| state.drain_client_responses(client_id))
+    }
+
     pub fn node_role(&self, node_index: usize) -> NodeRole {
         self.nodes[node_index].state().query_role()
     }

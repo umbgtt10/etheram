@@ -116,7 +116,7 @@ fn handle_client<P: Clone + From<alloc::vec::Vec<u8>>>(
         RaftClientRequest::Command(bytes) => {
             client::handle_client_command(protocol, ctx, client_id, P::from(bytes.clone()))
         }
-        RaftClientRequest::Query(_) => client::handle_client_query(ctx, client_id),
+        RaftClientRequest::Query(key) => client::handle_client_query(ctx, client_id, key),
     }
 }
 

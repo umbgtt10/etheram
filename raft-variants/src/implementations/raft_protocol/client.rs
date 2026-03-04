@@ -41,7 +41,14 @@ pub fn handle_client_command<P: Clone>(
 pub fn handle_client_query<P: Clone>(
     ctx: &RaftContext<P>,
     client_id: ClientId,
+    key: &str,
 ) -> Vec<RaftAction<P>> {
+    if ctx.role == NodeRole::Leader {
+        return vec![RaftAction::QueryStateMachine {
+            client_id,
+            key: key.into(),
+        }];
+    }
     vec![RaftAction::SendClientResponse {
         client_id,
         response: RaftClientResponse::NotLeader(ctx.leader_id),

@@ -93,3 +93,49 @@ fn follower_redirects_to_known_leader() {
         matches!(resp, RaftClientResponse::NotLeader(Some(id)) if *id == expected_leader_id)
     }));
 }
+
+#[test]
+fn query_after_committed_write_on_leader_returns_query_result_value() {
+    // Arrange
+    let (mut cluster, leader_idx) = setup_elected_3_node_cluster();
+    let write_client = 101;
+    let read_client = 202;
+
+    // Act
+    cluster.submit_command(leader_idx, write_client, make_kv_command("k", b"v"));
+    cluster.drain_all();
+    cluster.fire_timer(
+        leader_idx,
+        raft_node::incoming::timer::timer_event::RaftTimerEvent::Heartbeat,
+    );
+    cluster.drain_all();
+    cluster.submit_query(leader_idx, read_client, "k");
+    cluster.drain_all();
+    let responses = cluster.drain_client_responses(read_client);
+
+    // Assert
+    assert!(responses.iter().any(|resp| matches!(
+        resp,
+        RaftClientResponse::QueryResult(value) if value == b"v"
+    )));
+}
+
+#[test]
+fn query_response_can_be_drained_by_client_id() {
+    // Arrange
+    let (mut cluster, leader_idx) = setup_elected_3_node_cluster();
+    let client_id = 303;
+
+    // Act
+    cluster.submit_query(leader_idx, client_id, "missing");
+    cluster.drain_all();
+    let responses = cluster.drain_client_responses(client_id);
+
+    // Assert
+    assert!(responses.iter().any(|resp| {
+        matches!(
+            resp,
+            RaftClientResponse::QueryResult(value) if value.is_empty()
+        )
+    }));
+}

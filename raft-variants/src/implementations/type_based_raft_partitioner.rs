@@ -47,6 +47,7 @@ impl<P: Clone + 'static> RaftPartitioner<P> for TypeBasedRaftPartitioner {
                 RaftAction::BroadcastMessage { .. } => outputs.push(action.clone()),
                 RaftAction::ScheduleTimeout { .. } => outputs.push(action.clone()),
                 RaftAction::ApplyToStateMachine { .. } => outputs.push(action.clone()),
+                RaftAction::QueryStateMachine { .. } => outputs.push(action.clone()),
                 RaftAction::RestoreFromSnapshot(_) => outputs.push(action.clone()),
                 RaftAction::SendClientResponse { .. } => outputs.push(action.clone()),
                 RaftAction::Log(_) => outputs.push(action.clone()),

@@ -45,6 +45,10 @@ pub enum RaftAction<P> {
         client_id: Option<ClientId>,
         entry: LogEntry<P>,
     },
+    QueryStateMachine {
+        client_id: ClientId,
+        key: String,
+    },
     RestoreFromSnapshot(Vec<u8>),
     SendClientResponse {
         client_id: ClientId,
