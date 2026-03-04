@@ -45,6 +45,7 @@ pub enum RaftAction<P> {
         client_id: Option<ClientId>,
         entry: LogEntry<P>,
     },
+    RestoreFromSnapshot(Vec<u8>),
     SendClientResponse {
         client_id: ClientId,
         response: RaftClientResponse,

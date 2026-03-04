@@ -100,8 +100,11 @@ impl<P: Clone + 'static> RaftNode<P> {
                 entry,
             } = action
             {
-                // TODO: pass serialized entry.payload when P: Serialize is added
                 self.state_machine.apply_raw(entry.index, &[]);
+                self.state.set_last_applied(entry.index);
+            }
+            if let RaftAction::RestoreFromSnapshot(data) = action {
+                self.state_machine.restore(data);
             }
         }
     }

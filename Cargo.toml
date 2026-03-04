@@ -7,6 +7,7 @@ members = [
     "etheram-embassy",
     "etheram-validation",
     "raft-node",
+    "raft-variants",
 ]
 
 [workspace.dependencies]
@@ -40,3 +41,4 @@ etheram-etheram = { path = "etheram" }
 etheram-etheram-variants = { path = "etheram-variants", default-features = false }
 etheram-etheram-validation = { path = "etheram-validation" }
 raft-raft-node = { path = "raft-node" }
+raft-raft-variants = { path = "raft-variants" }

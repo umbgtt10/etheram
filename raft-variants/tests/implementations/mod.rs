@@ -1,3 +1,7 @@
 // Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
+
+pub mod in_memory_raft_cache_tests;
+pub mod in_memory_raft_storage_tests;
+pub mod raft_protocol;

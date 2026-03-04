@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+extern crate alloc;
+
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::log_entry::LogEntry;
@@ -239,4 +241,16 @@ fn action_kind_log_action_returns_log_kind() {
 
     // Assert
     assert_eq!(kind, RaftActionKind::Log);
+}
+
+#[test]
+fn action_kind_restore_from_snapshot_action_returns_restore_from_snapshot_kind() {
+    // Arrange
+    let action = RaftAction::<()>::RestoreFromSnapshot(alloc::vec![1u8, 2, 3]);
+
+    // Act
+    let kind = action_kind(&action);
+
+    // Assert
+    assert_eq!(kind, RaftActionKind::RestoreFromSnapshot);
 }

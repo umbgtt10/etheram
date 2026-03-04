@@ -32,6 +32,7 @@ pub enum RaftActionKind {
     BroadcastMessage,
     ScheduleTimeout,
     ApplyToStateMachine,
+    RestoreFromSnapshot,
     SendClientResponse { client_id: ClientId },
     Log,
 }
@@ -56,6 +57,7 @@ pub fn action_kind<P>(action: &RaftAction<P>) -> RaftActionKind {
         RaftAction::BroadcastMessage { .. } => RaftActionKind::BroadcastMessage,
         RaftAction::ScheduleTimeout { .. } => RaftActionKind::ScheduleTimeout,
         RaftAction::ApplyToStateMachine { .. } => RaftActionKind::ApplyToStateMachine,
+        RaftAction::RestoreFromSnapshot(_) => RaftActionKind::RestoreFromSnapshot,
         RaftAction::SendClientResponse { client_id, .. } => RaftActionKind::SendClientResponse {
             client_id: *client_id,
         },

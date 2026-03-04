@@ -10,8 +10,12 @@ function Invoke-Step {
 
 Invoke-Step "Formatting" { cargo fmt }
 
-foreach ($crate in @("etheram-etheram", "etheram-etheram-variants", "etheram-etheram-validation", "raft-raft-node")) {
+foreach ($crate in @("etheram-etheram", "etheram-etheram-variants", "etheram-etheram-validation", "raft-raft-node", "raft-raft-variants")) {
     Invoke-Step "Testing $crate" { cargo nextest run -p $crate }
+}
+
+foreach ($crate in @("etheram-etheram-variants", "raft-raft-node", "raft-raft-variants")) {
+    Invoke-Step "no_std gate: $crate" { cargo check -p $crate --no-default-features }
 }
 
 

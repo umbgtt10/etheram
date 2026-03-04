@@ -347,20 +347,23 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - `TinyEvmEngine` unknown opcode returns `OutOfGas` (was `Success`)
 - `StoreReceipts` storage mutation kind computes real success/out_of_gas counts from receipt statuses
 
-### 🔄 Next: Raft Consensus — Sprint 2 (RaftProtocol)
-- Sprint 0 (`raft-node/` skeleton) and Sprint 1 (`RaftNode<P>` step loop) are **complete** — see `raft-node/` crate
-- Sprint 2: implement `RaftProtocol<P>` in `raft-variants/` — pure Raft consensus (election, replication, snapshot)
+### 🔄 Next: Raft Consensus — Sprint 5 (RaftCluster / raft-validation)
+- Sprints 0–4 (`raft-node/` skeleton, `RaftNode<P>` step loop, `RaftProtocol<P>`, infra implementations, protocol-level tests) are **complete** — see `raft-node/` and `raft-variants/` crates
+- Sprint 5: implement `RaftCluster` harness in `raft-validation/` — election, replication, fault-tolerance, and snapshot cluster tests
 - See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
 - All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
 
-### ✅ Raft Sprint 0/1 Implemented
+### ✅ Raft Sprints 0–4 Implemented
 - `raft-node/` crate created with `#![no_std]` from day one
-- All Sprint 0 types: `RaftMessage<P>` (8 variants), `RaftAction<P>` (16 variants), `RaftContext<P>`, `RaftTimerEvent`, `RaftClientRequest`, `RaftClientResponse`, `RaftStorageQuery`, `RaftStorageMutation<P>`, `RaftStorageQueryResult<P>`, `RaftCacheQuery`, `RaftCacheUpdate`, `RaftCacheQueryResult`, `NodeRole`, `LogEntry<P>`, `RaftSnapshot`, `RaftStateMachine` trait
+- All Sprint 0 types: `RaftMessage<P>` (8 variants), `RaftAction<P>` (17 variants inc. `RestoreFromSnapshot`), `RaftContext<P>`, `RaftTimerEvent`, `RaftClientRequest`, `RaftClientResponse`, `RaftStorageQuery`, `RaftStorageMutation<P>`, `RaftStorageQueryResult<P>`, `RaftCacheQuery`, `RaftCacheUpdate`, `RaftCacheQueryResult`, `NodeRole`, `LogEntry<P>`, `RaftSnapshot`, `RaftStateMachine` trait
 - Sprint 1 `RaftNode<P>` with full 6-dimension struct and step loop matching `EtheramNode::step()` structure
-- `RaftObserver` trait with `RaftActionKind` projection, `action_kind()` helper
+- `RaftObserver` trait with `RaftActionKind` projection (inc. `RestoreFromSnapshot`), `action_kind()` helper
 - `RaftPartitioner<P>` producing 2-way partition (mutations, outputs) — no execution tier
 - All adapter blanket impls: `StorageAdapter<P>`, `CacheAdapter`, `TimerInputAdapter`, `TimerOutputAdapter`, `TransportIncomingAdapter`, `TransportOutgoingAdapter`, `ExternalInterfaceIncomingAdapter`, `ExternalInterfaceOutgoingAdapter`
 - `RaftIncomingSources<P>`, `RaftOutgoingSources<P>`, `RaftExecutor<P>` with poll and execute loops
+- Sprint 2 `RaftProtocol<P>` in `raft-variants/` — pure Raft consensus: pre-vote, election, leader promotion, heartbeat, log replication, snapshot install; `ELECTION_TIMEOUT_MS=300`, `HEARTBEAT_INTERVAL_MS=100`; quorum = `(n+1)/2 + 1`
+- Sprint 3 infra implementations in `raft-variants/`: `InMemoryRaftStorage<P>`, `InMemoryRaftCache`, `InMemoryRaftTransport<P,S>`, `InMemoryRaftTimer<S>`, `InMemoryRaftExternalInterface<S>`, `InMemoryRaftStateMachine`, `NoOpRaftTransport<P>`, `NoOpRaftObserver`, `TypeBasedRaftPartitioner`, `EagerRaftContextBuilder`, `SharedState<T>` trait; `RaftNodeBuilder<P>` builder
+- Sprint 4 tests in `raft-variants/tests/`: 42 protocol-level tests across `election_tests`, `replication_tests`, `snapshot_tests`, `client_tests`, `role_transition_tests`, `in_memory_raft_storage_tests`, `in_memory_raft_cache_tests` — all passing
 
 ---
 

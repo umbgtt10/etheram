@@ -95,6 +95,31 @@ impl<P: Clone + 'static> RaftState<P> {
         }
     }
 
+    pub fn query_snapshot(&self) -> Option<crate::common_types::snapshot::RaftSnapshot> {
+        match self.storage.query(RaftStorageQuery::Snapshot) {
+            RaftStorageQueryResult::Snapshot(s) => s,
+            _ => None,
+        }
+    }
+
+    pub fn query_all_match_index(&self) -> alloc::collections::BTreeMap<PeerId, u64> {
+        match self.cache.query(RaftCacheQuery::AllMatchIndex) {
+            RaftCacheQueryResult::AllMatchIndex(m) => m,
+            _ => alloc::collections::BTreeMap::new(),
+        }
+    }
+
+    pub fn query_all_next_index(&self) -> alloc::collections::BTreeMap<PeerId, u64> {
+        match self.cache.query(RaftCacheQuery::AllNextIndex) {
+            RaftCacheQueryResult::AllNextIndex(n) => n,
+            _ => alloc::collections::BTreeMap::new(),
+        }
+    }
+
+    pub fn set_last_applied(&mut self, index: u64) {
+        self.cache.update(RaftCacheUpdate::SetLastApplied(index));
+    }
+
     pub fn apply_mutations(&mut self, mutations: &ActionCollection<RaftAction<P>>) {
         for action in mutations.iter() {
             match action {

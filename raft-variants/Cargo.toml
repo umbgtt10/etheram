@@ -1,0 +1,25 @@
+[package]
+name = "raft-raft-variants"
+version = "0.1.0"
+edition = "2021"
+autotests = false
+
+[features]
+default = ["std"]
+std = []
+
+[dependencies]
+etheram-core.workspace = true
+raft-raft-node.workspace = true
+
+[dev-dependencies]
+etheram-core.workspace = true
+raft-raft-node.workspace = true
+
+[lib]
+name = "raft_variants"
+path = "src/lib.rs"
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"
