@@ -32,3 +32,9 @@ pub mod in_memory;
 
 #[cfg(feature = "channel-transport")]
 pub use in_memory::setup::init;
+
+#[cfg(feature = "udp-transport")]
+pub mod real;
+
+#[cfg(feature = "udp-transport")]
+pub use real::setup::init;

@@ -2,4 +2,4 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod channel;
+pub use raft_variants::implementations::in_memory_raft_storage::InMemoryRaftStorage;

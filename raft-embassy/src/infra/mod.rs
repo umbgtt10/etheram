@@ -3,5 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod external_interface;
+pub mod storage;
 pub mod timer;
 pub mod transport;

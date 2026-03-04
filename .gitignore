@@ -20,3 +20,5 @@ Thumbs.db
 # Semihosting persistence files
 etheram-embassy/persistency/*
 !etheram-embassy/persistency/.gitkeep
+raft-embassy/persistency/*
+!raft-embassy/persistency/.gitkeep

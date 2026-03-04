@@ -4,3 +4,5 @@
 
 #[cfg(feature = "channel-transport")]
 pub mod channel;
+#[cfg(feature = "udp-transport")]
+pub mod udp;

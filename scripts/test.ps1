@@ -27,5 +27,13 @@ Invoke-Step "Running etheram-etheram-embassy (udp-transport)" {
     powershell -File "$PSScriptRoot\..\etheram-embassy\scripts\run_udp_semihosting.ps1"
 }
 
+Invoke-Step "Running raft-raft-embassy (channel-transport)" {
+    powershell -File "$PSScriptRoot\..\raft-embassy\scripts\run_raft_channel_in_memory.ps1"
+}
+
+Invoke-Step "Running raft-raft-embassy (udp-transport)" {
+    powershell -File "$PSScriptRoot\..\raft-embassy\scripts\run_raft_udp_semihosting.ps1"
+}
+
 Write-Host "`nFull success!" -ForegroundColor Green
 exit 0

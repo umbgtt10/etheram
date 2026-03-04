@@ -5,3 +5,5 @@
 #[cfg(feature = "channel-external-interface")]
 pub mod channel;
 pub mod client_facade;
+#[cfg(feature = "udp-external-interface")]
+pub mod udp;

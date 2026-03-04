@@ -37,7 +37,7 @@ pub fn last_log_term<P>(ctx: &RaftContext<P>) -> u64 {
 }
 
 pub fn quorum_size(peer_count: usize) -> usize {
-    (peer_count + 1) / 2 + 1
+    peer_count.div_ceil(2) + 1
 }
 
 pub fn log_is_up_to_date(
