@@ -511,6 +511,12 @@ The Node abstraction is actually a specialization of a more general **SystemEnti
 
 The six-dimensional decomposition generalizes beyond blockchain to any distributed system participant.
 
+### Proving Generality: Raft as Second Protocol
+
+To validate that the 3-6 model generalizes across consensus families rather than being an artefact of IBFT, a second protocol family — **Raft** — is planned as an independent crate family (`raft-node/`, `raft-variants/`, `raft-validation/`, `raft-embassy/`). Raft is maximally different from IBFT across every axis: crash-only vs Byzantine fault model, `⌊n/2⌋+1` vs `⌊2n/3⌋+1` quorum, randomized vs deterministic leader election, 2-phase vs 3-phase commit, append-only log vs single pending block. If the same 6-dimension decomposition with the same `step()` primitive independently emerges for both protocols — depending only on the shared `core/` crate — the architectural model is validated beyond a single protocol.
+
+See [RAFT-ROADMAP.md](../etheram/RAFT-ROADMAP.md) for the full implementation plan.
+
 ---
 
 ## Key Takeaways

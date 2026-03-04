@@ -1,4 +1,4 @@
-# MetalRaft Code of Conduct
+# EtheRAM Code of Conduct
 
 ## Purpose
 

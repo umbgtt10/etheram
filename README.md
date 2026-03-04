@@ -38,7 +38,7 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 
 ### Planned
 
-- Second consensus protocol (Raft or HotStuff) to prove decomposition generality
+- **Raft consensus** — second protocol family (`raft-node`, `raft-variants`, `raft-validation`, `raft-embassy`) to prove decomposition generality ([Raft Roadmap](etheram/RAFT-ROADMAP.md))
 - Physical hardware deployment (STM32 / RP2040)
 - Property-based testing (`proptest`)
 - Merkle Patricia Trie state root
@@ -108,8 +108,9 @@ Dependencies are strictly one-way. `etheram` never depends on `etheram-variants`
 
 | Document | Scope |
 |---|---|
-| [IBFT-ROADMAP.md](etheram/IBFT-ROADMAP.md) | Consensus protocol features (supported + planned) |
+| [IBFT-ROADMAP.md](etheram/IBFT-ROADMAP.md) | IBFT consensus protocol features (supported + planned) |
 | [CHAIN-ROADMAP.md](etheram/CHAIN-ROADMAP.md) | Ethereum-like chain features (supported + planned) |
+| [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) | Raft consensus implementation plan (second protocol family) |
 
 ---
 

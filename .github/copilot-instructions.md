@@ -2,7 +2,7 @@
 
 ## Purpose
 
-EtheRAM is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary focus is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics.
+EtheRAM is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics. A second protocol family (**Raft**) is planned to prove the decomposition generalizes across consensus families.
 
 ---
 
@@ -287,7 +287,10 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - `TinyEvmEngine` unknown opcode returns `OutOfGas` (was `Success`)
 - `StoreReceipts` storage mutation kind computes real success/out_of_gas counts from receipt statuses
 
-### 🔄 Next: TBD
+### 🔄 Next: Raft Consensus (second protocol family)
+- See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
+- New crate family: `raft-node/`, `raft-variants/`, `raft-validation/`, `raft-embassy/`
+- Depends only on `core/` — zero changes to existing `etheram*` crates
 
 ---
 
