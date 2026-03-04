@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted** — Validated by Etheram implementation (January–March 2026)
+**Accepted** — Validated by Etheram and Raft implementations (January–March 2026)
 
 ## Context
 
@@ -135,6 +135,21 @@ Etheram validates `step()` as the universal execution primitive across three env
 - Graceful shutdown via `CancellationToken` — `select4` returns `Either4::First(())` to break the loop
 
 **The step() primitive is unchanged across all three environments.** Only the wrapper — how events are produced and when `step()` is called — varies.
+
+Raft independently validates the same `step()` primitive with the mirrored execution shape:
+
+**Environment 1 — Sequential/protocol testing (std):**
+- `RaftProtocol<P>` behaviour validated via deterministic event-to-action tests
+
+**Environment 2 — Cluster orchestration (std):**
+- `RaftCluster` drives multi-node execution with explicit `step()`, `drain()`, and timer/message injection controls
+
+**Environment 3 — Embedded async (no_std, ARM Cortex-M4, QEMU):**
+- Embassy task wrappers use async event waiting, then drain synchronous work with `while node.step() {}`
+- Both required configurations (all-in-memory and UDP+semihosting) run end-to-end
+- 5-act Raft scenario validates election, replication, read-after-write, re-election, and continued replication
+
+This cross-family replication of execution semantics confirms that `step()` is a protocol-agnostic primitive, not an IBFT-specific design choice.
 
 ## Related
 

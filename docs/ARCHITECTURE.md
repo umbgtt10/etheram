@@ -14,7 +14,7 @@ The architecture separates:
 - **Contract** — What capabilities a blockchain node must provide
 - **Strategy** — How those capabilities are realized
 
-This separation enables radical experimentation while maintaining correctness guarantees. Etheram validates this: the same `EtheramNode` and `IbftProtocol` code runs identically in std test harnesses, multi-node cluster orchestrators, and no_std ARM Cortex-M4 embedded tasks — with zero changes to the node logic.
+This separation enables radical experimentation while maintaining correctness guarantees. Etheram and Raft validate this: the same node architecture and `step()` primitive run identically in std test harnesses, multi-node cluster orchestrators, and no_std ARM Cortex-M4 embedded tasks — with zero changes to core node logic.
 
 ---
 
@@ -364,6 +364,13 @@ The architecture is validated across three environments:
 - Two independently maintained configurations verified end-to-end
 - Cross-environment proof: identical `etheram` and `etheram-variants` crates compile and execute correctly across std and no_std
 
+### Raft Validation (Protocol + Cluster + Embassy)
+- `RaftNode<P>` mirrors the same six dimensions and `step()` execution model used by `EtheramNode`
+- Protocol-level deterministic tests validate election, replication, snapshots, client handling, and role transitions
+- Cluster-level deterministic tests validate fault tolerance, state-machine apply, snapshot installation, and client semantics
+- Embassy deployment validates both required configurations end-to-end: all-in-memory and UDP+semihosting
+- 5-act Raft scenario validated in QEMU: election, replication, read-after-write, re-election, continued replication
+
 ---
 
 ## Comparison to Traditional Architectures
@@ -511,11 +518,13 @@ The Node abstraction is actually a specialization of a more general **SystemEnti
 
 The six-dimensional decomposition generalizes beyond blockchain to any distributed system participant.
 
-### Proving Generality: Raft as Second Protocol
+### Generality Proven: Raft as Second Protocol
 
-To validate that the 3-6 model generalizes across consensus families rather than being an artefact of IBFT, a second protocol family — **Raft** — is planned as an independent crate family (`raft-node/`, `raft-variants/`, `raft-validation/`, `raft-embassy/`). Raft is maximally different from IBFT across every axis: crash-only vs Byzantine fault model, `⌊n/2⌋+1` vs `⌊2n/3⌋+1` quorum, randomized vs deterministic leader election, 2-phase vs 3-phase commit, append-only log vs single pending block. If the same 6-dimension decomposition with the same `step()` primitive independently emerges for both protocols — depending only on the shared `core/` crate — the architectural model is validated beyond a single protocol.
+The 3-6 model is now validated across a second independent protocol family — **Raft** — implemented as its own crate family (`raft-node/`, `raft-variants/`, `raft-validation/`, `raft-embassy/`). Raft is maximally different from IBFT across every axis: crash-only vs Byzantine fault model, `⌊n/2⌋+1` vs `⌊2n/3⌋+1` quorum, randomized vs deterministic leader election, 2-phase vs 3-phase commit, append-only log vs single pending block.
 
-See [RAFT-ROADMAP.md](../etheram/RAFT-ROADMAP.md) for the full implementation plan.
+Despite these protocol-level differences, the same six-dimensional decomposition and the same `step()` primitive emerge unchanged, with `core/` as the shared abstraction layer and no cross-dependencies between protocol families. This is the architectural validation target of EtheRAM.
+
+See [RAFT-ROADMAP.md](../etheram/RAFT-ROADMAP.md) for implementation details and milestone history.
 
 ---
 

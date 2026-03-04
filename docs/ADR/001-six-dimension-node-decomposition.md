@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted** — Validated by Etheram implementation (January–March 2026)
+**Accepted** — Validated by Etheram and Raft implementations (January–March 2026)
 
 ## Context
 
@@ -87,6 +87,23 @@ Etheram validates the six-dimension decomposition across three deployment enviro
 - Two independently maintained configurations: all-in-memory (channel transport + in-memory storage + channel EI) and real (UDP transport + semihosting storage + UDP EI)
 - 12-act scenario exercising transfers, overdraft rejection, view changes, stale nonce rejection, gas limits, validator set updates, WAL round-trip, Ed25519 signatures, TinyEVM contract storage, and OutOfGas revert
 - Cross-environment proof: identical `etheram` and `etheram-variants` crates compile and execute correctly across std (testing), std (cluster validation), and no_std (ARM embedded)
+
+Raft independently validates the same six-dimension decomposition across the mirrored crate family:
+
+**Stage 1 — Protocol-level tests (raft-variants):**
+- Pure `RaftProtocol<P>` logic tested for election, replication, snapshots, client handling, and role transitions
+- Uses the same decision/infrastructure split as Etheram, with protocol-specific Raft types
+
+**Stage 2 — Cluster tests (raft-validation):**
+- `RaftCluster` orchestrates multiple `RaftNode<P>` instances through deterministic `step()` execution
+- Validates distributed correctness under failures, re-elections, snapshot flow, and state-machine apply
+
+**Stage 3 — Embedded deployment (raft-embassy, QEMU):**
+- Same `RaftNode<P>` runs on no_std ARM Cortex-M4 under Embassy async runtime
+- Two independently maintained configurations validated end-to-end: all-in-memory and UDP+semihosting
+- 5-act scenario validated in QEMU: election, replication, read-after-write, re-election, continued replication
+
+Together, Etheram and Raft confirm that the six-dimension node decomposition is architectural, not protocol-specific.
 
 ## Related
 
