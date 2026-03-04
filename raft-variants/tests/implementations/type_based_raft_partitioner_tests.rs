@@ -6,7 +6,6 @@ use etheram_core::collection::Collection;
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::collections::action_collection::ActionCollection;
-use raft_node::common_types::log_entry::LogEntry;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::partitioner::partition::RaftPartitioner;
 use raft_variants::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
@@ -15,7 +14,7 @@ use raft_variants::implementations::type_based_raft_partitioner::TypeBasedRaftPa
 fn partition_with_mixed_actions_splits_mutations_and_outputs() {
     // Arrange
     let partitioner = TypeBasedRaftPartitioner::new();
-    let mut actions = ActionCollection::new();
+    let mut actions: ActionCollection<RaftAction<Vec<u8>>> = ActionCollection::new();
     actions.push(RaftAction::SetTerm(2));
     actions.push(RaftAction::TransitionRole(NodeRole::Leader));
     actions.push(RaftAction::SendMessage {
@@ -29,11 +28,8 @@ fn partition_with_mixed_actions_splits_mutations_and_outputs() {
     });
     actions.push(RaftAction::ApplyToStateMachine {
         client_id: None,
-        entry: LogEntry {
-            term: 2,
-            index: 1,
-            payload: vec![1u8],
-        },
+        index: 1,
+        payload_bytes: vec![1u8],
     });
 
     // Act

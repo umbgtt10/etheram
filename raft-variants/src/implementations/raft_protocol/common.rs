@@ -101,7 +101,7 @@ pub fn build_append_entries_for_peer<P: Clone>(
     }
 }
 
-pub fn advance_commit_index<P: Clone>(
+pub fn advance_commit_index<P: Clone + AsRef<[u8]>>(
     ctx: &RaftContext<P>,
     updated_peer: PeerId,
     updated_match_index: u64,
@@ -146,19 +146,20 @@ pub fn advance_commit_index<P: Clone>(
         let client_id = pending_client_entries.get(&entry.index).copied();
         actions.push(RaftAction::ApplyToStateMachine {
             client_id,
-            entry: entry.clone(),
+            index: entry.index,
+            payload_bytes: entry.payload.as_ref().to_vec(),
         });
         if let Some(cid) = client_id {
             actions.push(RaftAction::SendClientResponse {
                 client_id: cid,
-                response: RaftClientResponse::Applied(alloc::vec::Vec::new()),
+                response: RaftClientResponse::Applied(Vec::new()),
             });
         }
     }
     actions
 }
 
-pub fn apply_committed_entries_follower<P: Clone>(
+pub fn apply_committed_entries_follower<P: Clone + AsRef<[u8]>>(
     ctx: &RaftContext<P>,
     new_commit: u64,
     newly_appended: &[LogEntry<P>],
@@ -178,7 +179,8 @@ pub fn apply_committed_entries_follower<P: Clone>(
         if seen.insert(entry.index) {
             actions.push(RaftAction::ApplyToStateMachine {
                 client_id: None,
-                entry: entry.clone(),
+                index: entry.index,
+                payload_bytes: entry.payload.as_ref().to_vec(),
             });
         }
     }

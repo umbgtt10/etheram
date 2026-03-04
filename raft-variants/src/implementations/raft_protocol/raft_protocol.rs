@@ -46,7 +46,7 @@ impl<P> Default for RaftProtocol<P> {
     }
 }
 
-impl<P: Clone + 'static + From<alloc::vec::Vec<u8>>> ConsensusProtocol for RaftProtocol<P> {
+impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> ConsensusProtocol for RaftProtocol<P> {
     type Message = Message<P>;
     type MessageSource = MessageSource;
     type Action = RaftAction<P>;
@@ -68,7 +68,7 @@ impl<P: Clone + 'static + From<alloc::vec::Vec<u8>>> ConsensusProtocol for RaftP
     }
 }
 
-fn dispatch<P: Clone + 'static + From<alloc::vec::Vec<u8>>>(
+fn dispatch<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>>(
     protocol: &mut RaftProtocol<P>,
     source: &MessageSource,
     message: &Message<P>,
@@ -106,7 +106,7 @@ fn handle_timer<P: Clone>(
     }
 }
 
-fn handle_client<P: Clone + From<alloc::vec::Vec<u8>>>(
+fn handle_client<P: Clone + From<Vec<u8>>>(
     protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,
     client_id: ClientId,
@@ -120,7 +120,7 @@ fn handle_client<P: Clone + From<alloc::vec::Vec<u8>>>(
     }
 }
 
-fn handle_peer<P: Clone + 'static>(
+fn handle_peer<P: Clone + 'static + AsRef<[u8]>>(
     protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,
     from: PeerId,

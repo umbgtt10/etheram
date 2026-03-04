@@ -49,7 +49,7 @@ pub fn send_all_peers_with_next<P: Clone>(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn handle_append_entries<P: Clone>(
+pub fn handle_append_entries<P: Clone + AsRef<[u8]>>(
     protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,
     from: PeerId,
@@ -177,7 +177,7 @@ fn find_append_point<P: Clone>(
     (truncate_at, to_append)
 }
 
-pub fn handle_append_entries_response<P: Clone>(
+pub fn handle_append_entries_response<P: Clone + AsRef<[u8]>>(
     protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,
     from: PeerId,

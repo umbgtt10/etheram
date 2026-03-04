@@ -6,7 +6,6 @@ extern crate alloc;
 
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::brain::protocol::message::RaftMessage;
-use raft_node::common_types::log_entry::LogEntry;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::common_types::snapshot::RaftSnapshot;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
@@ -202,11 +201,8 @@ fn action_kind_apply_to_state_machine_action_returns_apply_to_state_machine_kind
     // Arrange
     let action = RaftAction::<()>::ApplyToStateMachine {
         client_id: None,
-        entry: LogEntry {
-            term: 1,
-            index: 1,
-            payload: (),
-        },
+        index: 1,
+        payload_bytes: vec![],
     };
 
     // Act

@@ -30,7 +30,7 @@ pub struct RaftNode<P: Clone + 'static> {
     observer: Box<dyn RaftObserver>,
 }
 
-impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
+impl<P: Clone + 'static> RaftNode<P> {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         peer_id: PeerId,
@@ -65,7 +65,9 @@ impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
     pub fn peer_id(&self) -> PeerId {
         self.peer_id
     }
+}
 
+impl<P: Clone + 'static> RaftNode<P> {
     pub fn step(&mut self) -> bool {
         if let Some((source, message)) = self.incoming.poll() {
             self.observer.message_received(self.peer_id, &source);
@@ -106,12 +108,12 @@ impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
         for action in outputs.iter() {
             if let RaftAction::ApplyToStateMachine {
                 client_id: _,
-                entry,
+                index,
+                payload_bytes,
             } = action
             {
-                self.state_machine
-                    .apply_raw(entry.index, entry.payload.as_ref());
-                self.state.set_last_applied(entry.index);
+                self.state_machine.apply_raw(*index, payload_bytes);
+                self.state.set_last_applied(*index);
             }
             if let RaftAction::RestoreFromSnapshot(data) = action {
                 self.state_machine.restore(data);

@@ -43,7 +43,8 @@ pub enum RaftAction<P> {
     },
     ApplyToStateMachine {
         client_id: Option<ClientId>,
-        entry: LogEntry<P>,
+        index: u64,
+        payload_bytes: Vec<u8>,
     },
     QueryStateMachine {
         client_id: ClientId,

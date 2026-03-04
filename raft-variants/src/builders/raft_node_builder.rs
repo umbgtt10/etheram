@@ -48,7 +48,7 @@ use raft_node::partitioner::partition::RaftPartitioner;
 use raft_node::raft_node::RaftNode;
 use raft_node::state::raft_state::RaftState;
 
-pub struct RaftNodeBuilder<P: Clone + 'static + From<alloc::vec::Vec<u8>> + AsRef<[u8]>> {
+pub struct RaftNodeBuilder<P: Clone + 'static> {
     peer_id: Option<PeerId>,
     peers: Vec<PeerId>,
     timer_input: Option<Box<dyn TimerInputAdapter<RaftTimerEvent>>>,
@@ -66,7 +66,7 @@ pub struct RaftNodeBuilder<P: Clone + 'static + From<alloc::vec::Vec<u8>> + AsRe
     observer: Option<Box<dyn RaftObserver>>,
 }
 
-impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
+impl<P: Clone + 'static> RaftNodeBuilder<P> {
     pub fn new() -> Self {
         Self {
             peer_id: None,
@@ -177,7 +177,10 @@ impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
         self
     }
 
-    pub fn with_brain_variant(mut self, variant: RaftProtocolVariant<P>) -> Self {
+    pub fn with_brain_variant(mut self, variant: RaftProtocolVariant<P>) -> Self
+    where
+        P: From<Vec<u8>> + AsRef<[u8]>,
+    {
         self.brain = Some(
             RaftProtocolBuilder::new()
                 .with_variant(variant)
@@ -248,7 +251,10 @@ impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn build(self) -> Result<RaftNode<P>, BuildError> {
+    pub fn build(self) -> Result<RaftNode<P>, BuildError>
+    where
+        P: From<Vec<u8>> + AsRef<[u8]>,
+    {
         let peer_id = self
             .peer_id
             .ok_or(BuildError::MissingComponent("peer_id"))?;
@@ -319,7 +325,7 @@ impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
     }
 }
 
-impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> Default for RaftNodeBuilder<P> {
+impl<P: Clone + 'static> Default for RaftNodeBuilder<P> {
     fn default() -> Self {
         Self::new()
     }
