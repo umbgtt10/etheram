@@ -1,0 +1,15 @@
+// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RaftStorageQuery {
+    CurrentTerm,
+    VotedFor,
+    LogLength,
+    LastLogTerm,
+    Snapshot,
+    AllEntries,
+    EntryAt(u64),
+    EntriesFrom(u64),
+}

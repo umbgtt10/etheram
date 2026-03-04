@@ -2,7 +2,7 @@
 
 ## Purpose
 
-EtheRAM is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics. A second protocol family (**Raft**) is planned to prove the decomposition generalizes across consensus families.
+EtheRAM is a **research framework** for blockchain node decomposition and abstraction. It prioritizes architecture, testability, and swappability over feature completeness. The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node validating the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum semantics. A second protocol family (**Raft**) is being implemented to prove the decomposition generalizes across consensus families.
 
 ---
 
@@ -14,9 +14,15 @@ etheram/                    # Core node implementation (std Rust)
 etheram-variants/           # Concrete implementations + builder API
 etheram-validation/         # Cluster/integration tests (multi-node)
 etheram-embassy/            # no-std + Embassy embedded port
+raft-node/                  # Raft node — 3-6 model (no_std, #![no_std])
+raft-variants/              # Raft concrete implementations + builders (planned)
+raft-validation/            # Raft cluster tests (planned)
+raft-embassy/               # Raft on Embassy — 2 configs (planned)
 ```
 
 **The etheram ecosystem is designed to become a standalone repo.** Keep `etheram*` crates self-contained. They depend on `core` only.
+
+**The raft ecosystem mirrors the etheram ecosystem.** Keep `raft-*` crates self-contained. They depend only on `core/` — zero cross-dependencies between the two protocol families.
 
 ---
 
@@ -133,6 +139,60 @@ The embassy project must always maintain exactly two working configurations end-
 | **real** | `udp-transport` | `semihosting-storage` | `udp-external-interface` | `run_udp_semihosting.ps1` |
 
 Both must compile, link, and execute successfully at all times. Do not break either configuration when working on the other.
+
+### `raft-node/` — Raft Single Node Logic
+
+Mirrors `etheram/` structurally with Raft-specific types. `#![no_std]` from day one.
+
+```rust
+pub struct RaftNode<P: Clone + 'static> {
+    peer_id: PeerId,
+    incoming: RaftIncomingSources<P>,        // polls Timer, ExternalInterface, Transport
+    state: RaftState<P>,                     // wraps Storage + Cache
+    executor: RaftExecutor<P>,               // executes output actions
+    context_builder: Box<dyn RaftContextBuilder<P>>,
+    brain: BoxedRaftProtocol<P>,
+    partitioner: Box<dyn RaftPartitioner<P>>,
+    state_machine: Box<dyn RaftStateMachine>,
+    observer: Box<dyn RaftObserver>,
+}
+```
+
+**P** is the log entry payload type (e.g. `Vec<u8>` for serialized key-value commands).
+
+**The step loop is identical in structure to `EtheramNode::step()`:**
+1. `incoming.poll()` — get next event (transport, timer, or client)
+2. `context_builder.build()` — read state into immutable `RaftContext<P>`
+3. `brain.handle_message()` — pure Raft logic, returns `ActionCollection<RaftAction<P>>`
+4. `partitioner.partition()` — 2-way split: `(mutations, outputs)` (no execution tier — Raft has no EVM)
+5. `state.apply_mutations()` — apply storage/cache mutations
+6. `apply_state_machine_outputs()` — invoke `RaftStateMachine` for `ApplyToStateMachine` actions
+7. `executor.execute_outputs()` — dispatch network/timer/client I/O
+
+**`RaftAction<P>` state mutation variants** (go to mutations bucket):
+`SetTerm`, `SetVotedFor`, `AppendEntries`, `TruncateLogFrom`, `SaveSnapshot`, `AdvanceCommitIndex`, `TransitionRole`, `SetLeaderId`, `UpdateMatchIndex`, `UpdateNextIndex`
+
+**`RaftAction<P>` output variants** (go to outputs bucket):
+`SendMessage`, `BroadcastMessage`, `ScheduleTimeout`, `ApplyToStateMachine`, `SendClientResponse`, `Log`
+
+### `raft-variants/` — Concrete Raft Implementations + Builders (Sprint 3, planned)
+
+Will provide: `InMemoryRaftStorage`, `InMemoryRaftCache`, `InMemoryRaftTransport`, `NoOpRaftTransport`, `InMemoryRaftTimer`, `InMemoryRaftExternalInterface`, `EagerRaftContextBuilder`, `TypeBasedRaftPartitioner`, `InMemoryRaftStateMachine`, `NoOpRaftObserver`, `RaftNodeBuilder`
+
+### `raft-validation/` — Raft Cluster Tests (Sprint 5, planned)
+
+Will provide: `RaftCluster` harness with election, replication, fault-tolerance, and snapshot cluster tests.
+
+### `raft-embassy/` — Raft Embedded Port (Sprint 6, planned)
+
+Will provide two configurations:
+
+| Configuration | Transport | Storage | External Interface | Script |
+|---|---|---|---|---|
+| **all-in-memory** | `channel-transport` | `in-memory-storage` | `channel-external-interface` | `run_raft_channel_in_memory.ps1` |
+| **real** | `udp-transport` | `semihosting-storage` | `udp-external-interface` | `run_raft_udp_semihosting.ps1` |
+
+5-act scenario: election → replication → read-after-write → leader crash → continued replication.
 
 ---
 
@@ -287,10 +347,20 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - `TinyEvmEngine` unknown opcode returns `OutOfGas` (was `Success`)
 - `StoreReceipts` storage mutation kind computes real success/out_of_gas counts from receipt statuses
 
-### 🔄 Next: Raft Consensus (second protocol family)
+### 🔄 Next: Raft Consensus — Sprint 2 (RaftProtocol)
+- Sprint 0 (`raft-node/` skeleton) and Sprint 1 (`RaftNode<P>` step loop) are **complete** — see `raft-node/` crate
+- Sprint 2: implement `RaftProtocol<P>` in `raft-variants/` — pure Raft consensus (election, replication, snapshot)
 - See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
-- New crate family: `raft-node/`, `raft-variants/`, `raft-validation/`, `raft-embassy/`
-- Depends only on `core/` — zero changes to existing `etheram*` crates
+- All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
+
+### ✅ Raft Sprint 0/1 Implemented
+- `raft-node/` crate created with `#![no_std]` from day one
+- All Sprint 0 types: `RaftMessage<P>` (8 variants), `RaftAction<P>` (16 variants), `RaftContext<P>`, `RaftTimerEvent`, `RaftClientRequest`, `RaftClientResponse`, `RaftStorageQuery`, `RaftStorageMutation<P>`, `RaftStorageQueryResult<P>`, `RaftCacheQuery`, `RaftCacheUpdate`, `RaftCacheQueryResult`, `NodeRole`, `LogEntry<P>`, `RaftSnapshot`, `RaftStateMachine` trait
+- Sprint 1 `RaftNode<P>` with full 6-dimension struct and step loop matching `EtheramNode::step()` structure
+- `RaftObserver` trait with `RaftActionKind` projection, `action_kind()` helper
+- `RaftPartitioner<P>` producing 2-way partition (mutations, outputs) — no execution tier
+- All adapter blanket impls: `StorageAdapter<P>`, `CacheAdapter`, `TimerInputAdapter`, `TimerOutputAdapter`, `TransportIncomingAdapter`, `TransportOutgoingAdapter`, `ExternalInterfaceIncomingAdapter`, `ExternalInterfaceOutgoingAdapter`
+- `RaftIncomingSources<P>`, `RaftOutgoingSources<P>`, `RaftExecutor<P>` with poll and execute loops
 
 ---
 
@@ -306,6 +376,9 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - `etheram-embassy/` must remain `no_std`-compatible
 - **`etheram-embassy/` must always maintain both configurations** — the all-in-memory configuration (`channel-transport` + `in-memory-storage` + `channel-external-interface`) and the real configuration (`udp-transport` + `semihosting-storage` + `udp-external-interface`) must both compile, link, and run at all times. Every change must be verified against both feature sets before marking complete.
 - **Workspace dependency governance is mandatory** — all dependency versions/features and all local crate links must be declared in the workspace root `Cargo.toml` under `[workspace.dependencies]`. Member crates must reference them via `.workspace = true` and must not declare per-crate `path =`, version, or feature overrides for those dependencies. The only allowed `path =` entries outside root dependency declarations are target declarations such as `[lib] path`, `[[bin]] path`, and `[[test]] path`.
+- **The raft crate family is independent from etheram** — `raft-node/`, `raft-variants/`, `raft-validation/`, and `raft-embassy/` depend only on `core/`. No `raft-*` crate may import from `etheram*` and no `etheram*` crate may import from `raft-*`. Cross-dependencies between protocol families are forbidden.
+- **`raft-node/` and `raft-variants/` must be `no_std`-compatible** — they carry `#![no_std]` and use `alloc` for heap types. No `std`-only types or imports are permitted in these crates.
+- **Raft dependency direction mirrors etheram** — `raft-variants` may depend on `raft-node`; `raft-node` must never depend on `raft-variants`. Tests in `raft-node/tests/` can only use what `raft-node` itself exposes. Integration tests requiring concrete implementations from `raft-variants` belong in `raft-variants/tests/`.
 
 ---
 
@@ -335,7 +408,11 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - **Run `cargo fmt` after every change** — always run `cargo fmt` from the workspace root after editing any Rust source file.
 - **No warnings** — the codebase must compile with zero warnings. Every unused import, dead code path, or missing trait implementation that triggers a compiler warning must be fixed before committing. `#[allow(...)]` attributes are not permitted except for `#[allow(clippy::too_many_arguments)]` on builder constructors.
 - **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p etheram-etheram-variants` and `cargo test -p etheram-etheram-validation` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
-- **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate and covers: `cargo fmt` on the whole workspace, `cargo nextest` for `etheram` + `etheram-variants` + `etheram-validation`, the `etheram-variants` no_std gate check, and a full QEMU execution of both embassy configurations (`run_channel_in_memory.ps1` and `run_udp_semihosting.ps1`).
+- **Mandatory pre-feature Raft audit** — before writing any new protocol feature that touches `RaftProtocol`, run `cargo test -p raft-raft-variants` (once that crate exists) and confirm the following Raft invariants hold in source before beginning: (1) quorum = `⌊n/2⌋ + 1`; (2) leader never appends entries in a term other than its own; (3) voted_for is persisted before sending RequestVoteResponse; (4) commit_index only advances when a majority have acknowledged the entry; (5) step-down occurs immediately on receiving any message with a higher term. This is a hard gate — not a suggestion.
+- **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate and covers: `cargo fmt` on the whole workspace, `cargo nextest` for `etheram` + `etheram-variants` + `etheram-validation` + `raft-node`, the `etheram-variants` and `raft-node` no_std gate checks, and a full QEMU execution of both embassy configurations (`run_channel_in_memory.ps1` and `run_udp_semihosting.ps1`).
+- **Mandatory Raft no_std gate** — when working on `raft-node/` or `raft-variants/`, always run an explicit no_std compatibility check: `cargo check -p raft-raft-node --no-default-features` (and `cargo check -p raft-raft-variants --no-default-features` once that crate exists).
+- **Mandatory dual-layer test updates for Raft productive changes** — every time productive Raft code is added, changed, or fixed, update tests in both layers: protocol-level tests in `raft-variants` and cluster-level tests in `raft-validation`. The same rule applies as for etheram: do not mark work complete unless both layers are updated or explicitly justified as not applicable.
+- **Raft–etheram consistency check** — whenever productive code or tests are added or changed in either protocol family, check the parallel artefact in the other family for inconsistencies. This includes: structural divergence in equivalent types (e.g. `RaftNode` vs `EtheramNode`, `RaftPartitioner` vs `Partitioner`, `RaftObserver` vs `Observer`), naming convention drift, step-loop shape differences, test organisation deviations, and missing analogous tests. Inconsistencies that are intentional (protocol-specific types, Raft 2-way vs etheram 3-way partition) must be explicitly justified in a `// FIXME:` or `// TODO:` comment. Silent drift is not permitted.
 - **Mandatory Stage 3 no_std gate for variants** — when working on Stage 3 (`etheram-embassy/`), always run an explicit no_std compatibility check for `etheram-variants`: `cargo check -p etheram-etheram-variants --no-default-features`.
 - **Stage 3 test application never sleeps** — `main.rs` must not use fixed-duration sleeps (`Timer::after`) to wait for consensus or protocol progress. Use `EtheramClient::wait_for_height_above` (or an equivalent polling helper with a timeout ceiling) instead. Fixed sleeps are only permitted for non-observable housekeeping (e.g. a brief shutdown drain).
 - **Mandatory dual-layer test updates for productive changes** — every time productive code is added, changed, or fixed, update tests in both layers: protocol-level tests in `etheram-variants` and cluster-level tests in `etheram-validation`. Do not mark work complete unless both layers are updated or explicitly justified as not applicable.
