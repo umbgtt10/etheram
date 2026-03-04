@@ -3,6 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod client_tests;
+pub mod cluster_api_tests;
 pub mod common;
 pub mod election_tests;
 pub mod fault_tolerance_tests;
