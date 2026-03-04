@@ -16,7 +16,7 @@ use crate::implementations::in_memory_raft_state_machine::InMemoryRaftStateMachi
 use crate::implementations::in_memory_raft_storage::InMemoryRaftStorage;
 use crate::implementations::no_op_raft_observer::NoOpRaftObserver;
 use crate::implementations::no_op_raft_transport::NoOpRaftTransport;
-use crate::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use crate::implementations::raft::raft_protocol::RaftProtocol;
 use crate::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 use crate::variants::{
     RaftCacheVariant, RaftContextBuilderVariant, RaftObserverVariant, RaftPartitionerVariant,

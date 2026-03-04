@@ -137,7 +137,12 @@ pub fn send_udp_raft_ei_request(
         4 => UDP_RAFT_EI_REQUEST_4.sender(),
         _ => return,
     };
-    let _ = sender.try_send(bytes);
+    if sender.try_send(bytes).is_err() {
+        crate::info!(
+            "udp external interface request queue full for node {}",
+            node_index
+        );
+    }
     let notify = match node_index {
         0 => UDP_RAFT_EI_NOTIFY_0.sender(),
         1 => UDP_RAFT_EI_NOTIFY_1.sender(),
@@ -146,7 +151,12 @@ pub fn send_udp_raft_ei_request(
         4 => UDP_RAFT_EI_NOTIFY_4.sender(),
         _ => return,
     };
-    let _ = notify.try_send(());
+    if notify.try_send(()).is_err() {
+        crate::info!(
+            "udp external interface notify queue full for node {}",
+            node_index
+        );
+    }
 }
 
 pub async fn receive_udp_raft_ei_response(node_index: usize) -> (ClientId, RaftClientResponse) {
@@ -201,6 +211,11 @@ impl ExternalInterfaceOutgoing for UdpRaftExternalInterface {
             4 => UDP_RAFT_EI_RESPONSE_4.sender(),
             _ => return,
         };
-        let _ = sender.try_send(bytes);
+        if sender.try_send(bytes).is_err() {
+            crate::info!(
+                "udp external interface response queue full for node {}",
+                self.node_index
+            );
+        }
     }
 }

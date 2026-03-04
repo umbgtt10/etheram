@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::raft_protocol::common;
-use crate::implementations::raft_protocol::common::ELECTION_TIMEOUT_MS;
-use crate::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use crate::implementations::raft::common;
+use crate::implementations::raft::common::ELECTION_TIMEOUT_MS;
+use crate::implementations::raft::raft_protocol::RaftProtocol;
 use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
@@ -14,6 +14,7 @@ use raft_node::common_types::snapshot::RaftSnapshot;
 use raft_node::context::context_dto::RaftContext;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 
+#[allow(clippy::too_many_arguments)]
 pub fn handle_install_snapshot<P: Clone>(
     _protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,

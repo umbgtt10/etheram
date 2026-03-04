@@ -7,8 +7,8 @@ use raft_node::brain::protocol::action::RaftAction;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
-use raft_variants::implementations::raft_protocol::election;
-use raft_variants::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use raft_variants::implementations::raft::election;
+use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
 
 #[test]
 fn handle_election_timeout_leader_role_reschedules_election_timeout() {

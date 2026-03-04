@@ -6,8 +6,8 @@ use crate::common::test_context::make_ctx_with_term;
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::node_role::NodeRole;
-use raft_variants::implementations::raft_protocol::raft_protocol::RaftProtocol;
-use raft_variants::implementations::raft_protocol::snapshot;
+use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
+use raft_variants::implementations::raft::snapshot;
 
 #[test]
 fn handle_install_snapshot_stale_term_returns_failure() {

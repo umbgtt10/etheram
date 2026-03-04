@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::raft_protocol::common;
-use crate::implementations::raft_protocol::common::ELECTION_TIMEOUT_MS;
-use crate::implementations::raft_protocol::common::HEARTBEAT_INTERVAL_MS;
-use crate::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use crate::implementations::raft::common;
+use crate::implementations::raft::common::ELECTION_TIMEOUT_MS;
+use crate::implementations::raft::common::HEARTBEAT_INTERVAL_MS;
+use crate::implementations::raft::raft_protocol::RaftProtocol;
 use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;

@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::raft_protocol::common;
-use crate::implementations::raft_protocol::raft_protocol::RaftProtocol;
-use crate::implementations::raft_protocol::replication;
+use crate::implementations::raft::common;
+use crate::implementations::raft::raft_protocol::RaftProtocol;
+use crate::implementations::raft::replication;
 use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::types::ClientId;

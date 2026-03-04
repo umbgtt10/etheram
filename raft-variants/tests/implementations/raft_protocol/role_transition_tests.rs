@@ -6,10 +6,10 @@ use crate::common::test_context::{make_ctx, make_ctx_with_term};
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
-use raft_variants::implementations::raft_protocol::common;
-use raft_variants::implementations::raft_protocol::election;
-use raft_variants::implementations::raft_protocol::raft_protocol::RaftProtocol;
-use raft_variants::implementations::raft_protocol::replication;
+use raft_variants::implementations::raft::common;
+use raft_variants::implementations::raft::election;
+use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
+use raft_variants::implementations::raft::replication;
 
 #[test]
 fn become_leader_transitions_role_and_schedules_heartbeat() {

@@ -11,6 +11,6 @@ pub mod in_memory_raft_timer;
 pub mod in_memory_raft_transport;
 pub mod no_op_raft_observer;
 pub mod no_op_raft_transport;
-pub mod raft_protocol;
+pub mod raft;
 pub mod shared_state;
 pub mod type_based_raft_partitioner;

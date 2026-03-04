@@ -8,8 +8,8 @@ use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::log_entry::LogEntry;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
-use raft_variants::implementations::raft_protocol::raft_protocol::RaftProtocol;
-use raft_variants::implementations::raft_protocol::replication;
+use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
+use raft_variants::implementations::raft::replication;
 
 #[test]
 fn handle_heartbeat_not_leader_returns_empty() {

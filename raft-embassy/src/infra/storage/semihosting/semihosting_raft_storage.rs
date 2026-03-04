@@ -4,6 +4,7 @@
 
 use alloc::collections::BTreeMap;
 use alloc::format;
+use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::storage::Storage;
 use etheram_core::types::PeerId;
@@ -22,16 +23,18 @@ pub struct SemihostingRaftStorage<P> {
     snapshot: Option<RaftSnapshot>,
 }
 
-impl<P> SemihostingRaftStorage<P> {
+impl<P: Clone + From<Vec<u8>> + AsRef<[u8]> + core::fmt::Debug> SemihostingRaftStorage<P> {
     pub fn new(node_id: PeerId) -> Self {
-        Self {
+        let mut storage = Self {
             node_id,
             mutation_count: 0,
             current_term: 0,
             voted_for: None,
             log: BTreeMap::new(),
             snapshot: None,
-        }
+        };
+        storage.load_from_disk();
+        storage
     }
 }
 
@@ -42,6 +45,14 @@ impl<P: AsRef<[u8]> + core::fmt::Debug> SemihostingRaftStorage<P> {
 
     fn log_path(&self) -> Vec<u8> {
         format!("persistency/raft_node_{}_log.bin\0", self.node_id).into_bytes()
+    }
+
+    fn snapshot_meta_path(&self) -> Vec<u8> {
+        format!("persistency/raft_node_{}_snapshot_meta.bin\0", self.node_id).into_bytes()
+    }
+
+    fn snapshot_data_path(&self) -> Vec<u8> {
+        format!("persistency/raft_node_{}_snapshot_data.bin\0", self.node_id).into_bytes()
     }
 
     fn persist_metadata(&self) {
@@ -57,7 +68,12 @@ impl<P: AsRef<[u8]> + core::fmt::Debug> SemihostingRaftStorage<P> {
                 data.extend_from_slice(&peer.to_le_bytes());
             }
         }
-        let _ = self.write_file(&self.metadata_path(), &data);
+        if self.write_file(&self.metadata_path(), &data).is_err() {
+            crate::info!(
+                "raft_storage metadata persist failed for node {}",
+                self.node_id
+            );
+        }
     }
 
     fn persist_log(&self) {
@@ -71,7 +87,37 @@ impl<P: AsRef<[u8]> + core::fmt::Debug> SemihostingRaftStorage<P> {
             data.extend_from_slice(&(payload_bytes.len() as u32).to_le_bytes());
             data.extend_from_slice(payload_bytes);
         }
-        let _ = self.write_file(&self.log_path(), &data);
+        if self.write_file(&self.log_path(), &data).is_err() {
+            crate::info!("raft_storage log persist failed for node {}", self.node_id);
+        }
+    }
+
+    fn persist_snapshot(&self) {
+        if let Some(snapshot) = &self.snapshot {
+            let mut meta_data: Vec<u8> = Vec::with_capacity(16);
+            meta_data.extend_from_slice(&snapshot.last_included_index.to_le_bytes());
+            meta_data.extend_from_slice(&snapshot.last_included_term.to_le_bytes());
+
+            if self
+                .write_file(&self.snapshot_meta_path(), &meta_data)
+                .is_err()
+            {
+                crate::info!(
+                    "raft_storage snapshot meta persist failed for node {}",
+                    self.node_id
+                );
+            }
+
+            if self
+                .write_file(&self.snapshot_data_path(), &snapshot.data)
+                .is_err()
+            {
+                crate::info!(
+                    "raft_storage snapshot data persist failed for node {}",
+                    self.node_id
+                );
+            }
+        }
     }
 
     fn write_file(&self, path: &[u8], data: &[u8]) -> Result<(), ()> {
@@ -90,9 +136,167 @@ impl<P: AsRef<[u8]> + core::fmt::Debug> SemihostingRaftStorage<P> {
             }
         }
     }
+
+    fn read_file(&self, path: &[u8]) -> Result<Vec<u8>, ()> {
+        unsafe {
+            let mode: usize = 0x0000_0000;
+            let fd = cortex_m_semihosting::syscall!(OPEN, path.as_ptr(), mode, path.len() - 1);
+            if fd == usize::MAX {
+                return Err(());
+            }
+
+            let len = cortex_m_semihosting::syscall!(FLEN, fd);
+            if len == usize::MAX {
+                cortex_m_semihosting::syscall!(CLOSE, fd);
+                return Err(());
+            }
+
+            let mut data = vec![0u8; len];
+            let bytes_remaining = cortex_m_semihosting::syscall!(READ, fd, data.as_mut_ptr(), len);
+            cortex_m_semihosting::syscall!(CLOSE, fd);
+
+            if bytes_remaining == 0 {
+                Ok(data)
+            } else {
+                Err(())
+            }
+        }
+    }
 }
 
-impl<P: Clone + AsRef<[u8]> + core::fmt::Debug + 'static> Storage for SemihostingRaftStorage<P> {
+impl<P: Clone + From<Vec<u8>> + AsRef<[u8]> + core::fmt::Debug> SemihostingRaftStorage<P> {
+    fn load_from_disk(&mut self) {
+        if let Ok(metadata) = self.read_file(&self.metadata_path()) {
+            if metadata.len() >= 17 {
+                self.current_term = u64::from_le_bytes([
+                    metadata[0],
+                    metadata[1],
+                    metadata[2],
+                    metadata[3],
+                    metadata[4],
+                    metadata[5],
+                    metadata[6],
+                    metadata[7],
+                ]);
+                if metadata[8] == 0 {
+                    self.voted_for = None;
+                } else {
+                    self.voted_for = Some(u64::from_le_bytes([
+                        metadata[9],
+                        metadata[10],
+                        metadata[11],
+                        metadata[12],
+                        metadata[13],
+                        metadata[14],
+                        metadata[15],
+                        metadata[16],
+                    ]));
+                }
+            }
+        }
+
+        if let Ok(log_data) = self.read_file(&self.log_path()) {
+            self.log = self.deserialize_log(&log_data);
+        }
+
+        if let (Ok(snapshot_meta), Ok(snapshot_data)) = (
+            self.read_file(&self.snapshot_meta_path()),
+            self.read_file(&self.snapshot_data_path()),
+        ) {
+            if snapshot_meta.len() >= 16 {
+                let last_included_index = u64::from_le_bytes([
+                    snapshot_meta[0],
+                    snapshot_meta[1],
+                    snapshot_meta[2],
+                    snapshot_meta[3],
+                    snapshot_meta[4],
+                    snapshot_meta[5],
+                    snapshot_meta[6],
+                    snapshot_meta[7],
+                ]);
+                let last_included_term = u64::from_le_bytes([
+                    snapshot_meta[8],
+                    snapshot_meta[9],
+                    snapshot_meta[10],
+                    snapshot_meta[11],
+                    snapshot_meta[12],
+                    snapshot_meta[13],
+                    snapshot_meta[14],
+                    snapshot_meta[15],
+                ]);
+                self.snapshot = Some(RaftSnapshot {
+                    last_included_index,
+                    last_included_term,
+                    data: snapshot_data,
+                });
+            }
+        }
+    }
+
+    fn deserialize_log(&self, data: &[u8]) -> BTreeMap<u64, LogEntry<P>> {
+        let mut log = BTreeMap::new();
+        if data.len() < 8 {
+            return log;
+        }
+
+        let mut offset = 8;
+        while offset + 20 <= data.len() {
+            let index = u64::from_le_bytes([
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+                data[offset + 4],
+                data[offset + 5],
+                data[offset + 6],
+                data[offset + 7],
+            ]);
+            offset += 8;
+
+            let term = u64::from_le_bytes([
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+                data[offset + 4],
+                data[offset + 5],
+                data[offset + 6],
+                data[offset + 7],
+            ]);
+            offset += 8;
+
+            let payload_len = u32::from_le_bytes([
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+            ]) as usize;
+            offset += 4;
+
+            if offset + payload_len > data.len() {
+                break;
+            }
+
+            let payload = P::from(data[offset..offset + payload_len].to_vec());
+            offset += payload_len;
+
+            log.insert(
+                index,
+                LogEntry {
+                    index,
+                    term,
+                    payload,
+                },
+            );
+        }
+
+        log
+    }
+}
+
+impl<P: Clone + From<Vec<u8>> + AsRef<[u8]> + core::fmt::Debug + 'static> Storage
+    for SemihostingRaftStorage<P>
+{
     type Key = ();
     type Value = ();
     type Query = RaftStorageQuery;
@@ -166,6 +370,7 @@ impl<P: Clone + AsRef<[u8]> + core::fmt::Debug + 'static> Storage for Semihostin
                 self.log.retain(|&k, _| k > snap.last_included_index);
                 self.snapshot = Some(snap);
                 self.persist_log();
+                self.persist_snapshot();
             }
         }
     }

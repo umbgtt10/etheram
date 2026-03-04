@@ -7,7 +7,7 @@ use crate::common::raft_cluster_helpers::replicate_one;
 use crate::common::raft_cluster_helpers::setup_elected_5_node_cluster;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 use raft_raft_validation::raft_cluster::RaftCluster;
-use raft_variants::implementations::raft_protocol::common::quorum_size;
+use raft_variants::implementations::raft::common::quorum_size;
 
 #[test]
 fn one_node_crash_in_5_node_cluster_continues_replication() {

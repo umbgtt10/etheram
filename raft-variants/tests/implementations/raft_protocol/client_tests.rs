@@ -6,8 +6,8 @@ use crate::common::test_context::make_ctx;
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
-use raft_variants::implementations::raft_protocol::client;
-use raft_variants::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use raft_variants::implementations::raft::client;
+use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
 
 #[test]
 fn handle_client_command_not_leader_returns_not_leader_response() {

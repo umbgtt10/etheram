@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::raft_protocol::client;
-use crate::implementations::raft_protocol::election;
-use crate::implementations::raft_protocol::replication;
-use crate::implementations::raft_protocol::snapshot;
+use crate::implementations::raft::client;
+use crate::implementations::raft::election;
+use crate::implementations::raft::replication;
+use crate::implementations::raft::snapshot;
 use alloc::collections::BTreeMap;
 use alloc::collections::BTreeSet;
 use alloc::vec::Vec;

@@ -107,7 +107,9 @@ impl TransportOutgoing for UdpOutboundRaftTransport {
     type Message = RaftMessage<P>;
 
     fn send(&self, peer_id: PeerId, message: Self::Message) {
-        let _ = self.sender.try_send((peer_id, message));
+        if self.sender.try_send((peer_id, message)).is_err() {
+            crate::info!("udp transport outbox full, dropping message to {}", peer_id);
+        }
     }
 }
 
@@ -155,7 +157,12 @@ pub async fn run_udp_listener(node_index: usize, stack: Stack<'static>, sender: 
                     Ok(msg) => msg,
                     Err(_) => continue,
                 };
-                let _ = sender.try_send((envelope.from, message));
+                if sender.try_send((envelope.from, message)).is_err() {
+                    crate::info!(
+                        "udp transport inbox full for node {}, dropping inbound message",
+                        node_index
+                    );
+                }
             }
             Err(_) => {
                 Timer::after(Duration::from_millis(10)).await;
@@ -205,6 +212,12 @@ pub async fn run_udp_sender(
         };
 
         let target = peer_endpoint(peer_id);
-        let _ = socket.send_to(&bytes, target).await;
+        if socket.send_to(&bytes, target).await.is_err() {
+            crate::info!(
+                "udp transport send_to failed from {} to {}",
+                node_index,
+                peer_id
+            );
+        }
     }
 }

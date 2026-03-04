@@ -36,7 +36,7 @@ use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimer;
 use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
 use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransport;
 use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
-use raft_variants::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
 use raft_variants::implementations::shared_state::SharedState;
 use raft_variants::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 

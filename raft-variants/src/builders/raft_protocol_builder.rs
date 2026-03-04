@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::builders::error::BuildError;
-use crate::implementations::raft_protocol::raft_protocol::RaftProtocol;
+use crate::implementations::raft::raft_protocol::RaftProtocol;
 use crate::variants::RaftProtocolVariant;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
