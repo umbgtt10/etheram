@@ -16,7 +16,7 @@ etheram-validation/         # Cluster/integration tests (multi-node)
 etheram-embassy/            # no-std + Embassy embedded port
 raft-node/                  # Raft node — 3-6 model (no_std, #![no_std])
 raft-variants/              # Raft concrete implementations + builders (planned)
-raft-validation/            # Raft cluster tests (planned)
+raft-validation/            # Raft cluster tests
 raft-embassy/               # Raft on Embassy — 2 configs (planned)
 ```
 
@@ -175,13 +175,13 @@ pub struct RaftNode<P: Clone + 'static> {
 **`RaftAction<P>` output variants** (go to outputs bucket):
 `SendMessage`, `BroadcastMessage`, `ScheduleTimeout`, `ApplyToStateMachine`, `SendClientResponse`, `Log`
 
-### `raft-variants/` — Concrete Raft Implementations + Builders (Sprint 3, planned)
+### `raft-variants/` — Concrete Raft Implementations + Builders
 
-Will provide: `InMemoryRaftStorage`, `InMemoryRaftCache`, `InMemoryRaftTransport`, `NoOpRaftTransport`, `InMemoryRaftTimer`, `InMemoryRaftExternalInterface`, `EagerRaftContextBuilder`, `TypeBasedRaftPartitioner`, `InMemoryRaftStateMachine`, `NoOpRaftObserver`, `RaftNodeBuilder`
+Provides: `InMemoryRaftStorage`, `InMemoryRaftCache`, `InMemoryRaftTransport`, `NoOpRaftTransport`, `InMemoryRaftTimer`, `InMemoryRaftExternalInterface`, `EagerRaftContextBuilder`, `TypeBasedRaftPartitioner`, `InMemoryRaftStateMachine`, `NoOpRaftObserver`, `RaftNodeBuilder`
 
-### `raft-validation/` — Raft Cluster Tests (Sprint 5, planned)
+### `raft-validation/` — Raft Cluster Tests
 
-Will provide: `RaftCluster` harness with election, replication, fault-tolerance, and snapshot cluster tests.
+Provides: `RaftCluster` harness with `step()`, `drain()`, `drain_all()`, `drain_except()`, `fire_timer()`, `inject_message()`, `submit_command()`, `drain_responses()`, and node state query methods. 54 cluster-level tests across election, replication, fault tolerance, snapshots, state machine, and client interface.
 
 ### `raft-embassy/` — Raft Embedded Port (Sprint 6, planned)
 
@@ -347,9 +347,9 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - `TinyEvmEngine` unknown opcode returns `OutOfGas` (was `Success`)
 - `StoreReceipts` storage mutation kind computes real success/out_of_gas counts from receipt statuses
 
-### 🔄 Next: Raft Consensus — Sprint 5 (RaftCluster / raft-validation)
-- Sprints 0–4 (`raft-node/` skeleton, `RaftNode<P>` step loop, `RaftProtocol<P>`, infra implementations, protocol-level tests) are **complete** — see `raft-node/` and `raft-variants/` crates
-- Sprint 5: implement `RaftCluster` harness in `raft-validation/` — election, replication, fault-tolerance, and snapshot cluster tests
+### 🔄 Next: Raft Consensus — Sprint 6 (raft-embassy)
+- Sprints 0–5 (`raft-node/` skeleton, `RaftNode<P>` step loop, `RaftProtocol<P>`, infra implementations, protocol-level tests, cluster tests) are **complete**
+- Sprint 6: implement `raft-embassy/` with two configurations (all-in-memory + real) and a 5-act QEMU scenario
 - See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
 - All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
 
@@ -364,6 +364,7 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - Sprint 2 `RaftProtocol<P>` in `raft-variants/` — pure Raft consensus: pre-vote, election, leader promotion, heartbeat, log replication, snapshot install; `ELECTION_TIMEOUT_MS=300`, `HEARTBEAT_INTERVAL_MS=100`; quorum = `(n+1)/2 + 1`
 - Sprint 3 infra implementations in `raft-variants/`: `InMemoryRaftStorage<P>`, `InMemoryRaftCache`, `InMemoryRaftTransport<P,S>`, `InMemoryRaftTimer<S>`, `InMemoryRaftExternalInterface<S>`, `InMemoryRaftStateMachine`, `NoOpRaftTransport<P>`, `NoOpRaftObserver`, `TypeBasedRaftPartitioner`, `EagerRaftContextBuilder`, `SharedState<T>` trait; `RaftNodeBuilder<P>` builder
 - Sprint 4 tests in `raft-variants/tests/`: 42 protocol-level tests across `election_tests`, `replication_tests`, `snapshot_tests`, `client_tests`, `role_transition_tests`, `in_memory_raft_storage_tests`, `in_memory_raft_cache_tests` — all passing
+- Sprint 5 cluster tests in `raft-validation/tests/`: 54 cluster-level tests across `election_tests`, `replication_tests`, `fault_tolerance_tests`, `snapshot_tests`, `state_machine_tests`, `client_tests` — all passing; `RaftCluster` harness with `step()`, `drain()`, `drain_all()`, `drain_except()`, `fire_timer()`, `inject_message()`, `submit_command()`, `drain_responses()`; pre-flight fixes to `raft_node.rs` (`state()` + `peer_id()` accessors, `P: AsRef<[u8]>` bound, correct state machine payload), `common.rs` (`SendClientResponse` now emitted in `advance_commit_index`), and `in_memory_raft_timer.rs` (`schedule()` is a no-op — test harness drives timer events explicitly)
 
 ---
 

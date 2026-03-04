@@ -29,7 +29,7 @@ pub struct RaftNode<P: Clone + 'static> {
     observer: Box<dyn RaftObserver>,
 }
 
-impl<P: Clone + 'static> RaftNode<P> {
+impl<P: Clone + AsRef<[u8]> + 'static> RaftNode<P> {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         peer_id: PeerId,
@@ -55,6 +55,14 @@ impl<P: Clone + 'static> RaftNode<P> {
         };
         node.observer.node_started(peer_id);
         node
+    }
+
+    pub fn state(&self) -> &RaftState<P> {
+        &self.state
+    }
+
+    pub fn peer_id(&self) -> PeerId {
+        self.peer_id
     }
 
     pub fn step(&mut self) -> bool {
@@ -100,7 +108,8 @@ impl<P: Clone + 'static> RaftNode<P> {
                 entry,
             } = action
             {
-                self.state_machine.apply_raw(entry.index, &[]);
+                self.state_machine
+                    .apply_raw(entry.index, entry.payload.as_ref());
                 self.state.set_last_applied(entry.index);
             }
             if let RaftAction::RestoreFromSnapshot(data) = action {

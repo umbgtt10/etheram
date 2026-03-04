@@ -11,6 +11,7 @@ use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::log_entry::LogEntry;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::context::context_dto::RaftContext;
+use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
 
 pub const ELECTION_TIMEOUT_MS: u64 = 300;
 pub const HEARTBEAT_INTERVAL_MS: u64 = 100;
@@ -147,6 +148,12 @@ pub fn advance_commit_index<P: Clone>(
             client_id,
             entry: entry.clone(),
         });
+        if let Some(cid) = client_id {
+            actions.push(RaftAction::SendClientResponse {
+                client_id: cid,
+                response: RaftClientResponse::Applied(alloc::vec::Vec::new()),
+            });
+        }
     }
     actions
 }

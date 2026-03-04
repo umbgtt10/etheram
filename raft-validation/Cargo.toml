@@ -1,0 +1,14 @@
+[package]
+name = "raft-raft-validation"
+version = "0.1.0"
+edition = "2021"
+autotests = false
+
+[dependencies]
+etheram-core.workspace = true
+raft-raft-node.workspace = true
+raft-raft-variants.workspace = true
+
+[[test]]
+name = "all_tests"
+path = "tests/all_tests.rs"

@@ -36,7 +36,7 @@ use raft_node::partitioner::partition::RaftPartitioner;
 use raft_node::raft_node::RaftNode;
 use raft_node::state::raft_state::RaftState;
 
-pub struct RaftNodeBuilder<P: Clone + 'static + From<alloc::vec::Vec<u8>>> {
+pub struct RaftNodeBuilder<P: Clone + 'static + From<alloc::vec::Vec<u8>> + AsRef<[u8]>> {
     peer_id: Option<PeerId>,
     peers: Vec<PeerId>,
     timer_input: Option<Box<dyn TimerInputAdapter<RaftTimerEvent>>>,
@@ -54,7 +54,7 @@ pub struct RaftNodeBuilder<P: Clone + 'static + From<alloc::vec::Vec<u8>>> {
     observer: Option<Box<dyn RaftObserver>>,
 }
 
-impl<P: Clone + 'static + From<Vec<u8>>> RaftNodeBuilder<P> {
+impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> RaftNodeBuilder<P> {
     pub fn new() -> Self {
         Self {
             peer_id: None,
@@ -221,7 +221,7 @@ impl<P: Clone + 'static + From<Vec<u8>>> RaftNodeBuilder<P> {
     }
 }
 
-impl<P: Clone + 'static + From<Vec<u8>>> Default for RaftNodeBuilder<P> {
+impl<P: Clone + 'static + From<Vec<u8>> + AsRef<[u8]>> Default for RaftNodeBuilder<P> {
     fn default() -> Self {
         Self::new()
     }

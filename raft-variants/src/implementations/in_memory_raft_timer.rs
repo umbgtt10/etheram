@@ -76,9 +76,5 @@ where
     type Event = RaftTimerEvent;
     type Duration = u64;
 
-    fn schedule(&self, event: Self::Event, _delay: Self::Duration) {
-        self.state.with_mut(|s| {
-            s.events.entry(self.node_id).or_default().push(event);
-        });
-    }
+    fn schedule(&self, _event: Self::Event, _delay: Self::Duration) {}
 }
