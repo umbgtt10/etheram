@@ -31,26 +31,26 @@ use etheram::partitioner::partition::Partitioner;
 use etheram::state::etheram_state::EtheramState;
 use etheram_core::types::PeerId;
 
-pub struct EtheramNodeBuilder {
+pub struct EtheramNodeBuilder<M: Clone + 'static> {
     peer_id: Option<PeerId>,
 
     timer_input: Option<Box<dyn TimerInputAdapter<TimerEvent>>>,
     timer_output: Option<Box<dyn TimerOutputAdapter<TimerEvent, u64>>>,
-    transport_incoming: Option<Box<dyn TransportInputAdapter<()>>>,
-    transport_outgoing: Option<Box<dyn TransportOutputAdapter<()>>>,
+    transport_incoming: Option<Box<dyn TransportInputAdapter<M>>>,
+    transport_outgoing: Option<Box<dyn TransportOutputAdapter<M>>>,
     external_interface_incoming: Option<Box<dyn ExternalInterfaceIncomingAdapter<ClientRequest>>>,
     external_interface_outgoing: Option<Box<dyn ExternalInterfaceOutgoingAdapter<ClientResponse>>>,
     storage: Option<Box<dyn StorageAdapter<Key = Address, Value = Account>>>,
     cache: Option<Box<dyn CacheAdapter<Key = (), Value = Transaction>>>,
 
-    context_builder: Option<Box<dyn ContextBuilder<()>>>,
-    brain: Option<BoxedProtocol<()>>,
-    partitioner: Option<Box<dyn Partitioner<()>>>,
+    context_builder: Option<Box<dyn ContextBuilder<M>>>,
+    brain: Option<BoxedProtocol<M>>,
+    partitioner: Option<Box<dyn Partitioner<M>>>,
     execution_engine: BoxedExecutionEngine,
     observer: Option<Box<dyn Observer>>,
 }
 
-impl EtheramNodeBuilder {
+impl<M: Clone + 'static> EtheramNodeBuilder<M> {
     pub fn new() -> Self {
         Self {
             peer_id: None,
@@ -88,17 +88,14 @@ impl EtheramNodeBuilder {
         self
     }
 
-    pub fn with_transport_incoming(
-        mut self,
-        transport: Box<dyn TransportInputAdapter<()>>,
-    ) -> Self {
+    pub fn with_transport_incoming(mut self, transport: Box<dyn TransportInputAdapter<M>>) -> Self {
         self.transport_incoming = Some(transport);
         self
     }
 
     pub fn with_transport_outgoing(
         mut self,
-        transport: Box<dyn TransportOutputAdapter<()>>,
+        transport: Box<dyn TransportOutputAdapter<M>>,
     ) -> Self {
         self.transport_outgoing = Some(transport);
         self
@@ -136,17 +133,17 @@ impl EtheramNodeBuilder {
         self
     }
 
-    pub fn with_protocol(mut self, protocol: BoxedProtocol<()>) -> Self {
+    pub fn with_protocol(mut self, protocol: BoxedProtocol<M>) -> Self {
         self.brain = Some(protocol);
         self
     }
 
-    pub fn with_context_builder(mut self, context_builder: Box<dyn ContextBuilder<()>>) -> Self {
+    pub fn with_context_builder(mut self, context_builder: Box<dyn ContextBuilder<M>>) -> Self {
         self.context_builder = Some(context_builder);
         self
     }
 
-    pub fn with_partitioner(mut self, partitioner: Box<dyn Partitioner<()>>) -> Self {
+    pub fn with_partitioner(mut self, partitioner: Box<dyn Partitioner<M>>) -> Self {
         self.partitioner = Some(partitioner);
         self
     }
@@ -163,14 +160,14 @@ impl EtheramNodeBuilder {
 
     pub fn with_scheduler(
         mut self,
-        scheduler: (Box<dyn ContextBuilder<()>>, Box<dyn Partitioner<()>>),
+        scheduler: (Box<dyn ContextBuilder<M>>, Box<dyn Partitioner<M>>),
     ) -> Self {
         self.context_builder = Some(scheduler.0);
         self.partitioner = Some(scheduler.1);
         self
     }
 
-    pub fn build(self) -> Result<EtheramNode<()>, BuildError> {
+    pub fn build(self) -> Result<EtheramNode<M>, BuildError> {
         let peer_id = self
             .peer_id
             .ok_or(BuildError::MissingComponent("peer_id"))?;
@@ -234,7 +231,7 @@ impl EtheramNodeBuilder {
     }
 }
 
-impl Default for EtheramNodeBuilder {
+impl<M: Clone + 'static> Default for EtheramNodeBuilder<M> {
     fn default() -> Self {
         Self::new()
     }

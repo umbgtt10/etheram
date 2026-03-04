@@ -19,7 +19,7 @@ use etheram_etheram_variants::builders::transport_outgoing_builder::TransportOut
 #[test]
 fn build_missing_peer_id_returns_error() {
     // Arrange
-    let builder = EtheramNodeBuilder::new();
+    let builder = EtheramNodeBuilder::<()>::new();
 
     // Act
     let result = builder.build();
@@ -31,7 +31,7 @@ fn build_missing_peer_id_returns_error() {
 #[test]
 fn build_with_all_components_builds_successfully() {
     // Arrange
-    let builder = EtheramNodeBuilder::new()
+    let builder = EtheramNodeBuilder::<()>::new()
         .with_peer_id(1)
         .with_timer_input(TimerInputBuilder::default().build().unwrap())
         .with_timer_output(TimerOutputBuilder::default().build().unwrap())
