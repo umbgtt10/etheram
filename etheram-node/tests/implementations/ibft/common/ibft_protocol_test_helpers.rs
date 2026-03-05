@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use alloc::collections::BTreeMap;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
 use etheram_core::types::PeerId;
@@ -24,7 +25,6 @@ use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram_node::implementations::ibft::signature_scheme::SignatureScheme;
 use etheram_node::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
-use std::collections::BTreeMap;
 
 pub struct AlternateSignatureScheme;
 

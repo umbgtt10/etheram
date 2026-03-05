@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 use core::marker::PhantomData;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
-use raft_variants::implementations::shared_state::SharedState;
+use raft_node::implementations::shared_state::SharedState;
 
 pub struct OutboxTransport<M, S>
 where

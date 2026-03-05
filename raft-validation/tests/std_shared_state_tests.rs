@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use raft_node::implementations::shared_state::SharedState;
 use raft_validation::std_shared_state::StdSharedState;
-use raft_variants::implementations::shared_state::SharedState;
 
 #[test]
 fn with_mut_then_with_returns_updated_value() {

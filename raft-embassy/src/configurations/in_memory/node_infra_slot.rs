@@ -7,8 +7,8 @@ use crate::infra::storage::in_memory::in_memory_raft_storage::InMemoryRaftStorag
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
 use raft_node::brain::protocol::message::RaftMessage;
-use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
-use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
+use raft_node::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
+use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
 
 pub(super) type OutboxState = EmbassySharedState<Vec<(PeerId, RaftMessage<Vec<u8>>)>>;
 

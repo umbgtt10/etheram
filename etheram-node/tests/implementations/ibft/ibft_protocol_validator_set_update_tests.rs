@@ -11,6 +11,7 @@ use etheram_core::consensus_protocol::ConsensusProtocol;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 
+use alloc::collections::BTreeMap;
 use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
@@ -20,7 +21,6 @@ use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureSch
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
 use etheram_node::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
-use std::collections::BTreeMap;
 
 trait IbftProtocolValidatorSetUpdateOps {
     fn commit_height(

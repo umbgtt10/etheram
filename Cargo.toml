@@ -6,7 +6,6 @@ members = [
     "etheram-embassy",
     "etheram-validation",
     "raft-node",
-    "raft-variants",
     "raft-validation",
     "raft-embassy",
 ]
@@ -41,6 +40,5 @@ etheram-core = { path = "core" }
 etheram-node = { path = "etheram-node" }
 etheram-validation = { path = "etheram-validation" }
 raft-node = { path = "raft-node" }
-raft-variants = { path = "raft-variants", default-features = false }
 raft-validation = { path = "raft-validation" }
 raft-embassy = { path = "raft-embassy" }

@@ -92,7 +92,7 @@ fn snapshot_roundtrip_preserves_quorum() {
 fn from_snapshot_duplicate_voters_do_not_double_count() {
     // Arrange
     let hash = [8u8; 32];
-    let mut snapshot = std::collections::BTreeMap::new();
+    let mut snapshot = alloc::collections::BTreeMap::new();
     snapshot.insert((3, 0, hash), vec![1, 1, 2]);
 
     // Act

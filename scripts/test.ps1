@@ -10,7 +10,7 @@ function Invoke-Step {
 
 Invoke-Step "Formatting" { cargo fmt }
 
-foreach ($crate in @("etheram-node", "etheram-validation", "raft-node", "raft-variants", "raft-validation")) {
+foreach ($crate in @("etheram-node", "etheram-validation", "raft-node", "raft-validation")) {
     Invoke-Step "Testing $crate" { cargo nextest run -p $crate }
 }
 

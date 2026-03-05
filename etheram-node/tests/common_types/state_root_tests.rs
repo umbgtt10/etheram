@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use alloc::collections::BTreeMap;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::state_root::{
     compute_state_root, compute_state_root_with_contract_storage,
 };
 use etheram_node::common_types::types::{Address, Hash};
-use std::collections::BTreeMap;
 
 #[test]
 fn compute_state_root_empty_accounts_returns_zero_hash() {

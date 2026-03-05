@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use alloc::collections::BTreeMap;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::transaction::Transaction;
@@ -17,7 +18,6 @@ use etheram_node::implementations::tiny_evm_gas::GAS_PUSH1;
 use etheram_node::implementations::tiny_evm_gas::GAS_SSTORE_SET;
 use etheram_node::implementations::tiny_evm_gas::INTRINSIC_GAS;
 use etheram_node::implementations::value_transfer_engine::ValueTransferEngine;
-use std::collections::BTreeMap;
 
 #[test]
 fn execute_exact_gas_succeeds() {

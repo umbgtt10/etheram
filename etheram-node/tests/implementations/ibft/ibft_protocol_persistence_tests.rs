@@ -4,6 +4,7 @@
 
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_after_propose;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_with;
+use alloc::collections::BTreeMap;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
 use etheram_node::brain::protocol::action::Action;
@@ -17,7 +18,6 @@ use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureSch
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
-use std::collections::BTreeMap;
 
 fn valid_pre_prepare_message(sequence: u64, block: Block) -> Message<IbftMessage> {
     Message::Peer(IbftMessage::PrePrepare {

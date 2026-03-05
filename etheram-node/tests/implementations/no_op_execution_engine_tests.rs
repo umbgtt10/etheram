@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use alloc::collections::BTreeMap;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::execution::execution_engine::ExecutionEngine;
 use etheram_node::implementations::no_op_execution_engine::NoOpExecutionEngine;
-use std::collections::BTreeMap;
 
 #[test]
 fn execute_empty_block_returns_no_mutations() {

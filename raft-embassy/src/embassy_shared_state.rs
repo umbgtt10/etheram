@@ -5,7 +5,7 @@
 use alloc::sync::Arc;
 use core::cell::RefCell;
 use critical_section::Mutex;
-use raft_variants::implementations::shared_state::SharedState;
+use raft_node::implementations::shared_state::SharedState;
 
 pub struct EmbassySharedState<T> {
     state: Arc<Mutex<RefCell<T>>>,

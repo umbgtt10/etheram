@@ -8,7 +8,6 @@ autotests = false
 etheram-core.workspace = true
 
 [dev-dependencies]
-etheram-core.workspace = true
 
 [lib]
 name = "raft_node"

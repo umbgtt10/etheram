@@ -4,12 +4,12 @@
 
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_base;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_with;
+use alloc::collections::BTreeMap;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
-use std::collections::BTreeMap;
 
 fn round_trip(wal: ConsensusWal) -> ConsensusWal {
     let bytes = wal.to_bytes();

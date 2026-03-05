@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use alloc::collections::BTreeMap;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::transaction::Transaction;
@@ -16,7 +17,6 @@ use etheram_node::implementations::tiny_evm_engine::OPCODE_SSTORE;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_STOP;
 use etheram_node::implementations::value_transfer_engine::ValueTransferEngine;
 use etheram_node::state::storage::storage_mutation::StorageMutation;
-use std::collections::BTreeMap;
 
 #[test]
 fn execute_push_add_return_produces_no_contract_storage_mutation() {

@@ -7,6 +7,7 @@ use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_cont
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_restored_protocol;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_with;
+use alloc::collections::BTreeMap;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
 use etheram_node::brain::protocol::action::Action;
@@ -19,7 +20,6 @@ use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram_node::implementations::tiny_evm_engine::TinyEvmEngine;
-use std::collections::BTreeMap;
 
 #[test]
 fn valid_block_with_correct_commitments_accepted() {
