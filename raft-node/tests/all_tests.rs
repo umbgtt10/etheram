@@ -5,7 +5,6 @@
 extern crate alloc;
 
 pub mod builders;
-pub mod collections;
 pub mod common;
 pub mod implementations;
 pub mod observer;

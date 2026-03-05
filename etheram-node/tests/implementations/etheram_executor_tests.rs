@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
+use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_node::brain::protocol::action::Action;
-use etheram_node::collections::action_collection::ActionCollection;
 use etheram_node::executor::etheram_executor::EtheramExecutor;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram_node::executor::outgoing::outgoing_sources::OutgoingSources;

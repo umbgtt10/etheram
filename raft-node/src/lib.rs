@@ -7,7 +7,6 @@ extern crate alloc;
 
 pub mod brain;
 pub mod builders;
-pub mod collections;
 pub mod common_types;
 pub mod context;
 pub mod executor;

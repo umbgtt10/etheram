@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
-use crate::common_types::timer_output_adapter::TimerOutputAdapter;
-use crate::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use crate::executor::outgoing::external_interface::client_response::ClientResponse;
 use crate::incoming::timer::timer_event::TimerEvent;
 use alloc::boxed::Box;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 
 pub struct OutgoingSources<M> {
     timer: Box<dyn TimerOutputAdapter<TimerEvent, u64>>,

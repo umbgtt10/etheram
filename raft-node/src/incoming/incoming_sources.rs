@@ -5,12 +5,12 @@
 use crate::brain::protocol::message::RaftMessage;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::brain::protocol::unified_message::Message;
-use crate::common_types::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
-use crate::common_types::timer_input_adapter::TimerInputAdapter;
-use crate::common_types::transport_incoming_adapter::TransportIncomingAdapter;
 use crate::incoming::external_interface::client_request::RaftClientRequest;
 use crate::incoming::timer::timer_event::RaftTimerEvent;
 use alloc::boxed::Box;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
 
 pub struct RaftIncomingSources<P> {
     timer: Box<dyn TimerInputAdapter<RaftTimerEvent>>,

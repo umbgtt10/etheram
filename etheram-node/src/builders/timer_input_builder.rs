@@ -3,11 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::builders::error::BuildError;
-use crate::common_types::timer_input_adapter::TimerInputAdapter;
 use crate::implementations::no_op_timer::NoOpTimer;
 use crate::incoming::timer::timer_event::TimerEvent;
 use crate::variants::TimerInputVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
 
 pub struct TimerInputBuilder {
     timer: Option<Box<dyn TimerInputAdapter<TimerEvent>>>,

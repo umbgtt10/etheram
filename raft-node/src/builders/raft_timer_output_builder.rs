@@ -3,9 +3,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::builders::error::BuildError;
-use crate::common_types::timer_output_adapter::TimerOutputAdapter;
 use crate::incoming::timer::timer_event::RaftTimerEvent;
 use alloc::boxed::Box;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
 
 pub struct RaftTimerOutputBuilder {
     timer: Option<Box<dyn TimerOutputAdapter<RaftTimerEvent, u64>>>,

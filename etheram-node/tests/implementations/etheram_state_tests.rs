@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_node::brain::protocol::action::Action;
-use etheram_node::collections::action_collection::ActionCollection;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::transaction::Transaction;

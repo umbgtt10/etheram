@@ -6,7 +6,6 @@ use crate::brain::protocol::action::RaftAction;
 use crate::brain::protocol::message::RaftMessage;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::brain::protocol::unified_message::Message;
-use crate::collections::action_collection::ActionCollection;
 use crate::context::context_dto::RaftContext;
 use crate::implementations::raft::client;
 use crate::implementations::raft::election;
@@ -20,6 +19,7 @@ use alloc::vec::Vec;
 use core::marker::PhantomData;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::types::{ClientId, PeerId};
 
 pub struct RaftProtocol<P> {

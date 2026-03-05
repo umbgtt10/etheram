@@ -3,7 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::action::RaftAction;
-use crate::collections::action_collection::ActionCollection;
 use crate::common_types::cache_adapter::CacheAdapter;
 use crate::common_types::log_entry::LogEntry;
 use crate::common_types::node_role::NodeRole;
@@ -17,6 +16,7 @@ use crate::state::storage::storage_query_result::RaftStorageQueryResult;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use etheram_core::collection::Collection;
+use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::types::PeerId;
 
 pub struct RaftState<P> {

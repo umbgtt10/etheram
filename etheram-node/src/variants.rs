@@ -5,13 +5,8 @@
 use crate::{
     brain::protocol::boxed_protocol::BoxedProtocol,
     common_types::{
-        account::Account, cache_adapter::CacheAdapter,
-        external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter,
-        external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter,
-        storage_adapter::StorageAdapter, timer_input_adapter::TimerInputAdapter,
-        timer_output_adapter::TimerOutputAdapter, transaction::Transaction,
-        transport_incoming_adapter::TransportIncomingAdapter,
-        transport_outgoing_adapter::TransportOutgoingAdapter, types::Address,
+        account::Account, cache_adapter::CacheAdapter, storage_adapter::StorageAdapter,
+        transaction::Transaction, types::Address,
     },
     context::context_builder::ContextBuilder,
     execution::execution_engine::BoxedExecutionEngine,
@@ -22,6 +17,12 @@ use crate::{
 };
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram_core::types::PeerId;
 
 pub enum StorageVariant {

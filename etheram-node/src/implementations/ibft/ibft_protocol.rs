@@ -5,7 +5,6 @@
 use crate::brain::protocol::action::Action;
 use crate::brain::protocol::message::Message;
 use crate::brain::protocol::message_source::MessageSource;
-use crate::collections::action_collection::ActionCollection;
 use crate::common_types::block::Block;
 use crate::common_types::types::Gas;
 use crate::common_types::types::{Hash, Height};
@@ -31,6 +30,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::types::PeerId;
 
 pub(crate) const MAX_GAS_LIMIT: Gas = 1_000_000;

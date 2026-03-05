@@ -3,20 +3,20 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::std_shared_state::StdSharedState;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram_core::types::ClientId;
 use etheram_core::types::PeerId;
 use raft_node::brain::protocol::boxed_protocol::BoxedRaftProtocol;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::cache_adapter::CacheAdapter;
-use raft_node::common_types::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
-use raft_node::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::common_types::state_machine::RaftStateMachine;
 use raft_node::common_types::storage_adapter::StorageAdapter;
-use raft_node::common_types::timer_input_adapter::TimerInputAdapter;
-use raft_node::common_types::timer_output_adapter::TimerOutputAdapter;
-use raft_node::common_types::transport_incoming_adapter::TransportIncomingAdapter;
-use raft_node::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use raft_node::context::context_builder::RaftContextBuilder;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use raft_node::executor::outgoing::outgoing_sources::RaftOutgoingSources;

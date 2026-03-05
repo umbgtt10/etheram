@@ -5,10 +5,10 @@
 use crate::brain::protocol::action::Action;
 use crate::brain::protocol::message::Message;
 use crate::brain::protocol::message_source::MessageSource;
-use crate::collections::action_collection::ActionCollection;
 use crate::context::context_dto::Context;
 use alloc::boxed::Box;
 use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 pub type BoxedProtocol<M> = Box<
     dyn ConsensusProtocol<

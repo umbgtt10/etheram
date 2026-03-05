@@ -3,7 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::action::Action;
-use crate::collections::action_collection::ActionCollection;
 use crate::common_types::account::Account;
 use crate::common_types::block::Block;
 use crate::common_types::cache_adapter::CacheAdapter;
@@ -19,6 +18,7 @@ use crate::state::storage::storage_query_result::StorageQueryResult;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 pub struct EtheramState {
     storage: Box<dyn StorageAdapter<Key = Address, Value = Account>>,

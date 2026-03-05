@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::collection::Collection;
-use raft_node::collections::action_collection::ActionCollection;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 #[test]
 fn new_empty_collection_is_empty() {

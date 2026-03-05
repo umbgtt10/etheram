@@ -76,7 +76,7 @@ impl MiniNode {
 
 fn queue_broadcasts(
     from_peer: u64,
-    actions: &etheram_node::collections::action_collection::ActionCollection<Action<IbftMessage>>,
+    actions: &etheram_core::node_common::action_collection::ActionCollection<Action<IbftMessage>>,
     validators: &[u64],
 ) -> VecDeque<(u64, u64, IbftMessage)> {
     let mut queue = VecDeque::new();

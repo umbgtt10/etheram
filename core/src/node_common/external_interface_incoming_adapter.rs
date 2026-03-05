@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
+use crate::external_interface_incoming::ExternalInterfaceIncoming;
 
 pub trait ExternalInterfaceIncomingAdapter<Req>: ExternalInterfaceIncoming<Request = Req> {}
 

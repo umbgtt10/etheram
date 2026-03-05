@@ -3,9 +3,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::collection::Collection;
+use etheram_core::node_common::action_collection::ActionCollection;
 use raft_node::brain::protocol::action::RaftAction;
 use raft_node::brain::protocol::message::RaftMessage;
-use raft_node::collections::action_collection::ActionCollection;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 use raft_node::partitioner::partition::RaftPartitioner;

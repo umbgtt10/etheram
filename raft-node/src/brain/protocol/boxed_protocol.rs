@@ -5,10 +5,10 @@
 use crate::brain::protocol::action::RaftAction;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::brain::protocol::unified_message::Message;
-use crate::collections::action_collection::ActionCollection;
 use crate::context::context_dto::RaftContext;
 use alloc::boxed::Box;
 use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 pub type BoxedRaftProtocol<P> = Box<
     dyn ConsensusProtocol<

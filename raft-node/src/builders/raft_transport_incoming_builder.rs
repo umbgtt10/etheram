@@ -4,10 +4,10 @@
 
 use crate::brain::protocol::message::RaftMessage;
 use crate::builders::error::BuildError;
-use crate::common_types::transport_incoming_adapter::TransportIncomingAdapter;
 use crate::implementations::no_op_raft_transport::NoOpRaftTransport;
 use crate::variants::RaftTransportIncomingVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
 
 pub struct RaftTransportIncomingBuilder<P: Clone + 'static> {
     transport: Option<Box<dyn TransportIncomingAdapter<RaftMessage<P>>>>,

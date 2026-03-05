@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::action::Action;
-use crate::collections::action_collection::ActionCollection;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 #[allow(clippy::type_complexity)]
 pub trait Partitioner<M> {

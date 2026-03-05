@@ -5,13 +5,8 @@
 use crate::{
     brain::protocol::{boxed_protocol::BoxedRaftProtocol, message::RaftMessage},
     common_types::{
-        cache_adapter::CacheAdapter,
-        external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter,
-        external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter,
-        state_machine::RaftStateMachine, storage_adapter::StorageAdapter,
-        timer_input_adapter::TimerInputAdapter, timer_output_adapter::TimerOutputAdapter,
-        transport_incoming_adapter::TransportIncomingAdapter,
-        transport_outgoing_adapter::TransportOutgoingAdapter,
+        cache_adapter::CacheAdapter, state_machine::RaftStateMachine,
+        storage_adapter::StorageAdapter,
     },
     context::context_builder::RaftContextBuilder,
     executor::outgoing::external_interface::client_response::RaftClientResponse,
@@ -22,6 +17,12 @@ use crate::{
     partitioner::partition::RaftPartitioner,
 };
 use alloc::boxed::Box;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 
 pub enum RaftStorageVariant<P: Clone + 'static> {
     InMemory,

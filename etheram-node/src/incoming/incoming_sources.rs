@@ -4,14 +4,12 @@
 
 use crate::{
     brain::protocol::{message::Message, message_source::MessageSource},
-    common_types::{
-        external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter,
-        timer_input_adapter::TimerInputAdapter,
-        transport_incoming_adapter::TransportIncomingAdapter,
-    },
     incoming::{external_interface::client_request::ClientRequest, timer::timer_event::TimerEvent},
 };
 use alloc::boxed::Box;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
 
 pub struct IncomingSources<M> {
     timer: Box<dyn TimerInputAdapter<TimerEvent>>,

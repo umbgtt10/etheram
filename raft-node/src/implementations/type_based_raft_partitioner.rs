@@ -3,9 +3,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::action::RaftAction;
-use crate::collections::action_collection::ActionCollection;
 use crate::partitioner::partition::RaftPartitioner;
 use etheram_core::collection::Collection;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 pub struct TypeBasedRaftPartitioner;
 

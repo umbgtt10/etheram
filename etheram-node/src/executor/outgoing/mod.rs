@@ -4,5 +4,3 @@
 
 pub mod external_interface;
 pub mod outgoing_sources;
-pub mod timer;
-pub mod transport;

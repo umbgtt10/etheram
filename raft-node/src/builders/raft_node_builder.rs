@@ -13,14 +13,8 @@ use crate::builders::raft_protocol_builder::RaftProtocolBuilder;
 use crate::builders::raft_state_machine_builder::RaftStateMachineBuilder;
 use crate::builders::raft_storage_builder::RaftStorageBuilder;
 use crate::common_types::cache_adapter::CacheAdapter;
-use crate::common_types::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
-use crate::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use crate::common_types::state_machine::RaftStateMachine;
 use crate::common_types::storage_adapter::StorageAdapter;
-use crate::common_types::timer_input_adapter::TimerInputAdapter;
-use crate::common_types::timer_output_adapter::TimerOutputAdapter;
-use crate::common_types::transport_incoming_adapter::TransportIncomingAdapter;
-use crate::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use crate::context::context_builder::RaftContextBuilder;
 use crate::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use crate::executor::outgoing::outgoing_sources::RaftOutgoingSources;
@@ -46,6 +40,12 @@ use crate::variants::{
 };
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram_core::types::PeerId;
 
 pub struct RaftNodeBuilder<P: Clone + 'static> {

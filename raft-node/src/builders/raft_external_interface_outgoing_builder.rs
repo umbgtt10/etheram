@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::builders::error::BuildError;
-use crate::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use crate::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use crate::variants::RaftExternalInterfaceOutgoingVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 
 pub struct RaftExternalInterfaceOutgoingBuilder {
     ei: Option<Box<dyn ExternalInterfaceOutgoingAdapter<RaftClientResponse>>>,

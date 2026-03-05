@@ -9,7 +9,6 @@ use super::IbftProtocol;
 use crate::brain::protocol::action::Action;
 use crate::brain::protocol::message::Message;
 use crate::brain::protocol::message_source::MessageSource;
-use crate::collections::action_collection::ActionCollection;
 use crate::common_types::account::Account;
 use crate::common_types::block::Block;
 use crate::common_types::types::{Hash, Height};
@@ -20,6 +19,7 @@ use crate::incoming::external_interface::client_request::ClientRequest;
 use crate::incoming::timer::timer_event::TimerEvent;
 use crate::state::cache::cache_update::CacheUpdate;
 use etheram_core::collection::Collection;
+use etheram_core::node_common::action_collection::ActionCollection;
 
 impl IbftProtocol {
     fn empty_actions() -> ActionCollection<Action<IbftMessage>> {

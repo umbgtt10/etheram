@@ -3,4 +3,3 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod client_response;
-pub mod external_interface_adapter;
