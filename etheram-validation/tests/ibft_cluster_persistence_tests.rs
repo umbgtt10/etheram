@@ -9,13 +9,13 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
 use etheram_node::context::context_dto::Context;
+use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
-use etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use std::collections::VecDeque;
 
 struct MiniNode {

@@ -11,12 +11,12 @@ use etheram_node::common_types::block::Block;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::{Address, Balance};
 use etheram_node::context::context_dto::Context;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_validation::ibft_cluster::IbftCluster;
-use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 
 fn block(height: u64, proposer: u64, state_root: [u8; 32]) -> Block {
     Block::new(height, proposer, vec![], state_root)

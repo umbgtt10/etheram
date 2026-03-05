@@ -11,9 +11,9 @@ use etheram_node::common_types::types::Gas;
 use etheram_node::common_types::types::Hash;
 use etheram_node::common_types::types::Height;
 use etheram_node::common_types::types::Nonce;
-use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use serde::Deserialize;
 use serde::Serialize;
 

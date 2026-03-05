@@ -8,9 +8,9 @@ use crate::common::ibft_cluster_test_helpers::validators;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::state_root::compute_state_root;
 use etheram_node::common_types::transaction::Transaction;
+use etheram_node::implementations::tiny_evm_engine::TinyEvmEngine;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;
 use etheram_validation::ibft_cluster::IbftCluster;
-use etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
 use std::collections::BTreeMap;
 
 #[test]

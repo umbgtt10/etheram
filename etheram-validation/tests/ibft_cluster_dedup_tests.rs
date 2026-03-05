@@ -4,10 +4,10 @@
 
 use crate::common::ibft_cluster_test_helpers::validators;
 use etheram_node::common_types::block::Block;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_validation::ibft_cluster::IbftCluster;
-use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
 
 fn block(height: u64, proposer: u64) -> Block {
     Block::new(height, proposer, vec![], [0u8; 32])

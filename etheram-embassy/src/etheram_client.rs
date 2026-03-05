@@ -15,10 +15,10 @@ use etheram_core::types::ClientId;
 use etheram_node::common_types::types::Height;
 use etheram_node::common_types::types::{Address, Hash};
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
-use etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
 
 pub struct EtheramClient {
     cancel: &'static CancellationToken,

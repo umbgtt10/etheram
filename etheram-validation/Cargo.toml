@@ -7,7 +7,6 @@ autotests = false
 [dependencies]
 etheram-core.workspace = true
 etheram-node.workspace = true
-etheram-variants.workspace = true
 
 indexmap.workspace = true
 rand.workspace = true

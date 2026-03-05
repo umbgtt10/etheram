@@ -15,7 +15,6 @@ udp-external-interface = []
 [dependencies]
 etheram-core.workspace = true
 etheram-node.workspace = true
-etheram-variants.workspace = true
 
 postcard.workspace = true
 serde.workspace = true

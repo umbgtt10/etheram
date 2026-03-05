@@ -9,11 +9,11 @@ use etheram_node::common_types::types::Address;
 use etheram_node::common_types::types::Hash;
 use etheram_node::execution::block_commitments::compute_block_commitments;
 use etheram_node::execution::execution_engine::ExecutionEngine;
-use etheram_node::incoming::timer::timer_event::TimerEvent;
-use etheram_validation::ibft_cluster::IbftCluster;
-use etheram_variants::implementations::ibft::{
+use etheram_node::implementations::ibft::{
     ibft_message::IbftMessage, signature_scheme::SignatureBytes,
 };
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_validation::ibft_cluster::IbftCluster;
 use std::collections::BTreeMap;
 
 fn sequence(height: u64, round: u64, phase: u64) -> u64 {

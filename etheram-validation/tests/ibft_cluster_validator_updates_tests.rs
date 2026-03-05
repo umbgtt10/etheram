@@ -7,11 +7,11 @@ use crate::common::ibft_cluster_test_helpers::commit;
 use crate::common::ibft_cluster_test_helpers::finalize_round_after_proposer_timer;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_validation::ibft_cluster::IbftCluster;
-use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
 
 trait IbftClusterValidatorUpdateOps {
     fn commit_height_zero_on_node_zero(&mut self);

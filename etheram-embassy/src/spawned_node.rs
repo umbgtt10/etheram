@@ -11,10 +11,10 @@ use embassy_sync::channel::Sender;
 use etheram_node::common_types::types::Address;
 use etheram_node::common_types::types::Hash;
 use etheram_node::common_types::types::Height;
+use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_node::implementations::shared_state::SharedState;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
-use etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_variants::implementations::shared_state::SharedState;
 
 pub type TimerSender = Sender<'static, CriticalSectionRawMutex, TimerEvent, TIMER_COMMAND_CAPACITY>;
 

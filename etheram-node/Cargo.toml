@@ -7,6 +7,8 @@ autotests = false
 [dependencies]
 etheram-core.workspace = true
 
+ed25519-dalek.workspace = true
+
 [lib]
 name = "etheram_node"
 path = "src/lib.rs"

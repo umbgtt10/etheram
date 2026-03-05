@@ -7,9 +7,9 @@ use crate::infra::storage::in_memory::in_memory_storage::InMemoryStorage;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
 use etheram_node::common_types::types::Address;
-use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
-use etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::in_memory_timer::InMemoryTimerState;
+use etheram_node::implementations::in_memory_transport::InMemoryTransportState;
 
 pub(super) type OutboxState = EmbassySharedState<Vec<(PeerId, IbftMessage)>>;
 

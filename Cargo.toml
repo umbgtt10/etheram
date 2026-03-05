@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "core",
     "etheram-node",
-    "etheram-variants",
     "etheram-embassy",
     "etheram-validation",
     "raft-node",
@@ -40,7 +39,6 @@ ed25519-dalek = { version = "2", default-features = false }
 
 etheram-core = { path = "core" }
 etheram-node = { path = "etheram-node" }
-etheram-variants = { path = "etheram-variants", default-features = false }
 etheram-validation = { path = "etheram-validation" }
 raft-node = { path = "raft-node" }
 raft-variants = { path = "raft-variants", default-features = false }
