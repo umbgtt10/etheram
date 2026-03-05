@@ -2,19 +2,19 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_etheram_variants::builders::cache_builder::CacheBuilder;
-use etheram_etheram_variants::builders::context_builder_builder::ContextBuilderBuilder;
-use etheram_etheram_variants::builders::etheram_node_builder::EtheramNodeBuilder;
-use etheram_etheram_variants::builders::external_interface_incoming_builder::ExternalInterfaceIncomingBuilder;
-use etheram_etheram_variants::builders::external_interface_outgoing_builder::ExternalInterfaceOutgoingBuilder;
-use etheram_etheram_variants::builders::observer_builder::ObserverBuilder;
-use etheram_etheram_variants::builders::partitioner_builder::PartitionerBuilder;
-use etheram_etheram_variants::builders::protocol_builder::ProtocolBuilder;
-use etheram_etheram_variants::builders::storage_builder::StorageBuilder;
-use etheram_etheram_variants::builders::timer_input_builder::TimerInputBuilder;
-use etheram_etheram_variants::builders::timer_output_builder::TimerOutputBuilder;
-use etheram_etheram_variants::builders::transport_incoming_builder::TransportIncomingBuilder;
-use etheram_etheram_variants::builders::transport_outgoing_builder::TransportOutgoingBuilder;
+use etheram_variants::builders::cache_builder::CacheBuilder;
+use etheram_variants::builders::context_builder_builder::ContextBuilderBuilder;
+use etheram_variants::builders::etheram_node_builder::EtheramNodeBuilder;
+use etheram_variants::builders::external_interface_incoming_builder::ExternalInterfaceIncomingBuilder;
+use etheram_variants::builders::external_interface_outgoing_builder::ExternalInterfaceOutgoingBuilder;
+use etheram_variants::builders::observer_builder::ObserverBuilder;
+use etheram_variants::builders::partitioner_builder::PartitionerBuilder;
+use etheram_variants::builders::protocol_builder::ProtocolBuilder;
+use etheram_variants::builders::storage_builder::StorageBuilder;
+use etheram_variants::builders::timer_input_builder::TimerInputBuilder;
+use etheram_variants::builders::timer_output_builder::TimerOutputBuilder;
+use etheram_variants::builders::transport_incoming_builder::TransportIncomingBuilder;
+use etheram_variants::builders::transport_outgoing_builder::TransportOutgoingBuilder;
 
 #[test]
 fn build_missing_peer_id_returns_error() {

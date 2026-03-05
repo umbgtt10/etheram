@@ -1,5 +1,5 @@
 [package]
-name = "raft-raft-embassy"
+name = "raft-embassy"
 version = "0.1.0"
 edition = "2021"
 
@@ -14,8 +14,8 @@ udp-external-interface = []
 
 [dependencies]
 etheram-core.workspace = true
-raft-raft-node.workspace = true
-raft-raft-variants.workspace = true
+raft-node.workspace = true
+raft-variants.workspace = true
 
 postcard.workspace = true
 serde.workspace = true

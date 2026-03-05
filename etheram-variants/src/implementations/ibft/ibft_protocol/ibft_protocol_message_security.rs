@@ -4,9 +4,9 @@
 
 use super::IbftProtocol;
 use alloc::vec::Vec;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::common_types::types::Hash;
-use etheram::common_types::types::Height;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::common_types::types::Hash;
+use etheram_node::common_types::types::Height;
 
 impl IbftProtocol {
     pub(super) fn commit_commitment_payload(

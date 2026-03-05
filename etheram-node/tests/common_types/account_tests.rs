@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::common_types::account::Account;
+use etheram_node::common_types::account::Account;
 
 #[test]
 fn new_sets_balance_and_nonce_zero() {

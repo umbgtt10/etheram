@@ -6,7 +6,7 @@ use crate::common::raft_cluster_helpers::make_kv_command;
 use crate::common::raft_cluster_helpers::replicate_one;
 use crate::common::raft_cluster_helpers::setup_elected_3_node_cluster;
 use crate::common::raft_cluster_helpers::setup_elected_5_node_cluster;
-use raft_raft_validation::raft_cluster::RaftCluster;
+use raft_validation::raft_cluster::RaftCluster;
 
 #[test]
 fn applied_index_is_zero_before_any_commands() {

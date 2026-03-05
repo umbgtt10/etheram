@@ -5,8 +5,8 @@
 use alloc::collections::BTreeMap;
 use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
-use etheram::common_types::types::{Hash, Height};
 use etheram_core::types::PeerId;
+use etheram_node::common_types::types::{Hash, Height};
 
 pub struct VoteTracker {
     quorum_size: usize,

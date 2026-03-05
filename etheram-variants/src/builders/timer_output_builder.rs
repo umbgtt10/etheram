@@ -6,8 +6,8 @@ use crate::builders::error::BuildError;
 use crate::implementations::no_op_timer::NoOpTimer;
 use crate::variants::TimerOutputVariant;
 use alloc::boxed::Box;
-use etheram::common_types::timer_output_adapter::TimerOutputAdapter;
-use etheram::incoming::timer::timer_event::TimerEvent;
+use etheram_node::common_types::timer_output_adapter::TimerOutputAdapter;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
 
 pub struct TimerOutputBuilder {
     timer: Option<Box<dyn TimerOutputAdapter<TimerEvent, u64>>>,

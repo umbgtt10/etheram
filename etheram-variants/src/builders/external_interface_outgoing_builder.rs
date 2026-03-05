@@ -6,8 +6,8 @@ use crate::builders::error::BuildError;
 use crate::implementations::no_op_external_interface::NoOpExternalInterface;
 use crate::variants::OutgoingExternalInterfaceVariant;
 use alloc::boxed::Box;
-use etheram::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
 
 pub struct ExternalInterfaceOutgoingBuilder {
     external_interface: Option<Box<dyn ExternalInterfaceOutgoingAdapter<ClientResponse>>>,

@@ -1,5 +1,5 @@
 [package]
-name = "etheram-etheram-variants"
+name = "etheram-variants"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,5 @@ std = []
 
 [dependencies]
 etheram-core.workspace = true
-etheram-etheram.workspace = true
+etheram-node.workspace = true
 ed25519-dalek.workspace = true

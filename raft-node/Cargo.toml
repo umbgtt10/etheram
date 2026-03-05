@@ -1,5 +1,5 @@
 [package]
-name = "raft-raft-node"
+name = "raft-node"
 version = "0.1.0"
 edition = "2021"
 autotests = false

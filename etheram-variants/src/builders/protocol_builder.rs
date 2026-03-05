@@ -9,8 +9,8 @@ use crate::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
 use crate::implementations::no_op_protocol::NoOpProtocol;
 use crate::variants::ProtocolVariant;
 use alloc::boxed::Box;
-use etheram::brain::protocol::boxed_protocol::BoxedProtocol;
-use etheram::execution::execution_engine::BoxedExecutionEngine;
+use etheram_node::brain::protocol::boxed_protocol::BoxedProtocol;
+use etheram_node::execution::execution_engine::BoxedExecutionEngine;
 
 pub struct ProtocolBuilder<M> {
     protocol: Option<BoxedProtocol<M>>,

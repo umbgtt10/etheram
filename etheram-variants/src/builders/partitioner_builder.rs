@@ -6,7 +6,7 @@ use crate::builders::error::BuildError;
 use crate::implementations::type_based_partitioner::TypeBasedPartitioner;
 use crate::variants::PartitionerVariant;
 use alloc::boxed::Box;
-use etheram::partitioner::partition::Partitioner;
+use etheram_node::partitioner::partition::Partitioner;
 
 pub struct PartitionerBuilder {
     partitioner: Option<Box<dyn Partitioner<()>>>,

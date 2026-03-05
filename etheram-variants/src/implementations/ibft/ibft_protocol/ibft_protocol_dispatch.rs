@@ -6,20 +6,20 @@ use super::super::ibft_message::IbftMessage;
 use super::super::prepared_certificate::PreparedCertificate;
 use super::super::signature_scheme::SignatureBytes;
 use super::IbftProtocol;
-use etheram::brain::protocol::action::Action;
-use etheram::brain::protocol::message::Message;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::collections::action_collection::ActionCollection;
-use etheram::common_types::account::Account;
-use etheram::common_types::block::Block;
-use etheram::common_types::types::{Hash, Height};
-use etheram::context::context_dto::Context;
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
-use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram::incoming::timer::timer_event::TimerEvent;
-use etheram::state::cache::cache_update::CacheUpdate;
 use etheram_core::collection::Collection;
+use etheram_node::brain::protocol::action::Action;
+use etheram_node::brain::protocol::message::Message;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::collections::action_collection::ActionCollection;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::types::{Hash, Height};
+use etheram_node::context::context_dto::Context;
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_node::state::cache::cache_update::CacheUpdate;
 
 impl IbftProtocol {
     fn empty_actions() -> ActionCollection<Action<IbftMessage>> {

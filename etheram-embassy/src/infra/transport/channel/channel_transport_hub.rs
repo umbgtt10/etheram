@@ -6,7 +6,7 @@ use crate::config::MAX_NODES;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use etheram_core::types::PeerId;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
 
 const TRANSPORT_CAPACITY: usize = 64;
 

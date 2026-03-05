@@ -1,5 +1,5 @@
 [package]
-name = "etheram-etheram-embassy"
+name = "etheram-embassy"
 version = "0.1.0"
 edition = "2021"
 
@@ -14,8 +14,8 @@ udp-external-interface = []
 
 [dependencies]
 etheram-core.workspace = true
-etheram-etheram.workspace = true
-etheram-etheram-variants.workspace = true
+etheram-node.workspace = true
+etheram-variants.workspace = true
 
 postcard.workspace = true
 serde.workspace = true

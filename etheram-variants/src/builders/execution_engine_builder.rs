@@ -8,7 +8,7 @@ use crate::implementations::tiny_evm_engine::TinyEvmEngine;
 use crate::implementations::value_transfer_engine::ValueTransferEngine;
 use crate::variants::ExecutionEngineVariant;
 use alloc::boxed::Box;
-use etheram::execution::execution_engine::BoxedExecutionEngine;
+use etheram_node::execution::execution_engine::BoxedExecutionEngine;
 
 pub struct ExecutionEngineBuilder {
     execution_engine: Option<BoxedExecutionEngine>,

@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::embassy_shared_state::EmbassySharedState;
-use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_etheram_variants::implementations::ibft::wal_writer::WalWriter;
-use etheram_etheram_variants::implementations::shared_state::SharedState;
+use etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_variants::implementations::ibft::wal_writer::WalWriter;
+use etheram_variants::implementations::shared_state::SharedState;
 
 pub struct CapturedWalWriter {
     state: EmbassySharedState<Option<ConsensusWal>>,

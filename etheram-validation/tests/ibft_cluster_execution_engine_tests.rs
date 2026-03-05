@@ -5,23 +5,23 @@
 use crate::common::ibft_cluster_test_helpers::build_block_with_commitments;
 use crate::common::ibft_cluster_test_helpers::finalize_round_with_block;
 use crate::common::ibft_cluster_test_helpers::validators;
-use etheram::common_types::account::Account;
-use etheram::common_types::block::Block;
-use etheram::common_types::transaction::Transaction;
-use etheram::common_types::types::Address;
-use etheram::common_types::types::Hash;
-use etheram::execution::execution_engine::ExecutionEngine;
-use etheram::execution::execution_result::ExecutionResult;
-use etheram::execution::transaction_result::TransactionResult;
-use etheram::execution::transaction_result::TransactionStatus;
-use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram_etheram_validation::ibft_cluster::IbftCluster;
-use etheram_etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
-use etheram_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
-use etheram_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::common_types::types::Address;
+use etheram_node::common_types::types::Hash;
+use etheram_node::execution::execution_engine::ExecutionEngine;
+use etheram_node::execution::execution_result::ExecutionResult;
+use etheram_node::execution::transaction_result::TransactionResult;
+use etheram_node::execution::transaction_result::TransactionStatus;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
+use etheram_validation::ibft_cluster::IbftCluster;
+use etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
+use etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
+use etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
 use std::collections::BTreeMap;
 
 fn finalize_first_block_with_transaction(
@@ -31,7 +31,7 @@ fn finalize_first_block_with_transaction(
     engine: &dyn ExecutionEngine,
 ) {
     let genesis_accounts = BTreeMap::from([(from, Account::new(1_000))]);
-    let state_root = etheram::common_types::state_root::compute_state_root(&genesis_accounts);
+    let state_root = etheram_node::common_types::state_root::compute_state_root(&genesis_accounts);
     let contract_storage = BTreeMap::new();
     let proposed_block = build_block_with_commitments(
         0,

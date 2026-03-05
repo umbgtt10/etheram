@@ -4,9 +4,9 @@
 
 use crate::implementations::ibft::signature_scheme::SignatureBytes;
 use alloc::vec::Vec;
-use etheram::common_types::types::Hash;
-use etheram::common_types::types::Height;
 use etheram_core::types::PeerId;
+use etheram_node::common_types::types::Hash;
+use etheram_node::common_types::types::Height;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PreparedCertificate {

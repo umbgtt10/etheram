@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_etheram_variants::implementations::ibft::vote_tracker::VoteTracker;
+use etheram_variants::implementations::ibft::vote_tracker::VoteTracker;
 
 #[test]
 fn has_quorum_empty_returns_false() {

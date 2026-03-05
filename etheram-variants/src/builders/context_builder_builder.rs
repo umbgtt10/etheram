@@ -6,7 +6,7 @@ use crate::builders::error::BuildError;
 use crate::implementations::eager_context_builder::EagerContextBuilder;
 use crate::variants::ContextBuilderVariant;
 use alloc::boxed::Box;
-use etheram::context::context_builder::ContextBuilder;
+use etheram_node::context::context_builder::ContextBuilder;
 
 pub struct ContextBuilderBuilder {
     context_builder: Option<Box<dyn ContextBuilder<()>>>,

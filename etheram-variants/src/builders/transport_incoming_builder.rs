@@ -6,7 +6,7 @@ use crate::builders::error::BuildError;
 use crate::implementations::no_op_transport::NoOpTransport;
 use crate::variants::IncomingTransportVariant;
 use alloc::boxed::Box;
-use etheram::common_types::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram_node::common_types::transport_incoming_adapter::TransportIncomingAdapter;
 
 pub struct TransportIncomingBuilder {
     transport: Option<Box<dyn TransportIncomingAdapter<()>>>,

@@ -4,15 +4,15 @@
 
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use etheram::common_types::account::Account;
-use etheram::common_types::block::Block;
-use etheram::common_types::state_root::compute_state_root_with_contract_storage;
-use etheram::common_types::types::{Address, Hash, Height};
-use etheram::execution::transaction_receipt::TransactionReceipt;
-use etheram::state::storage::storage_mutation::StorageMutation;
-use etheram::state::storage::storage_query::StorageQuery;
-use etheram::state::storage::storage_query_result::StorageQueryResult;
 use etheram_core::storage::Storage;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::state_root::compute_state_root_with_contract_storage;
+use etheram_node::common_types::types::{Address, Hash, Height};
+use etheram_node::execution::transaction_receipt::TransactionReceipt;
+use etheram_node::state::storage::storage_mutation::StorageMutation;
+use etheram_node::state::storage::storage_query::StorageQuery;
+use etheram_node::state::storage::storage_query_result::StorageQueryResult;
 
 pub struct InMemoryStorage {
     accounts: BTreeMap<Address, Account>,

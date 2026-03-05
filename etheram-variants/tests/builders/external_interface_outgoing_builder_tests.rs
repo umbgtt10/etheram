@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_etheram_variants::builders::external_interface_outgoing_builder::ExternalInterfaceOutgoingBuilder;
-use etheram_etheram_variants::variants::OutgoingExternalInterfaceVariant;
+use etheram_variants::builders::external_interface_outgoing_builder::ExternalInterfaceOutgoingBuilder;
+use etheram_variants::variants::OutgoingExternalInterfaceVariant;
 
 #[test]
 fn build_without_variant_returns_error() {

@@ -4,13 +4,13 @@
 
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use etheram::brain::protocol::message::Message;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::context::context_builder::ContextBuilder;
-use etheram::context::context_dto::Context;
-use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram::state::etheram_state::EtheramState;
 use etheram_core::types::PeerId;
+use etheram_node::brain::protocol::message::Message;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::context::context_builder::ContextBuilder;
+use etheram_node::context::context_dto::Context;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
+use etheram_node::state::etheram_state::EtheramState;
 
 pub struct EagerContextBuilder;
 

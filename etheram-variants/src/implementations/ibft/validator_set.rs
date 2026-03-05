@@ -3,8 +3,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use etheram::common_types::types::Height;
 use etheram_core::types::PeerId;
+use etheram_node::common_types::types::Height;
 
 pub struct ValidatorSet {
     validators: Vec<PeerId>,

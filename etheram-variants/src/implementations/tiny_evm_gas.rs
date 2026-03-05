@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::common_types::types::Gas;
+use etheram_node::common_types::types::Gas;
 
 pub const INTRINSIC_GAS: Gas = 21_000;
 pub const GAS_STOP: Gas = 0;

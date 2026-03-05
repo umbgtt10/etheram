@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::common_types::transaction::Transaction;
-use etheram::state::cache::cache_query::CacheQuery;
-use etheram::state::cache::cache_query_result::CacheQueryResult;
-use etheram::state::cache::cache_update::CacheUpdate;
 use etheram_core::cache::Cache;
-use etheram_etheram_variants::implementations::in_memory_cache::InMemoryCache;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::state::cache::cache_query::CacheQuery;
+use etheram_node::state::cache::cache_query_result::CacheQueryResult;
+use etheram_node::state::cache::cache_update::CacheUpdate;
+use etheram_variants::implementations::in_memory_cache::InMemoryCache;
 
 fn tx_a() -> Transaction {
     Transaction::transfer([1u8; 20], [2u8; 20], 100, 21_000, 0)

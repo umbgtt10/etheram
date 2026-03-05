@@ -6,9 +6,9 @@ use crate::builders::error::BuildError;
 use crate::implementations::in_memory_storage::InMemoryStorage;
 use crate::variants::StorageVariant;
 use alloc::boxed::Box;
-use etheram::common_types::account::Account;
-use etheram::common_types::storage_adapter::StorageAdapter;
-use etheram::common_types::types::Address;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::storage_adapter::StorageAdapter;
+use etheram_node::common_types::types::Address;
 
 pub struct StorageBuilder {
     storage: Option<Box<dyn StorageAdapter<Key = Address, Value = Account>>>,

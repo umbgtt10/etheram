@@ -6,7 +6,7 @@ use crate::builders::error::BuildError;
 use crate::implementations::no_op_observer::NoOpObserver;
 use crate::variants::ObserverVariant;
 use alloc::boxed::Box;
-use etheram::observer::Observer;
+use etheram_node::observer::Observer;
 
 pub struct ObserverBuilder {
     observer: Option<Box<dyn Observer>>,

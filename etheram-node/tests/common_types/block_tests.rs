@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::common_types::block::Block;
-use etheram::common_types::transaction::Transaction;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::transaction::Transaction;
 
 #[test]
 fn compute_hash_same_block_twice_returns_same_hash() {

@@ -6,7 +6,7 @@ use crate::builders::error::BuildError;
 use crate::implementations::no_op_transport::NoOpTransport;
 use crate::variants::OutgoingTransportVariant;
 use alloc::boxed::Box;
-use etheram::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
+use etheram_node::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 
 pub struct TransportOutgoingBuilder {
     transport: Option<Box<dyn TransportOutgoingAdapter<()>>>,

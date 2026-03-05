@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
-use raft_raft_validation::raft_cluster::RaftCluster;
+use raft_validation::raft_cluster::RaftCluster;
 
 pub fn setup_elected_3_node_cluster() -> (RaftCluster, usize) {
     let mut cluster = RaftCluster::new(3);

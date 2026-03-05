@@ -9,9 +9,9 @@ use crate::infra::external_interface::channel::client_request_hub::CLIENT_REQUES
 use crate::infra::external_interface::udp::udp_external_interface::receive_udp_ei_response;
 #[cfg(feature = "udp-external-interface")]
 use crate::infra::external_interface::udp::udp_external_interface::send_udp_ei_request;
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram_core::types::ClientId;
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
 
 pub fn submit_ei_request(node_index: usize, client_id: ClientId, request: ClientRequest) {
     submit_impl(node_index, client_id, request);

@@ -1,5 +1,5 @@
 [package]
-name = "etheram-etheram"
+name = "etheram-node"
 version = "0.1.0"
 edition = "2021"
 autotests = false
@@ -8,7 +8,7 @@ autotests = false
 etheram-core.workspace = true
 
 [lib]
-name = "etheram"
+name = "etheram_node"
 path = "src/lib.rs"
 
 [[test]]

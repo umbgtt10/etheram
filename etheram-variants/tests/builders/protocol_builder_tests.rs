@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_etheram_variants::builders::protocol_builder::ProtocolBuilder;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
-use etheram_etheram_variants::implementations::no_op_protocol::NoOpProtocol;
-use etheram_etheram_variants::variants::ProtocolVariant;
+use etheram_variants::builders::protocol_builder::ProtocolBuilder;
+use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_variants::implementations::no_op_execution_engine::NoOpExecutionEngine;
+use etheram_variants::implementations::no_op_protocol::NoOpProtocol;
+use etheram_variants::variants::ProtocolVariant;
 
 #[test]
 fn build_without_variant_returns_error() {

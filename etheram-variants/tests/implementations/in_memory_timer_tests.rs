@@ -3,13 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
-use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::timer_output::TimerOutput;
-use etheram_etheram_variants::implementations::in_memory_timer::{
-    InMemoryTimer, InMemoryTimerState,
-};
-use etheram_etheram_variants::implementations::shared_state::SharedState;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_variants::implementations::in_memory_timer::{InMemoryTimer, InMemoryTimerState};
+use etheram_variants::implementations::shared_state::SharedState;
 
 #[test]
 fn poll_empty_queue_returns_none() {

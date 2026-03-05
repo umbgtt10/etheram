@@ -3,16 +3,16 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use etheram::common_types::transaction::Transaction;
-use etheram::common_types::types::Address;
-use etheram::common_types::types::Balance;
-use etheram::common_types::types::Gas;
-use etheram::common_types::types::Height;
-use etheram::common_types::types::Nonce;
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
-use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram_core::types::ClientId;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::common_types::types::Address;
+use etheram_node::common_types::types::Balance;
+use etheram_node::common_types::types::Gas;
+use etheram_node::common_types::types::Height;
+use etheram_node::common_types::types::Nonce;
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
 use serde::Deserialize;
 use serde::Serialize;
 

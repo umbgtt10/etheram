@@ -2,16 +2,16 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::brain::protocol::action::Action;
-use etheram::collections::action_collection::ActionCollection;
-use etheram::common_types::account::Account;
-use etheram::common_types::block::Block;
-use etheram::common_types::transaction::Transaction;
-use etheram::common_types::types::Address;
-use etheram::state::cache::cache_update::CacheUpdate;
-use etheram::state::etheram_state::EtheramState;
-use etheram_etheram_variants::implementations::in_memory_cache::InMemoryCache;
-use etheram_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
+use etheram_node::brain::protocol::action::Action;
+use etheram_node::collections::action_collection::ActionCollection;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::common_types::types::Address;
+use etheram_node::state::cache::cache_update::CacheUpdate;
+use etheram_node::state::etheram_state::EtheramState;
+use etheram_variants::implementations::in_memory_cache::InMemoryCache;
+use etheram_variants::implementations::in_memory_storage::InMemoryStorage;
 
 fn fresh_state() -> EtheramState {
     EtheramState::new(

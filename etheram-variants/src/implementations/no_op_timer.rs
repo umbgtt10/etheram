@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram_core::{timer_input::TimerInput, timer_output::TimerOutput};
+use etheram_node::incoming::timer::timer_event::TimerEvent;
 
 #[derive(Clone)]
 pub struct NoOpTimer;

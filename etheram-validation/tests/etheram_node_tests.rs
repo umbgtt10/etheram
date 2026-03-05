@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::common_types::transaction::Transaction;
-use etheram::common_types::types::{Address, Hash};
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
-use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram::incoming::timer::timer_event::TimerEvent;
-use etheram_etheram_validation::ibft_test_node::IbftTestNode;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::common_types::types::{Address, Hash};
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_validation::ibft_test_node::IbftTestNode;
 
 #[test]
 fn step_no_events_returns_false() {

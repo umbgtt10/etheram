@@ -5,10 +5,10 @@
 use crate::implementations::standard_shared_state::StdSharedState;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
-use etheram_etheram_variants::implementations::in_memory_transport::{
+use etheram_variants::implementations::in_memory_transport::{
     InMemoryTransport, InMemoryTransportState,
 };
-use etheram_etheram_variants::implementations::shared_state::SharedState;
+use etheram_variants::implementations::shared_state::SharedState;
 
 #[test]
 fn poll_empty_inbox_returns_none() {

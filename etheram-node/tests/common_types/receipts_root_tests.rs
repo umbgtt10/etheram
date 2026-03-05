@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::execution::receipts_root::compute_receipts_root;
-use etheram::execution::transaction_result::TransactionResult;
-use etheram::execution::transaction_result::TransactionStatus;
+use etheram_node::execution::receipts_root::compute_receipts_root;
+use etheram_node::execution::transaction_result::TransactionResult;
+use etheram_node::execution::transaction_result::TransactionStatus;
 
 #[test]
 fn compute_receipts_root_empty_results_returns_zero_hash() {

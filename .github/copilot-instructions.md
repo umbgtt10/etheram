@@ -395,7 +395,7 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
   // http://www.apache.org/licenses/LICENSE-2.0
   ```
 - **No comments in production code** — code should be self-explanatory through naming and structure. The only permitted comments are `// TODO:` and `// FIXME:` (with a description). Doc comments (`///` and `//!`) are not allowed.
-- **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
+- **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram_node::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
 - **`use` blocks are compacted and sorted** — all `use` statements must be grouped together with no blank lines between them, and sorted alphabetically. This must be verified before completing any task.
 - **1 empty line after file header** — there must be exactly one blank line between the 3-line Apache 2.0 copyright header and the first `use` statement.
 - **1 empty line between every code block** — there must be exactly one blank line between every top-level code block: between the `use` block and the first item, and between any two consecutive items (struct, enum, trait, impl, fn). No double blank lines.

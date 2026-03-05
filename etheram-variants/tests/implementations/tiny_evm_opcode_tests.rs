@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_etheram_variants::implementations::tiny_evm_engine::opcode_name;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_ADD;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_SLOAD;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
-use etheram_etheram_variants::implementations::tiny_evm_engine::OPCODE_STOP;
+use etheram_variants::implementations::tiny_evm_engine::opcode_name;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_ADD;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_PUSH1;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_RETURN;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_SLOAD;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_SSTORE;
+use etheram_variants::implementations::tiny_evm_engine::OPCODE_STOP;
 
 #[test]
 fn opcode_name_stop_returns_expected_name() {

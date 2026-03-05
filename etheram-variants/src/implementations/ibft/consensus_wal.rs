@@ -6,15 +6,15 @@ use crate::implementations::ibft::prepared_certificate::PreparedCertificate;
 use crate::implementations::ibft::signature_scheme::SignatureBytes;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
-use etheram::common_types::block::Block;
-use etheram::common_types::transaction::Transaction;
-use etheram::common_types::types::Address;
-use etheram::common_types::types::Balance;
-use etheram::common_types::types::Gas;
-use etheram::common_types::types::Hash;
-use etheram::common_types::types::Height;
-use etheram::common_types::types::Nonce;
 use etheram_core::types::PeerId;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::common_types::types::Address;
+use etheram_node::common_types::types::Balance;
+use etheram_node::common_types::types::Gas;
+use etheram_node::common_types::types::Hash;
+use etheram_node::common_types::types::Height;
+use etheram_node::common_types::types::Nonce;
 
 #[derive(Clone)]
 pub struct ConsensusWal {

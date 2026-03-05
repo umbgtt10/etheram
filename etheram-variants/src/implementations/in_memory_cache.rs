@@ -3,11 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::vec::Vec;
-use etheram::common_types::transaction::Transaction;
-use etheram::state::cache::cache_query::CacheQuery;
-use etheram::state::cache::cache_query_result::CacheQueryResult;
-use etheram::state::cache::cache_update::CacheUpdate;
 use etheram_core::cache::Cache;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::state::cache::cache_query::CacheQuery;
+use etheram_node::state::cache::cache_query_result::CacheQueryResult;
+use etheram_node::state::cache::cache_update::CacheUpdate;
 
 pub struct InMemoryCache {
     pending_txs: Vec<Transaction>,

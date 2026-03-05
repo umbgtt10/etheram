@@ -7,18 +7,18 @@ use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_cont
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_protocol;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_restored_protocol;
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_with;
-use etheram::brain::protocol::action::Action;
-use etheram::brain::protocol::message::Message;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::common_types::account::Account;
-use etheram::common_types::state_root::compute_state_root_with_contract_storage;
-use etheram::common_types::transaction::Transaction;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
-use etheram_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
+use etheram_node::brain::protocol::action::Action;
+use etheram_node::brain::protocol::message::Message;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::state_root::compute_state_root_with_contract_storage;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
 use std::collections::BTreeMap;
 
 #[test]

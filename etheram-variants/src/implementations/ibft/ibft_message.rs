@@ -5,8 +5,8 @@
 use crate::implementations::ibft::prepared_certificate::PreparedCertificate;
 use crate::implementations::ibft::signature_scheme::SignatureBytes;
 use alloc::vec::Vec;
-use etheram::common_types::block::Block;
-use etheram::common_types::types::{Hash, Height};
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::types::{Hash, Height};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IbftMessage {

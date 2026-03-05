@@ -6,7 +6,7 @@ use crate::common::raft_cluster_helpers::setup_elected_3_node_cluster;
 use crate::common::raft_cluster_helpers::setup_elected_5_node_cluster;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
-use raft_raft_validation::raft_cluster::RaftCluster;
+use raft_validation::raft_cluster::RaftCluster;
 
 #[test]
 fn new_cluster_all_nodes_start_as_follower() {

@@ -3,12 +3,12 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use core::marker::PhantomData;
-use etheram::brain::protocol::action::Action;
-use etheram::brain::protocol::message::Message;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::collections::action_collection::ActionCollection;
-use etheram::context::context_dto::Context;
 use etheram_core::consensus_protocol::ConsensusProtocol;
+use etheram_node::brain::protocol::action::Action;
+use etheram_node::brain::protocol::message::Message;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::collections::action_collection::ActionCollection;
+use etheram_node::context::context_dto::Context;
 
 pub struct NoOpProtocol<M> {
     _phantom: PhantomData<M>,

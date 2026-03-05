@@ -3,15 +3,15 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_context;
-use etheram::brain::protocol::message::Message;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
-use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use etheram_etheram_variants::implementations::ibft::wal_writer::WalWriter;
+use etheram_node::brain::protocol::message::Message;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_variants::implementations::ibft::wal_writer::WalWriter;
 use std::cell::RefCell;
 use std::rc::Rc;
 

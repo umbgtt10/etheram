@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram::common_types::account::Account;
-use etheram::common_types::state_root::{
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::state_root::{
     compute_state_root, compute_state_root_with_contract_storage,
 };
-use etheram::common_types::types::{Address, Hash};
+use etheram_node::common_types::types::{Address, Hash};
 use std::collections::BTreeMap;
 
 #[test]

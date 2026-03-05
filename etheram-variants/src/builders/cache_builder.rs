@@ -6,8 +6,8 @@ use crate::builders::error::BuildError;
 use crate::implementations::in_memory_cache::InMemoryCache;
 use crate::variants::CacheVariant;
 use alloc::boxed::Box;
-use etheram::common_types::cache_adapter::CacheAdapter;
-use etheram::common_types::transaction::Transaction;
+use etheram_node::common_types::cache_adapter::CacheAdapter;
+use etheram_node::common_types::transaction::Transaction;
 
 pub struct CacheBuilder {
     cache: Option<Box<dyn CacheAdapter<Key = (), Value = Transaction>>>,
