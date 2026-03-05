@@ -4,15 +4,15 @@
 
 ---
 
-## Overall Score: 8.6 / 10
+## Overall Score: 8.9 / 10
 
 | Category | Score | Notes |
 |---|---|---|
 | Architecture & Design | 9.5 | 3-6 model enforced in code, step-loop consistent across protocol families |
-| Code Quality & Consistency | 8.5 | Clean, no comments, AAA tests, consistent naming; a few long functions |
+| Code Quality & Consistency | 9.0 | ✅ `#[allow(clippy::type_complexity)]` removed; `PartitionedActions<M>` type alias introduced |
 | Test Coverage & Organization | 9.0 | 748 tests, strict structure, dual-layer coverage, QEMU end-to-end |
 | Documentation | 8.0 | ✅ Stale metrics fixed; still no usage examples |
-| CI & Automation | 8.0 | Solid single-script gate; no clippy/deny in CI, no GitHub Actions |
+| CI & Automation | 9.0 | ✅ Clippy + `RUSTFLAGS="-D warnings"` both hard gates; no GitHub Actions yet |
 | Dependency Governance | 9.0 | All workspace-level, clean no_std separation, spin-based shared state |
 | Duplication & DRY | 8.5 | ✅ `cancellation_token` consolidated into embassy-core |
 | no_std Discipline | 9.5 | Core + node crates truly no_std; explicit CI gate for all 4 crates |
@@ -41,8 +41,8 @@
 |---|---|---|---|
 | ~~1~~ | ~~Fix README/ADR test counts~~ | ✅ Done | All 10 occurrences of 557 updated; Raft moved to Achieved; consensus metric updated |
 | ~~2~~ | ~~Move `cancellation_token.rs` to `embassy-core`~~ | ✅ Done | Canonical impl in embassy-core; both embassy crates re-export |
-| 3 | Add `cargo clippy` to `test.ps1` | Open | Add `cargo clippy --workspace -- -D warnings` as a gate step | 
-| 4 | Resolve `#[allow(clippy::type_complexity)]` | Open | Introduce a type alias for the 3-tuple return type; removes the forbidden allow |
+| ~~3~~ | ~~Add `cargo clippy` to `test.ps1`~~ | ✅ Done | `cargo clippy --workspace -- -D warnings` added after formatting step |
+| ~~4~~ | ~~Resolve `#[allow(clippy::type_complexity)]`~~ | ✅ Done | `PartitionedActions<M>` type alias in `partition.rs`; both allows removed |
 
 ### Tier 2 — High Impact, Medium Effort
 
@@ -51,7 +51,7 @@
 | 5 | Extract execution handling from `EtheramNode::step()` | 64-line `step()` with inline block execution | Extract to a private `fn execute_block()` method; brings `step()` under 40 lines | 30 min |
 | 6 | Add GitHub Actions CI | Only local `test.ps1` | `.github/workflows/ci.yml` running format + clippy + no_std checks + nextest on push/PR | 1 hr |
 | 7 | Narrow `#[allow(too_many_arguments)]` scope | 5 occurrences on non-builder functions | Refactor dispatch handlers to accept a context/params struct instead of 8+ individual args | 1–2 hr |
-| 8 | Add `--deny warnings` to CI | Warnings forbidden by convention but not enforced | Add `RUSTFLAGS="-D warnings"` to `test.ps1`; makes the zero-warning policy a hard gate | 10 min |
+| ~~8~~ | ~~Add `--deny warnings` to CI~~ | ✅ Done | `$env:RUSTFLAGS = "-D warnings"` set at top of `test.ps1`; compiler warnings now abort the gate |
 
 ### Tier 3 — Medium Impact, Medium Effort
 
@@ -76,9 +76,10 @@
 
 | Action Group | Score Impact | Cumulative |
 |---|---|---|
-| ~~Items 1–2~~ | ~~+0.15~~ | ✅ **8.6** (current) |
-| Items 3–4 (Tier 1 remainder) | +0.15 | **8.8** |
-| Items 5–8 (Tier 2) | +0.5 | **9.0** |
+| ~~Items 1–2~~ | ~~+0.15~~ | ✅ **8.6** |
+| ~~Items 3–4 (Tier 1 remainder)~~ | ~~+0.2~~ | ✅ **8.8** |
+| ~~Item 8 (partial Tier 2)~~ | ~~+0.1~~ | ✅ **8.9** (current) |
+| Items 5–7 (Tier 2 remainder) | +0.4 | **9.0** |
 | Items 9–12 (Tier 3) | +0.3 | **9.3** |
 | All remaining items | — | **9.5** |
 
@@ -99,13 +100,13 @@ The remaining 0.5 to a perfect 10 would require: formal specification (TLA+), ph
 
 ### Forbidden `#[allow(...)]` Attributes
 
-| File | Attribute | Permitted? |
+| File | Attribute | Status |
 |---|---|---|
-| `etheram-node/src/partitioner/partition.rs` | `#[allow(clippy::type_complexity)]` | No — introduce type alias |
-| `etheram-node/src/implementations/type_based_partitioner.rs` | `#[allow(clippy::type_complexity)]` | No — same fix |
-| `etheram-node/src/implementations/ibft/ibft_protocol/ibft_protocol_dispatch.rs` (×3) | `#[allow(clippy::too_many_arguments)]` | Questionable — not builder constructors |
-| `raft-node/src/implementations/raft/replication.rs` | `#[allow(clippy::too_many_arguments)]` | Questionable — not builder constructor |
-| `raft-node/src/implementations/raft/snapshot.rs` | `#[allow(clippy::too_many_arguments)]` | Questionable — not builder constructor |
+| `etheram-node/src/partitioner/partition.rs` | `#[allow(clippy::type_complexity)]` | ✅ Removed — replaced by `PartitionedActions<M>` type alias |
+| `etheram-node/src/implementations/type_based_partitioner.rs` | `#[allow(clippy::type_complexity)]` | ✅ Removed — uses `PartitionedActions<M>` |
+| `etheram-node/src/implementations/ibft/ibft_protocol/ibft_protocol_dispatch.rs` (×3) | `#[allow(clippy::too_many_arguments)]` | Open — item 7 (not builder constructors) |
+| `raft-node/src/implementations/raft/replication.rs` | `#[allow(clippy::too_many_arguments)]` | Open — item 7 |
+| `raft-node/src/implementations/raft/snapshot.rs` | `#[allow(clippy::too_many_arguments)]` | Open — item 7 |
 
 ### Test Coverage Gaps
 

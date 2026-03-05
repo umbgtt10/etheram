@@ -3,25 +3,18 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::action::Action;
+use crate::partitioner::partition::PartitionedActions;
 use crate::partitioner::partition::Partitioner;
 use etheram_core::collection::Collection;
 use etheram_core::node_common::action_collection::ActionCollection;
 
 pub struct TypeBasedPartitioner;
 
-#[allow(clippy::type_complexity)]
 impl TypeBasedPartitioner {
     pub fn new() -> Self {
         Self
     }
-    fn partition_inner<M: Clone, A>(
-        &self,
-        actions: &A,
-    ) -> (
-        ActionCollection<Action<M>>,
-        ActionCollection<Action<M>>,
-        ActionCollection<Action<M>>,
-    )
+    fn partition_inner<M: Clone, A>(&self, actions: &A) -> PartitionedActions<M>
     where
         A: Collection<Item = Action<M>>,
     {
@@ -53,14 +46,7 @@ impl Default for TypeBasedPartitioner {
 }
 
 impl<M: Clone + 'static> Partitioner<M> for TypeBasedPartitioner {
-    fn partition(
-        &self,
-        actions: &ActionCollection<Action<M>>,
-    ) -> (
-        ActionCollection<Action<M>>,
-        ActionCollection<Action<M>>,
-        ActionCollection<Action<M>>,
-    ) {
+    fn partition(&self, actions: &ActionCollection<Action<M>>) -> PartitionedActions<M> {
         self.partition_inner(actions)
     }
 }

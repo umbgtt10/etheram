@@ -5,14 +5,12 @@
 use crate::brain::protocol::action::Action;
 use etheram_core::node_common::action_collection::ActionCollection;
 
-#[allow(clippy::type_complexity)]
+pub type PartitionedActions<M> = (
+    ActionCollection<Action<M>>,
+    ActionCollection<Action<M>>,
+    ActionCollection<Action<M>>,
+);
+
 pub trait Partitioner<M> {
-    fn partition(
-        &self,
-        actions: &ActionCollection<Action<M>>,
-    ) -> (
-        ActionCollection<Action<M>>,
-        ActionCollection<Action<M>>,
-        ActionCollection<Action<M>>,
-    );
+    fn partition(&self, actions: &ActionCollection<Action<M>>) -> PartitionedActions<M>;
 }

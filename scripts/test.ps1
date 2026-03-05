@@ -8,7 +8,11 @@ function Invoke-Step {
     }
 }
 
+$env:RUSTFLAGS = "-D warnings"
+
 Invoke-Step "Formatting" { cargo fmt }
+
+Invoke-Step "Clippy" { cargo clippy --workspace -- -D warnings }
 
 foreach ($crate in @("etheram-core", "embassy-core", "etheram-node", "raft-node")) {
     Invoke-Step "no_std check $crate" { cargo check -p $crate --no-default-features }
