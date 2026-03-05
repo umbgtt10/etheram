@@ -17,8 +17,22 @@ Thumbs.db
 *.tmp
 *.swp
 
+# TLA+ model checker output
+.tlacache/
+
 # Semihosting persistence files
 etheram-embassy/persistency/*
 !etheram-embassy/persistency/.gitkeep
 raft-embassy/persistency/*
 !raft-embassy/persistency/.gitkeep
+
+# TLA+ generated artefacts
+specs/ibft/states/
+specs/ibft/*.out
+specs/ibft/*_TTrace_*.tla
+specs/ibft/*_TTrace_*.bin
+specs/raft/states/
+specs/raft/*.out
+specs/raft/*_TTrace_*.tla
+specs/raft/*_TTrace_*.bin
+

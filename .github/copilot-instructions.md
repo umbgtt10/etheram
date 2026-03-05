@@ -432,3 +432,34 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
   tests/implementations/ibft/validator_set_tests.rs
   tests/implementations/ibft/vote_tracker_tests.rs
   ```
+
+---
+
+## TLA+ Formal Specifications
+
+The `specs/` directory contains formal TLA+ model specifications for both protocol families. Each specification is checked with TLC (the TLA+ model checker).
+
+### IBFT (`specs/ibft/`)
+- `IBFTConsensus.tla` — core specification with Byzantine fault model (`ByzValidators`, `CorrectValidators`, Byzantine injection actions, invariants scoped to correct validators)
+- `MC_IBFTConsensus_Quick.tla` — parametric override for quick check (MaxRound=0, ByzValidators={3}, ~5s)
+- `MC_IBFTConsensus_CI.tla` — parametric override for honest baseline (MaxRound=1, ByzValidators={}, ~21s)
+- `MC_IBFTConsensus.tla` — parametric override for full check (MaxRound=2, ByzValidators={3}, 30+ minutes)
+
+### Raft (`specs/raft/`)
+- `RaftConsensus.tla` — election safety specification (invariants: `ElectionSafety`, `VoteOnce`, `LeaderTermOK`)
+- `MC_RaftConsensus_Quick.tla` — parametric override for quick check (N=3, MaxTerm=1, ~2s)
+- `MC_RaftConsensus_CI.tla` — parametric override for CI check (N=3, MaxTerm=2, ~5s)
+- `MC_RaftConsensus.tla` — parametric override for full check (N=3, MaxTerm=3, 10-30 minutes)
+
+### Scripts
+
+| Script | Protocol | Scope | Typical duration |
+|---|---|---|---|
+| `scripts/ibft_run_tla_quick.ps1` | IBFT | Byzantine (MaxRound=0) + Honest (MaxRound=1) | ~30s |
+| `scripts/ibft_run_tla_full.ps1` | IBFT | Byzantine MaxRound=2 | 30+ min |
+| `scripts/raft_run_tla_quick.ps1` | Raft | Election safety N=3 MaxTerm=1+2 | ~10s |
+| `scripts/raft_run_tla_full.ps1` | Raft | Election safety N=3 MaxTerm=3 | 10-30 min |
+
+### AI agent restriction
+
+**TLA+ model checking scripts are NEVER invoked automatically by an AI agent.** These scripts start a JVM process, may consume significant CPU for minutes to hours, and produce multi-gigabyte state databases. They must only be run manually by a developer who has explicitly decided to do so. An AI agent must not call `ibft_run_tla_quick.ps1`, `ibft_run_tla_full.ps1`, `raft_run_tla_quick.ps1`, or `raft_run_tla_full.ps1` as part of any automated quality gate, task completion check, or proactive verification step — even if the user asks the agent to "run all checks" or "verify everything".

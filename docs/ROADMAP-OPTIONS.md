@@ -20,9 +20,8 @@ This document catalogues all candidate directions for the project's next phase, 
 | # | Feature | Effort | Value |
 |---|---|---|---|
 | B1 | **IBFT round-change certificate aggregation** — currently view changes work but don't carry aggregated signatures (BLS). Add a `BlsSignatureScheme` behind the existing `SignatureScheme` trait and aggregate prepare signatures into a single proof | High | Architecturally interesting (tests swappability of crypto); practically necessary for real BFT systems |
-| B2 | **IBFT Byzantine fault injection in cluster tests** — add adversarial protocol implementations (equivocating proposer, double-voting, message withholding) that can be swapped in via the builder | Medium | Directly validates the "Testing as Muscle" principle (swap-based testing, not scenario scripting) |
+| B2 | **IBFT Byzantine fault injection via builder** — message injection exists in cluster tests; the missing piece is a set of adversarial `ProtocolVariant` implementations (equivocating proposer, double-voting, message-withholding) that can be swapped in via `IbftNodeBuilder` without test-level orchestration | Low | Completes the "Testing as Muscle" principle — swap-based adversarial testing, not scenario scripting |
 | B3 | **IBFT finality gadget** — implement a finality observer that tracks which blocks are irreversible (2f+1 commits received) and exposes `latest_finalized_height` | Low | Useful for the EVM execution path; demonstrates the Observer being used for non-logging purposes |
-| B4 | **Write-Ahead Log recovery** — `ConsensusWal` and `WalWriter` exist but recovery-on-startup isn't implemented. Add a `recover_from_wal()` function that replays WAL entries to reconstruct protocol state | Medium | Completes the persistence story; tests the mutation/replay architecture |
 
 ---
 
@@ -61,7 +60,6 @@ The fact that `handle_message()` is pure (immutable context in, declarative acti
 |---|---|---|---|
 | E1 | **TLA+ specifications** — write TLA+ models of IBFT and Raft that mirror the Rust protocol handlers, then model-check safety (no two blocks committed at same height) and liveness (progress under <f failures) | Medium | Verifies the protocol logic independently of Rust; publishable artifact |
 | E2 | **Kani model checking** — use [Kani](https://github.com/model-checking/kani) (Rust-native bounded model checker by AWS) to exhaustively verify `handle_message()` invariants: e.g., two honest nodes never emit conflicting `StoreBlock` actions at the same height | Medium | Runs directly on the Rust source — no translation layer. Leverages the purity that the architecture enforces |
-| E3 | **Property-based testing with `proptest`** — generate arbitrary `(MessageSource, Message, Context)` triples and assert protocol invariants hold for all inputs | Low | Lighter than formal verification but catches edge cases; straightforward integration with existing test infrastructure |
 
 ---
 
@@ -99,7 +97,7 @@ A4 → B2 → C3 → C6
 C1 → C3 → C6 → C5
 
 ### Complete the consensus story
-A1 → B4 → A2 → B1
+A1 → A2 → B1
 
 ### One pick from each direction
 - **D2 (Multi-Paxos)** — fastest path to proving generality across three consensus families

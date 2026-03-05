@@ -85,7 +85,10 @@ proptest! {
         );
 
         // Assert
-        let send_count = actions.iter().filter(|a| matches!(a, RaftAction::SendMessage { .. })).count();
+        let send_count = actions
+            .iter()
+            .filter(|a| matches!(a, RaftAction::SendMessage { .. }))
+            .count();
         prop_assert_eq!(send_count, peers.len());
     }
 
