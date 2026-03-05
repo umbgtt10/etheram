@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::node_common::shared_state::SharedState;
-use etheram_core::node_common::shared_state::StdSharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::types::ClientId;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::types::{Address, Hash};
@@ -35,15 +35,15 @@ pub const PEER_ID: u64 = 0;
 
 pub struct IbftTestNode {
     node: EtheramNode<IbftMessage>,
-    timer_state: StdSharedState<InMemoryTimerState>,
-    ei_state: StdSharedState<InMemoryExternalInterfaceState>,
+    timer_state: SpinSharedState<InMemoryTimerState>,
+    ei_state: SpinSharedState<InMemoryExternalInterfaceState>,
 }
 
 impl IbftTestNode {
     pub fn new(genesis_accounts: Vec<(Address, u128)>) -> Self {
-        let timer_state = StdSharedState::new(InMemoryTimerState::new());
-        let transport_state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
-        let ei_state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+        let timer_state = SpinSharedState::new(InMemoryTimerState::new());
+        let transport_state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+        let ei_state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
 
         let mut storage = InMemoryStorage::new();
         for (address, balance) in genesis_accounts {

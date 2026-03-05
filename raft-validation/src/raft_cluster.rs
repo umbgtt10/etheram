@@ -5,7 +5,7 @@
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use etheram_core::node_common::shared_state::SharedState;
-use etheram_core::node_common::shared_state::StdSharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
 use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
 use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
@@ -47,17 +47,17 @@ use std::vec::Vec;
 pub struct RaftCluster {
     peer_ids: Vec<PeerId>,
     nodes: Vec<RaftNode<Vec<u8>>>,
-    timer_state: StdSharedState<InMemoryRaftTimerState>,
-    transport_state: StdSharedState<InMemoryRaftTransportState<Vec<u8>>>,
-    ei_state: StdSharedState<InMemoryRaftExternalInterfaceState>,
+    timer_state: SpinSharedState<InMemoryRaftTimerState>,
+    transport_state: SpinSharedState<InMemoryRaftTransportState<Vec<u8>>>,
+    ei_state: SpinSharedState<InMemoryRaftExternalInterfaceState>,
 }
 
 impl RaftCluster {
     pub fn new(node_count: usize) -> Self {
         let peer_ids: Vec<PeerId> = (1..=(node_count as u64)).collect();
-        let timer_state = StdSharedState::new(InMemoryRaftTimerState::new());
-        let transport_state = StdSharedState::new(InMemoryRaftTransportState::<Vec<u8>>::new());
-        let ei_state = StdSharedState::new(InMemoryRaftExternalInterfaceState::new());
+        let timer_state = SpinSharedState::new(InMemoryRaftTimerState::new());
+        let transport_state = SpinSharedState::new(InMemoryRaftTransportState::<Vec<u8>>::new());
+        let ei_state = SpinSharedState::new(InMemoryRaftExternalInterfaceState::new());
 
         let mut nodes = Vec::new();
         for &peer_id in &peer_ids {

@@ -4,7 +4,7 @@
 
 use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::node_common::shared_state::SharedState;
-use etheram_core::node_common::shared_state::StdSharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_node::brain::protocol::action::Action;
@@ -25,7 +25,7 @@ use etheram_node::incoming::timer::timer_event::TimerEvent;
 #[test]
 fn execute_outputs_broadcast_message_routes_to_all_registered_peers() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+    let state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
     let sender_transport = InMemoryTransport::new(0, state.clone());
     let receiver_1 = InMemoryTransport::new(1, state.clone());
     let receiver_2 = InMemoryTransport::new(2, state.clone());
@@ -57,7 +57,7 @@ fn execute_outputs_broadcast_message_routes_to_all_registered_peers() {
 #[test]
 fn execute_outputs_broadcast_message_empty_peers_silently_ignored() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+    let state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
     let transport = InMemoryTransport::new(0, state);
     let outgoing = OutgoingSources::new(
         Box::new(NoOpTimer),
@@ -83,7 +83,7 @@ fn execute_outputs_broadcast_message_empty_peers_silently_ignored() {
 #[test]
 fn execute_outputs_send_message_routes_to_specific_peer() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+    let state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
     let sender_transport = InMemoryTransport::new(0, state.clone());
     let receiver = InMemoryTransport::new(1, state.clone());
     let non_recipient = InMemoryTransport::new(2, state.clone());
@@ -115,10 +115,10 @@ fn execute_outputs_send_message_routes_to_specific_peer() {
 #[test]
 fn execute_outputs_schedule_timeout_schedules_timer_event() {
     // Arrange
-    let timer_state = StdSharedState::new(InMemoryTimerState::new());
+    let timer_state = SpinSharedState::new(InMemoryTimerState::new());
     let scheduler = InMemoryTimer::new(0, timer_state.clone());
     let poller = InMemoryTimer::new(0, timer_state);
-    let transport_state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+    let transport_state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
     let transport = InMemoryTransport::new(0, transport_state);
     let outgoing = OutgoingSources::new(
         Box::new(scheduler),
@@ -142,9 +142,9 @@ fn execute_outputs_schedule_timeout_schedules_timer_event() {
 #[test]
 fn execute_outputs_send_client_response_routes_to_client() {
     // Arrange
-    let ei_state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+    let ei_state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
     let ei = InMemoryExternalInterface::new(0, ei_state.clone());
-    let transport_state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+    let transport_state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
     let transport = InMemoryTransport::new(0, transport_state);
     let outgoing = OutgoingSources::new(Box::new(NoOpTimer), Box::new(ei), Box::new(transport));
     let executor = EtheramExecutor::new(outgoing);

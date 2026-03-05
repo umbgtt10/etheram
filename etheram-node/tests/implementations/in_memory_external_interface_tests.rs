@@ -5,7 +5,7 @@
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
 use etheram_core::node_common::shared_state::SharedState;
-use etheram_core::node_common::shared_state::StdSharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::types::ClientId;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram_node::implementations::in_memory_external_interface::{
@@ -16,7 +16,7 @@ use etheram_node::incoming::external_interface::client_request::ClientRequest;
 #[test]
 fn poll_request_empty_queue_returns_none() {
     // Arrange
-    let state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+    let state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
     let ei = InMemoryExternalInterface::new(0, state.clone());
 
     // Act & Assert
@@ -26,7 +26,7 @@ fn poll_request_empty_queue_returns_none() {
 #[test]
 fn push_request_then_poll_returns_request() {
     // Arrange
-    let state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+    let state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
     let ei = InMemoryExternalInterface::new(0, state.clone());
     state.with_mut(|state| {
         state.push_request(0, 1, ClientRequest::GetHeight);
@@ -42,7 +42,7 @@ fn push_request_then_poll_returns_request() {
 #[test]
 fn send_response_then_drain_returns_response() {
     // Arrange
-    let state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+    let state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
     let ei = InMemoryExternalInterface::new(0, state.clone());
     let client_id: ClientId = 42;
 
@@ -58,7 +58,7 @@ fn send_response_then_drain_returns_response() {
 #[test]
 fn drain_responses_unknown_client_returns_empty() {
     // Arrange
-    let state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+    let state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
 
     // Act
     let responses = state.with_mut(|state| state.drain_responses(99));
@@ -70,7 +70,7 @@ fn drain_responses_unknown_client_returns_empty() {
 #[test]
 fn send_response_routes_to_correct_client() {
     // Arrange
-    let state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+    let state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
     let ei = InMemoryExternalInterface::new(0, state.clone());
 
     // Act

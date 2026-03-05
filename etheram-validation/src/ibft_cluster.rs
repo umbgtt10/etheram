@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::node_common::shared_state::SharedState;
-use etheram_core::node_common::shared_state::StdSharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::types::ClientId;
 use etheram_core::types::PeerId;
 use etheram_node::common_types::account::Account;
@@ -45,9 +45,9 @@ use std::vec::Vec;
 pub struct IbftCluster {
     validators: Vec<PeerId>,
     nodes: Vec<EtheramNode<IbftMessage>>,
-    timer_state: StdSharedState<InMemoryTimerState>,
-    transport_state: StdSharedState<InMemoryTransportState<IbftMessage>>,
-    ei_state: StdSharedState<InMemoryExternalInterfaceState>,
+    timer_state: SpinSharedState<InMemoryTimerState>,
+    transport_state: SpinSharedState<InMemoryTransportState<IbftMessage>>,
+    ei_state: SpinSharedState<InMemoryExternalInterfaceState>,
 }
 
 impl IbftCluster {
@@ -115,9 +115,9 @@ impl IbftCluster {
         S: Fn(PeerId) -> BoxedSignatureScheme,
         E: Fn() -> BoxedExecutionEngine,
     {
-        let timer_state = StdSharedState::new(InMemoryTimerState::new());
-        let transport_state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
-        let ei_state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+        let timer_state = SpinSharedState::new(InMemoryTimerState::new());
+        let transport_state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+        let ei_state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
 
         let mut nodes = Vec::new();
         for &peer_id in &validators {

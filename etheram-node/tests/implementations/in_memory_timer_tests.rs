@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::node_common::shared_state::SharedState;
-use etheram_core::node_common::shared_state::StdSharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::timer_output::TimerOutput;
 use etheram_node::implementations::in_memory_timer::{InMemoryTimer, InMemoryTimerState};
@@ -12,7 +12,7 @@ use etheram_node::incoming::timer::timer_event::TimerEvent;
 #[test]
 fn poll_empty_queue_returns_none() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTimerState::new());
+    let state = SpinSharedState::new(InMemoryTimerState::new());
     let timer = InMemoryTimer::new(0, state.clone());
 
     // Act & Assert
@@ -22,7 +22,7 @@ fn poll_empty_queue_returns_none() {
 #[test]
 fn push_event_then_poll_returns_event() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTimerState::new());
+    let state = SpinSharedState::new(InMemoryTimerState::new());
     let timer = InMemoryTimer::new(0, state.clone());
     state.with_mut(|state| {
         state.push_event(0, TimerEvent::ProposeBlock);
@@ -38,7 +38,7 @@ fn push_event_then_poll_returns_event() {
 #[test]
 fn push_multiple_events_poll_drains_all_then_returns_none() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTimerState::new());
+    let state = SpinSharedState::new(InMemoryTimerState::new());
     let timer = InMemoryTimer::new(0, state.clone());
     state.with_mut(|state| {
         state.push_event(0, TimerEvent::ProposeBlock);
@@ -61,7 +61,7 @@ fn push_multiple_events_poll_drains_all_then_returns_none() {
 #[test]
 fn schedule_event_then_poll_returns_event() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTimerState::new());
+    let state = SpinSharedState::new(InMemoryTimerState::new());
     let timer = InMemoryTimer::new(0, state.clone());
 
     // Act
@@ -74,7 +74,7 @@ fn schedule_event_then_poll_returns_event() {
 #[test]
 fn push_event_different_node_id_not_visible_to_other_node() {
     // Arrange
-    let state = StdSharedState::new(InMemoryTimerState::new());
+    let state = SpinSharedState::new(InMemoryTimerState::new());
     let timer_a = InMemoryTimer::new(0, state.clone());
     let _timer_b = InMemoryTimer::new(1, state.clone());
     state.with_mut(|state| {
