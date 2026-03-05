@@ -2,4 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub use etheram_core::node_common::message_source::MessageSource;
+use crate::types::{ClientId, PeerId};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MessageSource {
+    Peer(PeerId),
+    Client(ClientId),
+    Timer,
+}

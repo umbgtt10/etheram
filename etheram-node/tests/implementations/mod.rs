@@ -13,7 +13,7 @@ pub mod in_memory_timer_tests;
 pub mod in_memory_transport_tests;
 pub mod no_op_execution_engine_tests;
 pub mod no_op_observer_tests;
-pub mod standard_shared_state;
+pub mod std_shared_state;
 pub mod tiny_evm_execution_engine_tests;
 pub mod tiny_evm_gas_tests;
 pub mod tiny_evm_opcode_tests;

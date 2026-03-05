@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::standard_shared_state::StdSharedState;
+use crate::implementations::std_shared_state::StdSharedState;
 use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
