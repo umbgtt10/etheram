@@ -265,7 +265,7 @@ Protocol returns `ActionCollection`, execution is separate. Actions can be logge
 
 Protocol is stateless (`&self`), no internal mutation. Testing becomes `protocol(context, message) == expected_actions` — just assert equality. No concurrency issues within protocol. Reusable across different operating models.
 
-Etheram validates this with 557 deterministic tests covering all IBFT protocol paths — all tested via pure function calls with no infrastructure setup.
+EtheRAM validates this with 564 deterministic tests covering all IBFT and Ethereum protocol paths — all tested via pure function calls with no infrastructure setup.
 
 ### 7. Action Partitioning
 
@@ -344,14 +344,14 @@ Concrete types implementing the traits:
 
 The architecture is validated across three environments:
 
-### Deterministic Testing (557 tests)
+### Deterministic Testing (748 tests across both protocol families)
 - `step()` primitive enables event-by-event control
 - In-memory infrastructure implementations
 - Deterministic time (controlled timer advancement via `push_event`)
 - No async/await in core logic (synchronous poll-based)
 - Byzantine fault injection, message interception, round interleaving
 
-### Cluster Orchestration (130+ integration tests)
+### Cluster Orchestration (205+ integration tests)
 - `IbftCluster` with 4–7 validator nodes
 - Shared in-memory transport enables controlled message delivery
 - `step_all()` drives all nodes to idle; `step(n)` enables fine-grained interleaving
@@ -402,7 +402,7 @@ Abstraction over six dimensions
 ```
 
 **Benefits:**
-- Test protocols with in-memory infrastructure (557 deterministic tests)
+- Test protocols with in-memory infrastructure (748 deterministic tests)
 - Swap components at construction via builder pattern
 - Validation through deterministic simulation and cluster orchestration
 - Same node logic deploys to std tests, cluster harnesses, and no_std embedded

@@ -5,7 +5,6 @@
 use super::infrastructure::InMemoryInfrastructure;
 use super::node_infra_slot::NodeInfraSlot;
 use super::node_infra_slot::OutboxState;
-use crate::cancellation_token::CancellationToken;
 use crate::config::MAX_NODES;
 use crate::embassy_shared_state::EmbassySharedState;
 use crate::infra::external_interface::channel::channel_external_interface::ChannelExternalInterface;
@@ -19,6 +18,7 @@ use crate::spawned_node::TimerReceiver;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
+use embassy_core::cancellation_token::CancellationToken;
 use embassy_core::outbox_transport::OutboxTransport;
 use embassy_executor::Spawner;
 use embassy_futures::select::select4;

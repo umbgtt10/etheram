@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::cancellation_token::CancellationToken;
 use crate::config::MAX_NODES;
 use crate::infra::external_interface::client_facade::await_ei_response;
 use crate::infra::external_interface::client_facade::submit_ei_request;
@@ -10,6 +9,7 @@ use crate::infra::external_interface::client_facade::submit_ei_to_all_nodes;
 use crate::spawned_node::SpawnedNode;
 use alloc::string::String;
 use alloc::vec::Vec;
+use embassy_core::cancellation_token::CancellationToken;
 use embassy_time::with_timeout;
 use embassy_time::Duration;
 use embassy_time::Timer;

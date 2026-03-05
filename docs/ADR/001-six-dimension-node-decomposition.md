@@ -52,7 +52,7 @@ Time-based event scheduling. Triggers block proposals (`ProposeBlock`), round ti
 ### Positive
 
 1. **Clean Separation** — Each dimension has explicit contracts and boundaries; the Partitioner enforces side-effect isolation by separating mutations from outputs from execution actions
-2. **Independent Testing** — Protocol tested with mock storage, mock transport, mock timer across 557 deterministic tests
+2. **Independent Testing** — Protocol tested with mock storage, mock transport, mock timer across 748 deterministic tests
 3. **Free Swapping** — Replace any dimension without touching others; dimensions are selected at construction via builders (`StorageBuilder`, `ProtocolBuilder`, `EtheramNodeBuilder`)
 4. **Determinism** — In-memory implementations enable fully deterministic testing with explicit event injection
 5. **Protocol Reuse** — Same `IbftProtocol<S>` works with in-memory infrastructure (testing), Embassy channels (embedded), and UDP/semihosting (real hardware)
@@ -70,7 +70,7 @@ Time-based event scheduling. Triggers block proposals (`ProposeBlock`), round ti
 Etheram validates the six-dimension decomposition across three deployment environments:
 
 **Stage 1 — Unit and single-node tests (etheram-node):**
-- 557 deterministic tests using in-memory dimensions, zero external dependencies
+- 748 deterministic tests using in-memory dimensions, zero external dependencies
 - Complete IBFT BFT consensus: pre-prepare, prepare, commit, view change, validator set updates, future-round buffering, deduplication, replay protection, WAL persistence
 - Two execution engines (`ValueTransferEngine`, `TinyEvmEngine`) demonstrating Engine swappability
 - Ed25519 and Mock signature schemes demonstrating cryptographic swappability

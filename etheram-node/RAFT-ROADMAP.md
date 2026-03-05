@@ -286,7 +286,7 @@ Create `raft-embassy/` with two configurations:
 5. **Same 3-stage validation** — protocol tests, cluster tests, and embedded QEMU end-to-end
 6. **Same Embassy pattern** — `select4` reactor with `while node.step() {}`
 7. **Zero changes to existing crates** — `core/`, `etheram-node/`, `etheram-validation/`, `etheram-embassy/` remain untouched
-8. **All existing tests pass** — 557 tests remain green throughout
+8. **All existing tests pass** — 748 tests remain green throughout
 
 ---
 

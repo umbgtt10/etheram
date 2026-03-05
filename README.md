@@ -15,8 +15,8 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 | Crates | 8 (`core`, `embassy-core`, `etheram-node`, `etheram-validation`, `etheram-embassy`, `raft-node`, `raft-validation`, `raft-embassy`) |
 | Production Rust files / LOC | ~190 / ~9 000 |
 | Test files / LOC | ~75 / ~15 000 |
-| Automated tests | 557 (21 + 391 + 145) |
-| Consensus protocol | Istanbul BFT (PrePrepare → Prepare → Commit + View Change) |
+| Automated tests | 748 (7 + 412 + 124 + 145 + 60) |
+| Consensus protocols | Istanbul BFT (PrePrepare → Prepare → Commit + View Change), Raft (pre-vote, election, log replication, snapshots) |
 | Execution engines | `TinyEvmEngine`, `ValueTransferEngine`, `NoOpExecutionEngine` |
 | Embedded target | ARM Cortex-M4 via QEMU, 5-node async cluster, two hardware configurations |
 | Cryptographic schemes | `MockSignatureScheme`, `Ed25519SignatureScheme` (runtime-swappable) |
@@ -30,15 +30,15 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 - **Full IBFT consensus** — three-phase commit, view change, quorum via `⌊2n/3⌋ + 1`, prepared certificate with cryptographic proof ([IBFT Roadmap](etheram-node/IBFT-ROADMAP.md))
 - **Ethereum-like chain** — accounts, nonces, balances, gas metering, state roots, transaction receipts, block re-execution validation ([Chain Roadmap](etheram-node/CHAIN-ROADMAP.md))
 - **TinyEVM** — subset EVM with opcode execution (`PUSH`, `ADD`, `MUL`, `SSTORE`, `SLOAD`, `RETURN`), per-opcode gas accounting, contract storage
-- **557 automated tests** — protocol-level, cluster-level (Byzantine fault injection, deduplication, replay, malicious blocks, validator set updates), and QEMU end-to-end
+- **748 automated tests** — protocol-level, cluster-level (Byzantine fault injection, deduplication, replay, malicious blocks, validator set updates), and QEMU end-to-end
 - **Embedded port** — 5-node IBFT cluster on ARM Cortex-M4 (Embassy async, `no_std`, real Ed25519 signatures, semihosting storage, UDP transport)
 - **Total component swappability** — storage, cache, transport, timer, external interface, context builder, partitioner, execution engine, signature scheme, observer — all swappable at construction time
 - **Ed25519 cryptographic signatures** — real signing/verification integrated into consensus flow; `PreparedCertificate` carries quorum proof
 - **WAL crash-recovery** — `ConsensusWal` serialization/deserialization with restart recovery
+- **Raft consensus** \u2014 second protocol family (`raft-node`, `raft-validation`, `raft-embassy`) proving decomposition generality across CrashFault+CFT consensus ([Raft Roadmap](etheram-node/RAFT-ROADMAP.md))
 
 ### Planned
 
-- **Raft consensus** — second protocol family (`raft-node`, `raft-validation`, `raft-embassy`) to prove decomposition generality ([Raft Roadmap](etheram-node/RAFT-ROADMAP.md))
 - Physical hardware deployment (STM32 / RP2040)
 - Property-based testing (`proptest`)
 - Merkle Patricia Trie state root

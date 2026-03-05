@@ -8,7 +8,6 @@
 extern crate alloc;
 extern crate panic_semihosting;
 
-mod cancellation_token;
 mod config;
 mod configurations;
 mod embassy_shared_state;
@@ -20,9 +19,9 @@ mod semihosting_observer;
 mod spawned_node;
 mod time_driver;
 
+use embassy_core::cancellation_token::CancellationToken;
 pub use embassy_core::info;
 
-use crate::cancellation_token::CancellationToken;
 use crate::config::MAX_NODES;
 use crate::etheram_client::EtheramClient;
 use cortex_m::Peripherals;

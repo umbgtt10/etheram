@@ -3,9 +3,9 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use super::node_infra_slot::NodeInfraSlot;
-use crate::cancellation_token::CancellationToken;
 use crate::config::MAX_NODES;
 use crate::spawned_node::SpawnedNode;
+use embassy_core::cancellation_token::CancellationToken;
 use embassy_executor::Spawner;
 
 pub struct InMemoryInfrastructure {

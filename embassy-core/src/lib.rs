@@ -6,6 +6,7 @@
 
 extern crate alloc;
 
+pub mod cancellation_token;
 pub mod channel_external_interface_macro;
 pub mod channel_transport_hub;
 pub mod client_facade_macro;

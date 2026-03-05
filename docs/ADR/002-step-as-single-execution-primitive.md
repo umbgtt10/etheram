@@ -97,7 +97,7 @@ async fn node_task(mut node: EtheramNode<IbftMessage>, ...) {
 ### Positive
 
 1. **Environment Agnostic** — Same primitive works everywhere: std tests, cluster validation, no_std ARM Cortex-M4 via QEMU
-2. **Deterministic Testing** — Call `step()` explicitly in tests, full control over event ordering and interleaving across 557 tests
+2. **Deterministic Testing** — Call `step()` explicitly in tests, full control over event ordering and interleaving across 748 tests
 3. **Debuggable** — Step through one event at a time, inspect state between steps; Observer trait provides per-step visibility
 4. **Composable** — Build any execution pattern from `step()`: blocking loops, run-until-idle, async event-driven (Embassy `select4`), cluster orchestration
 5. **Simple Contract** — One method, clear semantics, easy to implement
@@ -115,7 +115,7 @@ async fn node_task(mut node: EtheramNode<IbftMessage>, ...) {
 Etheram validates `step()` as the universal execution primitive across three environments:
 
 **Environment 1 — Sequential testing (std):**
-- 557 tests execute deterministically via explicit `step()` calls
+- 748 tests execute deterministically via explicit `step()` calls
 - `IbftCluster::step_all()` calls `step()` on each node in sequence until all are idle
 - `IbftCluster::step(node_index)` enables per-node stepping for fine-grained interleaving tests
 - `IbftTestNode` wraps a single `EtheramNode` and drives `step()` for isolated protocol testing
