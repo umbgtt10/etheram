@@ -37,7 +37,7 @@ use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransportS
 use raft_node::implementations::raft::raft_protocol::RaftProtocol;
 use raft_node::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 use raft_node::incoming::incoming_sources::RaftIncomingSources;
-use raft_node::observer::RaftEventLevel;
+use raft_node::observer::EventLevel;
 use raft_node::raft_node::RaftNode;
 use raft_node::state::raft_state::RaftState;
 
@@ -100,7 +100,7 @@ impl SpawnedNode {
             Box::new(RaftProtocol::<P>::new()),
             Box::new(TypeBasedRaftPartitioner::new()),
             Box::new(InMemoryRaftStateMachine::new()),
-            Box::new(RaftSemihostingObserver::new(RaftEventLevel::Essential)),
+            Box::new(RaftSemihostingObserver::new(EventLevel::Essential)),
         );
 
         let commit_index = EmbassySharedState::new(0u64);

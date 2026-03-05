@@ -5,7 +5,7 @@
 use crate::brain::protocol::action::RaftAction;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::node_role::NodeRole;
-pub use etheram_core::node_common::event_level::EventLevel as RaftEventLevel;
+pub use etheram_core::node_common::event_level::EventLevel;
 use etheram_core::types::{ClientId, PeerId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,7 +60,7 @@ pub fn action_kind<P>(action: &RaftAction<P>) -> RaftActionKind {
 }
 
 pub trait RaftObserver {
-    fn min_level(&self) -> RaftEventLevel;
+    fn min_level(&self) -> EventLevel;
 
     fn node_started(&mut self, peer_id: PeerId);
 

@@ -4,8 +4,8 @@
 
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::node_role::NodeRole;
+use crate::observer::EventLevel;
 use crate::observer::RaftActionKind;
-use crate::observer::RaftEventLevel;
 use crate::observer::RaftObserver;
 use etheram_core::types::PeerId;
 
@@ -24,8 +24,8 @@ impl Default for NoOpRaftObserver {
 }
 
 impl RaftObserver for NoOpRaftObserver {
-    fn min_level(&self) -> RaftEventLevel {
-        RaftEventLevel::None
+    fn min_level(&self) -> EventLevel {
+        EventLevel::None
     }
 
     fn node_started(&mut self, _peer_id: PeerId) {}

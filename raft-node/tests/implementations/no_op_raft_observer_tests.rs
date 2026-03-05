@@ -5,8 +5,8 @@
 use raft_node::brain::protocol::message_source::MessageSource;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::implementations::no_op_raft_observer::NoOpRaftObserver;
+use raft_node::observer::EventLevel;
 use raft_node::observer::RaftActionKind;
-use raft_node::observer::RaftEventLevel;
 use raft_node::observer::RaftObserver;
 
 #[test]
@@ -18,7 +18,7 @@ fn min_level_returns_none() {
     let level = observer.min_level();
 
     // Assert
-    assert_eq!(level, RaftEventLevel::None);
+    assert_eq!(level, EventLevel::None);
 }
 
 #[test]
@@ -36,5 +36,5 @@ fn observer_methods_are_noops() {
     observer.step_completed(1, true);
 
     // Assert
-    assert_eq!(observer.min_level(), RaftEventLevel::None);
+    assert_eq!(observer.min_level(), EventLevel::None);
 }

@@ -4,7 +4,7 @@
 
 ---
 
-## Overall Score: 9.2 / 10
+## Overall Score: 9.3 / 10
 
 | Category | Score | Notes |
 |---|---|---|
@@ -67,8 +67,8 @@
 | # | Action | Current State | Improvement | Est. Effort |
 |---|---|---|---|---|
 | 13 | Add usage examples to READMEs | Good architecture docs but zero code examples | A "Quick Start" section in root README with 3 commands and a 10-line Rust example | 30 min |
-| 14 | Consistent `Raft` prefix strategy | Raft uses `RaftEventLevel` alias, `RaftActionKind`; etheram drops prefixes | Align on one pattern across both families | 1 hr |
-| 15 | ADR for Embassy port decisions | Only 2 ADRs exist | ADR-003 for embassy-core extraction and dual-configuration strategy | 30 min |
+| ~~14~~ | ~~Consistent `Raft` prefix strategy~~ | ✅ Done | `RaftEventLevel` alias removed; re-exported as plain `EventLevel` matching etheram's pattern; 6 files updated. `RaftActionKind` / `RaftObserver` retain prefix (intentional: cross-crate disambiguation with etheram's `ActionKind` / `Observer`) |
+| ~~15~~ | ~~ADR for Embassy port decisions~~ | ✅ Done | [ADR-003](../docs/ADR/003-embassy-core-extraction-and-dual-configuration.md) documents embassy-core extraction rationale and dual-configuration invariant |
 
 ---
 
@@ -79,11 +79,12 @@
 | ~~Items 1–2~~ | ~~+0.15~~ | ✅ **8.6** |
 | ~~Items 3–4 (Tier 1 remainder)~~ | ~~+0.2~~ | ✅ **8.8** |
 | ~~Item 8 (partial Tier 2)~~ | ~~+0.1~~ | ✅ **8.9** |
-| ~~Items 9, 10, 12 (Tier 3)~~ | ~~+0.3~~ | ✅ **9.2** (current) |
-| Items 5–7 (Tier 2 remainder) | +0.3 | **9.5** |
-| All remaining items | — | **9.7** |
+| ~~Items 9, 10, 12 (Tier 3)~~ | ~~+0.3~~ | ✅ **9.2** |
+| ~~Items 14, 15 (Tier 4)~~ | ~~+0.1~~ | ✅ **9.3** (current) |
+| Items 5–7 (Tier 2 remainder) | +0.3 | **9.6** |
+| All remaining items | — | **9.8** |
 
-The remaining 0.8 to a perfect 10 would require: completing items 5–7, 11, and 13–15, plus formal specification (TLA+), physical hardware validation, and crates.io publication with `rustdoc` documentation.
+The remaining 0.7 to a perfect 10 would require: completing items 5–7 (extract `execute_block`, GitHub Actions CI, narrow `too_many_arguments`), item 11 (proptest), item 13 (README examples), plus formal specification (TLA+), physical hardware validation, and crates.io publication with `rustdoc` documentation.
 
 ---
 
