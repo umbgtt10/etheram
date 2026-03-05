@@ -58,7 +58,7 @@ The fact that `handle_message()` is pure (immutable context in, declarative acti
 
 | # | Option | Effort | Why |
 |---|---|---|---|
-| E1 | **TLA+ specifications** — write TLA+ models of IBFT and Raft that mirror the Rust protocol handlers, then model-check safety (no two blocks committed at same height) and liveness (progress under <f failures) | Medium | Verifies the protocol logic independently of Rust; publishable artifact |
+| E1 ✅ | **TLA+ specifications** — write TLA+ models of IBFT and Raft that mirror the Rust protocol handlers, then model-check safety (no two blocks committed at same height) and liveness (progress under <f failures) | Medium | Verifies the protocol logic independently of Rust; publishable artifact |
 | E2 | **Kani model checking** — use [Kani](https://github.com/model-checking/kani) (Rust-native bounded model checker by AWS) to exhaustively verify `handle_message()` invariants: e.g., two honest nodes never emit conflicting `StoreBlock` actions at the same height | Medium | Runs directly on the Rust source — no translation layer. Leverages the purity that the architecture enforces |
 
 ---
