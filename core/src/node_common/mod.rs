@@ -4,6 +4,7 @@
 
 pub mod action_collection;
 pub mod build_error;
+pub mod event_level;
 pub mod external_interface_incoming_adapter;
 pub mod external_interface_outgoing_adapter;
 pub mod message_source;

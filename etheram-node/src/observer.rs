@@ -6,16 +6,8 @@ use crate::brain::protocol::action::Action;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::types::{Address, Hash, Height};
 use crate::incoming::timer::timer_event::TimerEvent;
+pub use etheram_core::node_common::event_level::EventLevel;
 use etheram_core::types::{ClientId, PeerId};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum EventLevel {
-    None,
-    Essential,
-    Info,
-    Debug,
-    Trace,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ActionKind {

@@ -5,16 +5,8 @@
 use crate::brain::protocol::action::RaftAction;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::node_role::NodeRole;
+pub use etheram_core::node_common::event_level::EventLevel as RaftEventLevel;
 use etheram_core::types::{ClientId, PeerId};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum RaftEventLevel {
-    None,
-    Essential,
-    Info,
-    Debug,
-    Trace,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RaftActionKind {
