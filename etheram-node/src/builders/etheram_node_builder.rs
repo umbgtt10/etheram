@@ -3,7 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::boxed_protocol::BoxedProtocol;
-use crate::builders::error::BuildError;
 use crate::common_types::account::Account;
 use crate::common_types::cache_adapter::CacheAdapter;
 use crate::common_types::storage_adapter::StorageAdapter;
@@ -23,6 +22,7 @@ use crate::observer::Observer;
 use crate::partitioner::partition::Partitioner;
 use crate::state::etheram_state::EtheramState;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;

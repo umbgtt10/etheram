@@ -3,11 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::boxed_protocol::BoxedRaftProtocol;
-use crate::builders::error::BuildError;
 use crate::implementations::raft::raft_protocol::RaftProtocol;
 use crate::variants::RaftProtocolVariant;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct RaftProtocolBuilder<P: Clone + From<Vec<u8>> + AsRef<[u8]> + 'static> {
     brain: Option<BoxedRaftProtocol<P>>,

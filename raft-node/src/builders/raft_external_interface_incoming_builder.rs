@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::incoming::external_interface::client_request::RaftClientRequest;
 use crate::variants::RaftExternalInterfaceIncomingVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 
 pub struct RaftExternalInterfaceIncomingBuilder {

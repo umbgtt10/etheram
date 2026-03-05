@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::incoming::timer::timer_event::RaftTimerEvent;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
 
 pub struct RaftTimerInputBuilder {

@@ -3,12 +3,12 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::executor::outgoing::external_interface::client_response::RaftClientResponse;
-use crate::implementations::shared_state::SharedState;
 use crate::incoming::external_interface::client_request::RaftClientRequest;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::types::ClientId;
 
 pub struct InMemoryRaftExternalInterfaceState {

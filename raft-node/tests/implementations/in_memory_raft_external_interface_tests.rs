@@ -5,10 +5,10 @@
 use crate::implementations::standard_shared_state::StdSharedState;
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::node_common::shared_state::SharedState;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use raft_node::implementations::in_memory_raft_external_interface::InMemoryRaftExternalInterface;
 use raft_node::implementations::in_memory_raft_external_interface::InMemoryRaftExternalInterfaceState;
-use raft_node::implementations::shared_state::SharedState;
 use raft_node::incoming::external_interface::client_request::RaftClientRequest;
 
 #[test]

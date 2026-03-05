@@ -7,8 +7,8 @@ use crate::embassy_shared_state::EmbassySharedState;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Receiver;
 use embassy_sync::channel::Sender;
+use etheram_core::node_common::shared_state::SharedState;
 use raft_node::common_types::node_role::NodeRole;
-use raft_node::implementations::shared_state::SharedState;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 
 pub type TimerSender =

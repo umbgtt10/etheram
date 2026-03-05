@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::implementations::type_based_partitioner::TypeBasedPartitioner;
 use crate::partitioner::partition::Partitioner;
 use crate::variants::PartitionerVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct PartitionerBuilder {
     partitioner: Option<Box<dyn Partitioner<()>>>,

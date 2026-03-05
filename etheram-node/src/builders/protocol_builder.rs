@@ -3,7 +3,6 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::boxed_protocol::BoxedProtocol;
-use crate::builders::error::BuildError;
 use crate::execution::execution_engine::BoxedExecutionEngine;
 use crate::implementations::ibft::ibft_message::IbftMessage;
 use crate::implementations::ibft::ibft_protocol::IbftProtocol;
@@ -11,6 +10,7 @@ use crate::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
 use crate::implementations::no_op_protocol::NoOpProtocol;
 use crate::variants::ProtocolVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct ProtocolBuilder<M> {
     protocol: Option<BoxedProtocol<M>>,

@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::common_types::cache_adapter::CacheAdapter;
 use crate::implementations::in_memory_raft_cache::InMemoryRaftCache;
 use crate::variants::RaftCacheVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct RaftCacheBuilder {
     cache: Option<Box<dyn CacheAdapter<Key = (), Value = ()>>>,

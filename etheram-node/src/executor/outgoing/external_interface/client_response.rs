@@ -2,7 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::common_types::types::{Balance, Height};
+use crate::{
+    common_types::types::{Balance, Height},
+    executor::outgoing::external_interface::transaction_rejection_reason::TransactionRejectionReason,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ClientResponse {
@@ -10,11 +13,4 @@ pub enum ClientResponse {
     TransactionAccepted,
     TransactionRejected { reason: TransactionRejectionReason },
     Height(Height),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TransactionRejectionReason {
-    InsufficientBalance,
-    InvalidNonce,
-    GasLimitExceeded,
 }

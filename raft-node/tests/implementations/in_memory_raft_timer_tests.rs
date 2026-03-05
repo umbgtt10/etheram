@@ -3,11 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::timer_output::TimerOutput;
 use raft_node::implementations::in_memory_raft_timer::InMemoryRaftTimer;
 use raft_node::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
-use raft_node::implementations::shared_state::SharedState;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 
 #[test]

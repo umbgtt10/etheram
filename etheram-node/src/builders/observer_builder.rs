@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::implementations::no_op_observer::NoOpObserver;
 use crate::observer::Observer;
 use crate::variants::ObserverVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct ObserverBuilder {
     observer: Option<Box<dyn Observer>>,

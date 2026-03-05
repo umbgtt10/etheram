@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::common_types::storage_adapter::StorageAdapter;
 use crate::implementations::in_memory_raft_storage::InMemoryRaftStorage;
 use crate::variants::RaftStorageVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct RaftStorageBuilder<P: Clone + 'static> {
     storage: Option<Box<dyn StorageAdapter<P, Key = (), Value = ()>>>,

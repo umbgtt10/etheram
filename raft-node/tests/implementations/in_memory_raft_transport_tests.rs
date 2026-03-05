@@ -3,12 +3,12 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransport;
 use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
-use raft_node::implementations::shared_state::SharedState;
 
 #[test]
 fn poll_empty_inbox_returns_none() {

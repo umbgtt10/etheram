@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::shared_state::SharedState;
 use crate::incoming::timer::timer_event::TimerEvent;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::{timer_input::TimerInput, timer_output::TimerOutput};
 
 pub struct InMemoryTimerState {

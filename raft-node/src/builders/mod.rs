@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod error;
 pub mod raft_cache_builder;
 pub mod raft_context_builder_builder;
 pub mod raft_external_interface_incoming_builder;

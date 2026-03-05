@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::implementations::no_op_raft_observer::NoOpRaftObserver;
 use crate::observer::RaftObserver;
 use crate::variants::RaftObserverVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct RaftObserverBuilder {
     observer: Option<Box<dyn RaftObserver>>,

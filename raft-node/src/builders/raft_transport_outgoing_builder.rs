@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::message::RaftMessage;
-use crate::builders::error::BuildError;
 use crate::implementations::no_op_raft_transport::NoOpRaftTransport;
 use crate::variants::RaftTransportOutgoingVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 
 pub struct RaftTransportOutgoingBuilder<P: Clone + 'static> {

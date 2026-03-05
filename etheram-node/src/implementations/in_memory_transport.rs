@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::shared_state::SharedState;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;

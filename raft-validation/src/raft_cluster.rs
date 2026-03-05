@@ -5,6 +5,7 @@
 use crate::std_shared_state::StdSharedState;
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
 use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
 use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
@@ -33,7 +34,6 @@ use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransport;
 use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
 use raft_node::implementations::no_op_raft_observer::NoOpRaftObserver;
 use raft_node::implementations::raft::raft_protocol::RaftProtocol;
-use raft_node::implementations::shared_state::SharedState;
 use raft_node::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 use raft_node::incoming::external_interface::client_request::RaftClientRequest;
 use raft_node::incoming::incoming_sources::RaftIncomingSources;

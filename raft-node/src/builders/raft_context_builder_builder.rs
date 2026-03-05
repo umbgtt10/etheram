@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::context::context_builder::RaftContextBuilder;
 use crate::implementations::eager_raft_context_builder::EagerRaftContextBuilder;
 use crate::variants::RaftContextBuilderVariant;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::types::PeerId;
 
 pub struct RaftContextBuilderBuilder<P: Clone + 'static> {

@@ -3,6 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::std_shared_state::StdSharedState;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::types::ClientId;
 use etheram_core::types::PeerId;
 use etheram_node::common_types::account::Account;
@@ -32,7 +33,6 @@ use etheram_node::implementations::in_memory_timer::InMemoryTimerState;
 use etheram_node::implementations::in_memory_transport::InMemoryTransport;
 use etheram_node::implementations::in_memory_transport::InMemoryTransportState;
 use etheram_node::implementations::no_op_observer::NoOpObserver;
-use etheram_node::implementations::shared_state::SharedState;
 use etheram_node::implementations::type_based_partitioner::TypeBasedPartitioner;
 use etheram_node::implementations::value_transfer_engine::ValueTransferEngine;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;

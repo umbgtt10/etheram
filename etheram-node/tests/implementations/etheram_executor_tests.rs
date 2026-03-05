@@ -4,6 +4,7 @@
 
 use crate::implementations::standard_shared_state::StdSharedState;
 use etheram_core::node_common::action_collection::ActionCollection;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_node::brain::protocol::action::Action;
@@ -19,7 +20,6 @@ use etheram_node::implementations::in_memory_transport::InMemoryTransport;
 use etheram_node::implementations::in_memory_transport::InMemoryTransportState;
 use etheram_node::implementations::no_op_external_interface::NoOpExternalInterface;
 use etheram_node::implementations::no_op_timer::NoOpTimer;
-use etheram_node::implementations::shared_state::SharedState;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 
 #[test]

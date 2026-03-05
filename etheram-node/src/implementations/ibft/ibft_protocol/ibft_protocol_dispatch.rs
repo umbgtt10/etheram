@@ -14,7 +14,7 @@ use crate::common_types::block::Block;
 use crate::common_types::types::{Hash, Height};
 use crate::context::context_dto::Context;
 use crate::executor::outgoing::external_interface::client_response::ClientResponse;
-use crate::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
+use crate::executor::outgoing::external_interface::transaction_rejection_reason::TransactionRejectionReason;
 use crate::incoming::external_interface::client_request::ClientRequest;
 use crate::incoming::timer::timer_event::TimerEvent;
 use crate::state::cache::cache_update::CacheUpdate;

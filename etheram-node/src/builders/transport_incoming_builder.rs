@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::implementations::no_op_transport::NoOpTransport;
 use crate::variants::IncomingTransportVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
 
 pub struct TransportIncomingBuilder {

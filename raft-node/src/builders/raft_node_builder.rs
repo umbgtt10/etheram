@@ -4,7 +4,6 @@
 
 use crate::brain::protocol::boxed_protocol::BoxedRaftProtocol;
 use crate::brain::protocol::message::RaftMessage;
-use crate::builders::error::BuildError;
 use crate::builders::raft_cache_builder::RaftCacheBuilder;
 use crate::builders::raft_context_builder_builder::RaftContextBuilderBuilder;
 use crate::builders::raft_observer_builder::RaftObserverBuilder;
@@ -40,6 +39,7 @@ use crate::variants::{
 };
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;

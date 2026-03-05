@@ -3,3 +3,4 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod client_response;
+pub mod transaction_rejection_reason;

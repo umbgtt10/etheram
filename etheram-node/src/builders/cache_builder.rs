@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::common_types::cache_adapter::CacheAdapter;
 use crate::common_types::transaction::Transaction;
 use crate::implementations::in_memory_cache::InMemoryCache;
 use crate::variants::CacheVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct CacheBuilder {
     cache: Option<Box<dyn CacheAdapter<Key = (), Value = Transaction>>>,

@@ -4,9 +4,9 @@
 
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::timer_output::TimerOutput;
-use raft_node::builders::error::BuildError;
 use raft_node::builders::raft_node_builder::RaftNodeBuilder;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use raft_node::incoming::external_interface::client_request::RaftClientRequest;

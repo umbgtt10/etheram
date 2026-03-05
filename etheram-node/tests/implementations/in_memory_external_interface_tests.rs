@@ -5,12 +5,12 @@
 use crate::implementations::standard_shared_state::StdSharedState;
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::types::ClientId;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram_node::implementations::in_memory_external_interface::{
     InMemoryExternalInterface, InMemoryExternalInterfaceState,
 };
-use etheram_node::implementations::shared_state::SharedState;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;
 
 #[test]

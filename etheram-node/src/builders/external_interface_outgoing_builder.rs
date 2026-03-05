@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::executor::outgoing::external_interface::client_response::ClientResponse;
 use crate::implementations::no_op_external_interface::NoOpExternalInterface;
 use crate::variants::OutgoingExternalInterfaceVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 
 pub struct ExternalInterfaceOutgoingBuilder {

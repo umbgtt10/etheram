@@ -15,7 +15,6 @@ pub mod no_op_observer;
 pub mod no_op_protocol;
 pub mod no_op_timer;
 pub mod no_op_transport;
-pub mod shared_state;
 pub mod tiny_evm_engine;
 pub mod tiny_evm_gas;
 pub mod tiny_evm_opcode;

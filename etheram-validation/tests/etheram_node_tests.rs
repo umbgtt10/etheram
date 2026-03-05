@@ -5,7 +5,7 @@
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::{Address, Hash};
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram_node::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
+use etheram_node::executor::outgoing::external_interface::transaction_rejection_reason::TransactionRejectionReason;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_validation::ibft_test_node::IbftTestNode;

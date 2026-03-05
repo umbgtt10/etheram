@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::common_types::account::Account;
 use crate::common_types::storage_adapter::StorageAdapter;
 use crate::common_types::types::Address;
 use crate::implementations::in_memory_storage::InMemoryStorage;
 use crate::variants::StorageVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct StorageBuilder {
     storage: Option<Box<dyn StorageAdapter<Key = Address, Value = Account>>>,

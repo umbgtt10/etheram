@@ -4,7 +4,6 @@
 
 pub mod cache_builder;
 pub mod context_builder_builder;
-pub mod error;
 pub mod etheram_node_builder;
 pub mod execution_engine_builder;
 pub mod external_interface_incoming_builder;

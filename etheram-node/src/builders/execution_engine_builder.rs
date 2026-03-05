@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::builders::error::BuildError;
 use crate::execution::execution_engine::BoxedExecutionEngine;
 use crate::implementations::no_op_execution_engine::NoOpExecutionEngine;
 use crate::implementations::tiny_evm_engine::TinyEvmEngine;
 use crate::implementations::value_transfer_engine::ValueTransferEngine;
 use crate::variants::ExecutionEngineVariant;
 use alloc::boxed::Box;
+use etheram_core::node_common::build_error::BuildError;
 
 pub struct ExecutionEngineBuilder {
     execution_engine: Option<BoxedExecutionEngine>,

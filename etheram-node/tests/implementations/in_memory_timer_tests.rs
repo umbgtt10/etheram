@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::implementations::standard_shared_state::StdSharedState;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::timer_input::TimerInput;
 use etheram_core::timer_output::TimerOutput;
 use etheram_node::implementations::in_memory_timer::{InMemoryTimer, InMemoryTimerState};
-use etheram_node::implementations::shared_state::SharedState;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 
 #[test]

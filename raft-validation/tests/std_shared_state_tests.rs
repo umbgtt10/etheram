@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use raft_node::implementations::shared_state::SharedState;
+use etheram_core::node_common::shared_state::SharedState;
 use raft_validation::std_shared_state::StdSharedState;
 
 #[test]
