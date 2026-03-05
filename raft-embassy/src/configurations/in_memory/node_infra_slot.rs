@@ -3,10 +3,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::embassy_shared_state::EmbassySharedState;
+use crate::infra::storage::in_memory::in_memory_raft_storage::InMemoryRaftStorage;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
 use raft_node::brain::protocol::message::RaftMessage;
-use raft_variants::implementations::in_memory_raft_storage::InMemoryRaftStorage;
 use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
 use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
 

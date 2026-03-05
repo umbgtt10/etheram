@@ -103,7 +103,7 @@ fn snapshot_below_current_commit_is_ignored() {
         RaftMessage::InstallSnapshot {
             term: leader_term,
             leader_id: leader_peer_id,
-            snapshot_index: current_commit.saturating_sub(1).max(0),
+            snapshot_index: current_commit.saturating_sub(1),
             snapshot_term: leader_term,
             data: vec![],
         },
