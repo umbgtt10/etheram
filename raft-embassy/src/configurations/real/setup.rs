@@ -113,8 +113,8 @@ impl SpawnedNode {
         let commit_index = EmbassySharedState::new(0u64);
         let term = EmbassySharedState::new(0u64);
         let role = EmbassySharedState::new(NodeRole::Follower);
-        let timer_sender = TIMER_CHANNELS[node_index].sender();
-        let timer_receiver = TIMER_CHANNELS[node_index].receiver();
+        let timer_sender = TIMER_CHANNELS.channel(node_index).sender();
+        let timer_receiver = TIMER_CHANNELS.channel(node_index).receiver();
 
         spawner
             .spawn(semihosting_udp_node_task(

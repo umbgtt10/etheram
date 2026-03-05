@@ -13,13 +13,13 @@ use crate::infra::external_interface::channel::client_request_hub::ei_notify_rec
 use crate::infra::storage::captured_wal_writer::CapturedWalWriter;
 use crate::infra::timer::channel::timer_channels::TIMER_CHANNELS;
 use crate::infra::transport::channel::channel_transport_hub::TRANSPORT_HUB;
-use crate::infra::transport::channel::outbox_transport::OutboxTransport;
 use crate::semihosting_observer::SemihostingObserver;
 use crate::spawned_node::SpawnedNode;
 use crate::spawned_node::TimerReceiver;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
+use embassy_core::outbox_transport::OutboxTransport;
 use embassy_executor::Spawner;
 use embassy_futures::select::select4;
 use embassy_futures::select::Either4;
@@ -140,8 +140,8 @@ impl SpawnedNode {
 
         let height = EmbassySharedState::new(0u64);
         let contract_storage = EmbassySharedState::new(BTreeMap::new());
-        let timer_sender = TIMER_CHANNELS[node_index].sender();
-        let timer_receiver = TIMER_CHANNELS[node_index].receiver();
+        let timer_sender = TIMER_CHANNELS.channel(node_index).sender();
+        let timer_receiver = TIMER_CHANNELS.channel(node_index).receiver();
 
         spawner
             .spawn(in_memory_channel_node_task(

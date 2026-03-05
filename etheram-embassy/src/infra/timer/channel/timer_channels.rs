@@ -4,16 +4,9 @@
 
 use crate::config::MAX_NODES;
 use crate::config::TIMER_COMMAND_CAPACITY;
-use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use embassy_sync::channel::Channel;
+use embassy_core::timer_channels::GenericTimerChannels;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 
-type TimerCommandChannel = Channel<CriticalSectionRawMutex, TimerEvent, TIMER_COMMAND_CAPACITY>;
+type TimerChannels = GenericTimerChannels<TimerEvent, MAX_NODES, TIMER_COMMAND_CAPACITY>;
 
-pub static TIMER_CHANNELS: [TimerCommandChannel; MAX_NODES] = [
-    Channel::new(),
-    Channel::new(),
-    Channel::new(),
-    Channel::new(),
-    Channel::new(),
-];
+pub static TIMER_CHANNELS: TimerChannels = TimerChannels::new();
