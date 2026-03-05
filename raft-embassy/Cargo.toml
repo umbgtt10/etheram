@@ -13,6 +13,7 @@ channel-external-interface = []
 udp-external-interface = []
 
 [dependencies]
+embassy-core.workspace = true
 etheram-core.workspace = true
 raft-node.workspace = true
 

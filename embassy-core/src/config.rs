@@ -2,4 +2,5 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub use embassy_core::logging::init;
+pub const MAX_NODES: usize = 5;
+pub const TIMER_COMMAND_CAPACITY: usize = 16;

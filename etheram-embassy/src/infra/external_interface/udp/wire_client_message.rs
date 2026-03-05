@@ -11,7 +11,7 @@ use etheram_node::common_types::types::Gas;
 use etheram_node::common_types::types::Height;
 use etheram_node::common_types::types::Nonce;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram_node::executor::outgoing::external_interface::client_response::TransactionRejectionReason;
+use etheram_node::executor::outgoing::external_interface::transaction_rejection_reason::TransactionRejectionReason;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;
 use serde::Deserialize;
 use serde::Serialize;
