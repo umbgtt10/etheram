@@ -83,4 +83,33 @@ proptest! {
         ));
         prop_assert!(rejects);
     }
+
+    #[test]
+    fn higher_term_request_vote_always_produces_set_term(
+        peer_id in arb_peer_id(),
+        ctx_term in 1u64..=10u64,
+        term_delta in 1u64..=20u64,
+        sender in arb_peer_id(),
+    ) {
+        // Arrange
+        let mut protocol = RaftProtocol::<Vec<u8>>::new();
+        let ctx = make_ctx_with_term(peer_id, vec![10, 11], NodeRole::Follower, ctx_term);
+        let msg_term = ctx_term + term_delta;
+        let message = Message::Peer(RaftMessage::RequestVote {
+            term: msg_term,
+            candidate_id: sender,
+            last_log_index: 0,
+            last_log_term: 0,
+        });
+
+        // Act
+        let actions = protocol.handle_message(&MessageSource::Peer(sender), &message, &ctx);
+
+        // Assert
+        let has_set_term = actions.iter().any(|a| matches!(
+            a,
+            RaftAction::SetTerm(t) if *t == msg_term
+        ));
+        prop_assert!(has_set_term);
+    }
 }

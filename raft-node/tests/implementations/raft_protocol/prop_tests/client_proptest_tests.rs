@@ -122,4 +122,24 @@ proptest! {
         )).count();
         prop_assert_eq!(query_count, 1);
     }
+
+    #[test]
+    fn command_as_candidate_always_returns_not_leader(
+        peer_id in arb_peer_id(),
+        payload in arb_payload(),
+    ) {
+        // Arrange & Act
+        let actions = send_command(peer_id, NodeRole::Candidate, payload);
+
+        // Assert
+        let is_not_leader = matches!(
+            actions.get(0),
+            Some(RaftAction::SendClientResponse {
+                response: RaftClientResponse::NotLeader(_),
+                ..
+            })
+        );
+        prop_assert!(is_not_leader);
+        prop_assert_eq!(actions.len(), 1);
+    }
 }

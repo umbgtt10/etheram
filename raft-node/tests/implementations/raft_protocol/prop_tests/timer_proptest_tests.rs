@@ -7,6 +7,7 @@ use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
 use proptest::prelude::*;
 use raft_node::brain::protocol::action::RaftAction;
+use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::brain::protocol::message_source::MessageSource;
 use raft_node::brain::protocol::unified_message::Message;
 use raft_node::common_types::node_role::NodeRole;
@@ -86,5 +87,30 @@ proptest! {
         // Assert
         let send_count = actions.iter().filter(|a| matches!(a, RaftAction::SendMessage { .. })).count();
         prop_assert_eq!(send_count, peers.len());
+    }
+
+    #[test]
+    fn election_timeout_follower_with_peers_always_broadcasts_pre_vote_request(
+        peer_id in arb_peer_id(),
+    ) {
+        // Arrange
+        let mut protocol = RaftProtocol::<Vec<u8>>::new();
+        let ctx = make_ctx(peer_id, vec![10, 11], NodeRole::Follower);
+
+        // Act
+        let actions = protocol.handle_message(
+            &MessageSource::Timer,
+            &Message::Timer(RaftTimerEvent::ElectionTimeout),
+            &ctx,
+        );
+
+        // Assert
+        let has_pre_vote_broadcast = actions.iter().any(|a| matches!(
+            a,
+            RaftAction::BroadcastMessage {
+                message: RaftMessage::PreVoteRequest { .. },
+            }
+        ));
+        prop_assert!(has_pre_vote_broadcast);
     }
 }

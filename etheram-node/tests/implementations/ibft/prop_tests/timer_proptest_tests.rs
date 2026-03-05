@@ -72,4 +72,28 @@ proptest! {
         )).count();
         prop_assert_eq!(view_change_count, 1);
     }
+
+    #[test]
+    fn timeout_round_view_change_always_has_round_one(
+        ctx in arb_context(),
+    ) {
+        // Arrange
+        let mut protocol = IbftProtocol::new(vec![0, 1, 2, 3], Box::new(MockSignatureScheme::new(ctx.peer_id)));
+
+        // Act
+        let actions = protocol.handle_message(
+            &MessageSource::Timer,
+            &Message::Timer(TimerEvent::TimeoutRound),
+            &ctx,
+        );
+
+        // Assert
+        let has_round_one = actions.iter().any(|a| matches!(
+            a,
+            Action::BroadcastMessage {
+                message: IbftMessage::ViewChange { round: 1, .. },
+            }
+        ));
+        prop_assert!(has_round_one);
+    }
 }

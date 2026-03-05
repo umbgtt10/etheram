@@ -184,4 +184,25 @@ proptest! {
             .count();
         prop_assert_eq!(add_pending_count, 1);
     }
+
+    #[test]
+    fn get_balance_unknown_address_always_returns_zero(
+        ctx in arb_context(),
+        addr in arb_address(),
+    ) {
+        // Arrange — context has no entry for addr (accounts BTreeMap starts empty)
+
+        // Act
+        let actions = send_client_request(ClientRequest::GetBalance(addr), &ctx);
+
+        // Assert
+        let returns_zero = matches!(
+            actions.get(0),
+            Some(Action::SendClientResponse {
+                response: ClientResponse::Balance { balance: 0, .. },
+                ..
+            })
+        );
+        prop_assert!(returns_zero);
+    }
 }
