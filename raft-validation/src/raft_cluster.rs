@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::std_shared_state::StdSharedState;
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use etheram_core::node_common::shared_state::SharedState;
+use etheram_core::node_common::shared_state::StdSharedState;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
 use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
 use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;

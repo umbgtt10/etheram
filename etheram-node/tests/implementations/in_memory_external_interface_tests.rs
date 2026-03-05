@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::implementations::std_shared_state::StdSharedState;
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
 use etheram_core::node_common::shared_state::SharedState;
+use etheram_core::node_common::shared_state::StdSharedState;
 use etheram_core::types::ClientId;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram_node::implementations::in_memory_external_interface::{

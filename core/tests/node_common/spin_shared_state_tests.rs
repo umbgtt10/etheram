@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::node_common::shared_state::SharedState;
-use raft_validation::std_shared_state::StdSharedState;
+use etheram_core::node_common::shared_state::StdSharedState;
 
 #[test]
 fn with_mut_then_with_returns_updated_value() {

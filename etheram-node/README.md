@@ -1,14 +1,14 @@
-# etheram
+# etheram-node
 
 > Core node implementation — types, traits, step loop, and execution engine interface
 
-`etheram` defines the single-node architecture for an Ethereum-like blockchain node. It contains the `EtheramNode` struct and step loop, all common types (blocks, accounts, transactions, state roots, receipts), the execution engine trait, the observer trait, and the adapter layer that bridges core dimension traits to Ethereum-specific types.
+`etheram-node` defines the single-node architecture for an Ethereum-like blockchain node. It contains the `EtheramNode` struct and step loop, all common types (blocks, accounts, transactions, state roots, receipts), the execution engine trait, the observer trait, and the adapter layer that bridges core dimension traits to Ethereum-specific types.
 
-This crate is `#![no_std]` and uses `alloc` for heap types. It contains **no concrete implementations** — those live in [etheram-variants](../etheram-variants/README.md).
+This crate is `#![no_std]` and uses `alloc` for heap types. It contains node abstractions and concrete implementations for the Ethereum-like protocol family.
 
 **Parent:** [EtheRAM](../README.md)
 **Depends on:** [core](../core/README.md)
-**Depended on by:** [etheram-variants](../etheram-variants/README.md), and transitively by [etheram-validation](../etheram-validation/README.md) and [etheram-embassy](../etheram-embassy/README.md)
+**Depended on by:** [etheram-validation](../etheram-validation/README.md) and [etheram-embassy](../etheram-embassy/README.md)
 
 ---
 
@@ -103,7 +103,7 @@ Adapter traits that specialize core dimension traits for Ethereum-specific types
 | `compute_receipts_root()` | `receipts_root.rs` | Deterministic hash over receipt list |
 | `compute_block_commitments()` | `block_commitments.rs` | Centralized commitment computation (post_state_root + receipts_root) |
 
-The `ExecutionEngine` trait contract: immutable input, declarative `ExecutionResult`, no I/O. Concrete engines (`TinyEvmEngine`, `ValueTransferEngine`, `NoOpExecutionEngine`) are in `etheram-variants`.
+The `ExecutionEngine` trait contract: immutable input, declarative `ExecutionResult`, no I/O. Concrete engines (`TinyEvmEngine`, `ValueTransferEngine`, `NoOpExecutionEngine`) are in this crate family.
 
 ### Brain (`brain/`)
 
@@ -205,7 +205,7 @@ src/
 
 ## Tests
 
-21 tests in `etheram/tests/`:
+21 tests in `etheram-node/tests/`:
 
 | File | Count | Scope |
 |---|---|---|
@@ -215,4 +215,4 @@ src/
 | `receipts_root_tests.rs` | 5 | `compute_receipts_root` determinism |
 | `transaction_receipt_tests.rs` | 4 | `TransactionReceipt` construction |
 
-Integration tests that require concrete implementations (e.g., `IbftProtocol`, `InMemoryStorage`) live in [etheram-variants](../etheram-variants/README.md) and [etheram-validation](../etheram-validation/README.md), not here — enforcing the one-way dependency direction.
+Integration tests that require multi-node orchestration live in [etheram-validation](../etheram-validation/README.md), preserving one-way dependency direction from validation to node logic.

@@ -5,7 +5,7 @@
 The core crate defines the minimal, `no_std`-compatible trait surface that all EtheRAM crates build on. It provides the behavioral building blocks — dimension I/O traits, the consensus protocol interface, and the node execution primitive — without prescribing how they are composed.
 
 **Parent:** [EtheRAM](../README.md)
-**Dependents:** [etheram](../etheram/README.md) → [etheram-variants](../etheram-variants/README.md) → [etheram-validation](../etheram-validation/README.md), [etheram-embassy](../etheram-embassy/README.md)
+**Dependents:** [etheram-node](../etheram-node/README.md) → [etheram-validation](../etheram-validation/README.md), [etheram-embassy](../etheram-embassy/README.md); [raft-node](../raft-node/README.md) → [raft-validation](../raft-validation/README.md), [raft-embassy](../raft-embassy/README.md); [embassy-core](../embassy-core/README.md)
 
 ---
 

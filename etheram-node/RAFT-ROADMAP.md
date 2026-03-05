@@ -1,7 +1,7 @@
 # Raft Consensus — Implementation Plan
 
 **Goal:** Implement Raft as a second consensus protocol to prove the 3-6 architectural model generalizes across consensus families
-**Approach:** Option B — independent crate family (`raft-node`, `raft-variants`, `raft-validation`, `raft-embassy`), each depending only on `core/`
+**Approach:** Option B — independent crate family (`raft-node`, `raft-validation`, `raft-embassy`), each depending only on `core/`
 **Reference:** MetalRaft (`C:\Projects\metal_raft`) — full Raft implementation with 12 generic type parameters, mutable context, inline I/O
 **Related:** [IBFT Roadmap](IBFT-ROADMAP.md) — Ethereum-specific IBFT consensus
 
@@ -9,15 +9,15 @@
 
 ## Architectural Decision: Why a Separate Crate Family
 
-The EtheRAM crate family (`etheram/`, `etheram-variants/`, `etheram-validation/`, `etheram-embassy/`) is Ethereum-specific at every layer: `Action<M>` carries `UpdateAccount`, `StoreBlock`, `ExecuteBlock`; `Context` carries `accounts`, `state_root`, `pending_txs`; `TimerEvent` carries `ProposeBlock`, `TimeoutRound`. These types are not generic — they are protocol-specific by design (Architecture Decision 8: Protocol-Specific Types).
+The EtheRAM crate family (`etheram-node/`, `etheram-validation/`, `etheram-embassy/`) is Ethereum-specific at every layer: `Action<M>` carries `UpdateAccount`, `StoreBlock`, `ExecuteBlock`; `Context` carries `accounts`, `state_root`, `pending_txs`; `TimerEvent` carries `ProposeBlock`, `TimeoutRound`. These types are not generic — they are protocol-specific by design (Architecture Decision 8: Protocol-Specific Types).
 
 Raft requires fundamentally different types: `RaftAction<P>` with `SetTerm`, `AppendLog`, `AdvanceCommitIndex`; `RaftContext<P>` with `current_term`, `voted_for`, `log`, `commit_index`; `RaftTimerEvent` with `ElectionTimeout`, `Heartbeat`.
 
-**Option A** (generalize `etheram/`) would risk the 557 existing tests and blur the Ethereum-specific semantics that make the IBFT implementation meaningful.
+**Option A** (generalize `etheram-node/`) would risk the existing tests and blur the Ethereum-specific semantics that make the IBFT implementation meaningful.
 
 **Option B** (independent crate family) is chosen because:
 1. **Independent emergence** — the 3-6 pattern independently re-emerging for Raft is stronger architectural evidence than parameterization
-2. **Zero risk** — no changes to `core/`, `etheram/`, `etheram-variants/`, `etheram-validation/`, or `etheram-embassy/`
+2. **Zero risk** — no changes to `core/`, `etheram-node/`, `etheram-validation/`, or `etheram-embassy/`
 3. **Protocol-specific types** — each protocol defines exactly what it needs, no compromises
 4. **Dedicated Embassy crate** — avoids feature flag explosion (6 per crate vs 12+ shared) and keeps IBFT/Raft scenarios isolated
 
@@ -25,12 +25,10 @@ Raft requires fundamentally different types: `RaftAction<P>` with `SetTerm`, `Ap
 
 ```
 core/                  Shared: PeerId, ConsensusProtocol trait (unchanged)
-etheram/               Ethereum node — 3-6 model with IBFT (unchanged)
-etheram-variants/      IBFT concrete implementations (unchanged)
+etheram-node/          Ethereum node — 3-6 model with IBFT (unchanged)
 etheram-validation/    IBFT cluster tests (unchanged)
 etheram-embassy/       IBFT on Embassy — 2 configs (unchanged)
 raft-node/             Raft node — 3-6 model with Raft (NEW)
-raft-variants/         Raft concrete implementations (NEW)
 raft-validation/       Raft cluster tests (NEW)
 raft-embassy/          Raft on Embassy — 2 configs (NEW)
 ```
@@ -38,12 +36,12 @@ raft-embassy/          Raft on Embassy — 2 configs (NEW)
 ### Crate Dependency Graph
 
 ```
-               ┌── etheram ←── etheram-variants ←── etheram-validation
-               │                               ←── etheram-embassy
+               ┌── etheram-node ←── etheram-validation
+               │              └── etheram-embassy
 core ──────────┤
                │
-               └── raft-node ←── raft-variants ←── raft-validation
-                                               ←── raft-embassy
+               └── raft-node ←── raft-validation
+                             └── raft-embassy
 ```
 
 Both protocol families share only `core/` (PeerId, `ConsensusProtocol` trait, dimension I/O traits). No cross-dependencies between the two families.
@@ -154,7 +152,7 @@ Create `raft-node/` with Raft-specific types:
 | `NodeRole` | `common_types/node_role.rs` | Follower, Candidate, Leader |
 | `LogEntry<P>` | `common_types/log_entry.rs` | term, index, payload |
 
-`raft-node/` mirrors `etheram/` structurally but with Raft-specific types. `#![no_std]` from day one.
+`raft-node/` mirrors `etheram-node/` structurally but with Raft-specific types. `#![no_std]` from day one.
 
 ### Sprint 1: RaftNode Step Loop (0.5 days)
 
@@ -190,7 +188,7 @@ Each handler reads from `RaftContext<P>` (immutable) and returns `ActionCollecti
 
 ### Sprint 3: Concrete Implementations (1 day)
 
-Create `raft-variants/` with:
+Create in `raft-node/` with:
 
 | Component | Type | Description |
 |---|---|---|
@@ -208,7 +206,7 @@ Create `raft-variants/` with:
 
 ### Sprint 4: Stage 1 Tests (~111 tests, 2 days)
 
-Protocol-level tests in `raft-variants/tests/`:
+Protocol-level tests in `raft-node/tests/`:
 
 | Area | Tests | Coverage |
 |---|---|---|
@@ -253,7 +251,6 @@ Create `raft-embassy/` with two configurations:
 ### Sprint 7: Documentation (0.5 days)
 
 - `raft-node/README.md` — crate documentation
-- `raft-variants/README.md` — implementations documentation
 - `raft-validation/README.md` — cluster test documentation
 - `raft-embassy/README.md` — Embassy port documentation
 - Update root `README.md` — add Raft crates to workspace structure, update test count, add Raft to "Achieved"
@@ -288,7 +285,7 @@ Create `raft-embassy/` with two configurations:
 4. **Same trait** — `RaftProtocol<P>` implements `ConsensusProtocol` from `core/`
 5. **Same 3-stage validation** — protocol tests, cluster tests, and embedded QEMU end-to-end
 6. **Same Embassy pattern** — `select4` reactor with `while node.step() {}`
-7. **Zero changes to existing crates** — `core/`, `etheram/`, `etheram-variants/`, `etheram-validation/`, `etheram-embassy/` remain untouched
+7. **Zero changes to existing crates** — `core/`, `etheram-node/`, `etheram-validation/`, `etheram-embassy/` remain untouched
 8. **All existing tests pass** — 557 tests remain green throughout
 
 ---

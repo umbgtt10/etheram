@@ -4,4 +4,3 @@
 
 pub mod ibft_cluster;
 pub mod ibft_test_node;
-pub mod std_shared_state;

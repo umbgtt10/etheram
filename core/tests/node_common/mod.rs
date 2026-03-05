@@ -3,3 +3,4 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod action_collection_tests;
+pub mod spin_shared_state_tests;

@@ -1,7 +1,7 @@
 # EtheRAM Chain — Feature Status
 
 **Scope:** Ethereum-like chain semantics in EtheRAM
-**Implementation:** `etheram/src/` (types, traits) + `etheram-variants/src/implementations/` (concrete engines, storage)
+**Implementation:** `etheram-node/src/` (types, traits, concrete engines, storage)
 **Related:** [IBFT Roadmap](IBFT-ROADMAP.md) — Consensus protocol features
 
 ---
@@ -91,7 +91,7 @@ Gas constants are aligned with the post-Istanbul EVM schedule.
 
 | Backend | Crate | `no_std` | Description |
 |---|---|---|---|
-| `InMemoryStorage` | `etheram-variants` | ✅ | `BTreeMap`-backed, auto state root recomputation |
+| `InMemoryStorage` | `etheram-node` | ✅ | `BTreeMap`-backed, auto state root recomputation |
 | `SemihostingStorage` | `etheram-embassy` | ✅ | ARM semihosting file I/O for QEMU persistence |
 
 ### Client Interface

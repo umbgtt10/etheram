@@ -3,4 +3,3 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod raft_cluster;
-pub mod std_shared_state;

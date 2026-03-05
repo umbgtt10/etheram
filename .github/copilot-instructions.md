@@ -308,7 +308,7 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
 - Per-component builders with `PartitionerVariant`, `StorageVariant`, etc.
 - InMemoryTransport (incoming + outgoing), shared `Arc<Mutex<InMemoryTransportState>>` per cluster
 - etheram-validation cluster harness with `fire_timer`, `submit_request`, `drain_responses`, `step_all`, `push_transport_message`
-- `etheram/tests/block_tests.rs` — 3 tests; `etheram/tests/account_tests.rs` — 4 tests; `etheram/tests/state_root_tests.rs` — 5 tests
+- `etheram-node/tests/common_types/block_tests.rs` — 3 tests; `etheram-node/tests/common_types/account_tests.rs` — 4 tests; `etheram-node/tests/common_types/state_root_tests.rs` — 5 tests
 - `etheram-node/tests/implementations/in_memory_storage_tests.rs` — 7 tests
 - `etheram-node/tests/implementations/in_memory_timer_tests.rs` — 5 tests
 - `etheram-node/tests/implementations/in_memory_external_interface_tests.rs` — 5 tests
@@ -341,7 +341,7 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
 ### 🔄 Next: Raft Consensus — Sprint 6 (raft-embassy)
 - Sprints 0–5 (`raft-node/` skeleton, `RaftNode<P>` step loop, `RaftProtocol<P>`, infra implementations, protocol-level tests, cluster tests) are **complete**
 - Sprint 6: implement `raft-embassy/` with two configurations (all-in-memory + real) and a 5-act QEMU scenario
-- See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
+- See [RAFT-ROADMAP.md](etheram-node/RAFT-ROADMAP.md) for the full implementation plan
 - All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
 
 ### ✅ Raft Sprints 0–5 Implemented
@@ -405,6 +405,7 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
 - **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p etheram-node --test all_tests` and `cargo test -p etheram-validation --test all_tests` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
 - **Mandatory pre-feature Raft audit** — before writing any new protocol feature that touches `RaftProtocol`, run `cargo test -p raft-node --test all_tests` and `cargo test -p raft-validation --test all_tests` and confirm the following Raft invariants hold in source before beginning: (1) quorum = `⌊n/2⌋ + 1`; (2) leader never appends entries in a term other than its own; (3) voted_for is persisted before sending RequestVoteResponse; (4) commit_index only advances when a majority have acknowledged the entry; (5) step-down occurs immediately on receiving any message with a higher term. This is a hard gate — not a suggestion.
 - **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate for formatting, tests, no_std checks, and embassy scenarios.
+- **Mandatory no_std gate for core + embassy-core + nodes** — every completion gate must include explicit checks for all four crates: `cargo check -p etheram-core --no-default-features`, `cargo check -p embassy-core --no-default-features`, `cargo check -p etheram-node --no-default-features`, and `cargo check -p raft-node --no-default-features`.
 - **Mandatory Raft no_std gate** — when working on `raft-node/`, always run an explicit no_std compatibility check: `cargo check -p raft-node --no-default-features`.
 - **Mandatory dual-layer test updates for Raft productive changes** — every time productive Raft code is added, changed, or fixed, update tests in both layers: protocol-level tests in `raft-node` and cluster-level tests in `raft-validation`. The same rule applies as for etheram: do not mark work complete unless both layers are updated or explicitly justified as not applicable.
 - **Raft–etheram consistency check** — whenever productive code or tests are added or changed in either protocol family, check the parallel artefact in the other family for inconsistencies. This includes: structural divergence in equivalent types (e.g. `RaftNode` vs `EtheramNode`, `RaftPartitioner` vs `Partitioner`, `RaftObserver` vs `Observer`), naming convention drift, step-loop shape differences, test organisation deviations, and missing analogous tests. Inconsistencies that are intentional (protocol-specific types, Raft 2-way vs etheram 3-way partition) must be explicitly justified in a `// FIXME:` or `// TODO:` comment. Silent drift is not permitted.

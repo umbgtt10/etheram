@@ -1,9 +1,9 @@
 # Istanbul BFT — Feature Status
 
 **Scope:** IBFT consensus protocol in EtheRAM
-**Implementation:** `etheram-variants/src/implementations/ibft/`
+**Implementation:** `etheram-node/src/implementations/ibft/`
 **Validation model:**
-- Stage 1: protocol tests in `etheram-variants/tests/implementations/ibft/`
+- Stage 1: protocol tests in `etheram-node/tests/implementations/ibft/`
 - Stage 2: cluster tests in `etheram-validation/tests/`
 - Stage 3: embedded end-to-end in `etheram-embassy/`
 
