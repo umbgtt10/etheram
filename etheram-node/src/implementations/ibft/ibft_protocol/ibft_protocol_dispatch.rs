@@ -21,6 +21,22 @@ use crate::state::cache::cache_update::CacheUpdate;
 use etheram_core::collection::Collection;
 use etheram_core::node_common::action_collection::ActionCollection;
 
+struct VotingMessageFields {
+    sequence: u64,
+    height: Height,
+    round: u64,
+    block_hash: Hash,
+    sender_signature: SignatureBytes,
+}
+
+struct NewViewMessageFields<'a> {
+    sequence: u64,
+    height: Height,
+    round: u64,
+    prepared_certificate: &'a Option<PreparedCertificate>,
+    view_change_senders: &'a [u64],
+}
+
 impl IbftProtocol {
     fn empty_actions() -> ActionCollection<Action<IbftMessage>> {
         ActionCollection::new()
@@ -122,11 +138,13 @@ impl IbftProtocol {
                 sender_signature,
             }) => self.handle_prepare_message(
                 source,
-                *sequence,
-                *height,
-                *round,
-                *block_hash,
-                *sender_signature,
+                VotingMessageFields {
+                    sequence: *sequence,
+                    height: *height,
+                    round: *round,
+                    block_hash: *block_hash,
+                    sender_signature: *sender_signature,
+                },
                 ctx,
             ),
             Message::Peer(IbftMessage::Commit {
@@ -137,11 +155,13 @@ impl IbftProtocol {
                 sender_signature,
             }) => self.handle_commit_message(
                 source,
-                *sequence,
-                *height,
-                *round,
-                *block_hash,
-                *sender_signature,
+                VotingMessageFields {
+                    sequence: *sequence,
+                    height: *height,
+                    round: *round,
+                    block_hash: *block_hash,
+                    sender_signature: *sender_signature,
+                },
                 ctx,
             ),
             Message::Peer(IbftMessage::ViewChange {
@@ -166,11 +186,13 @@ impl IbftProtocol {
             }) => {
                 self.handle_new_view_message(
                     source,
-                    *sequence,
-                    *height,
-                    *round,
-                    prepared_certificate,
-                    view_change_senders,
+                    NewViewMessageFields {
+                        sequence: *sequence,
+                        height: *height,
+                        round: *round,
+                        prepared_certificate,
+                        view_change_senders,
+                    },
                     ctx,
                 );
                 Self::empty_actions()
@@ -221,58 +243,62 @@ impl IbftProtocol {
         self.handle_pre_prepare(source, height, round, block, ctx)
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn handle_prepare_message(
         &mut self,
         source: &MessageSource,
-        sequence: u64,
-        height: Height,
-        round: u64,
-        block_hash: Hash,
-        sender_signature: SignatureBytes,
+        fields: VotingMessageFields,
         ctx: &Context,
     ) -> ActionCollection<Action<IbftMessage>> {
         let msg = IbftMessage::Prepare {
-            sequence,
-            height,
-            round,
-            block_hash,
-            sender_signature,
+            sequence: fields.sequence,
+            height: fields.height,
+            round: fields.round,
+            block_hash: fields.block_hash,
+            sender_signature: fields.sender_signature,
         };
-        if self.try_buffer_future_message(source, round, &msg) {
+        if self.try_buffer_future_message(source, fields.round, &msg) {
             return Self::empty_actions();
         }
-        if !self.accept_peer_message(source, height, 1, sequence) {
+        if !self.accept_peer_message(source, fields.height, 1, fields.sequence) {
             return Self::empty_actions();
         }
-        self.handle_prepare(source, height, round, block_hash, sender_signature, ctx)
+        self.handle_prepare(
+            source,
+            fields.height,
+            fields.round,
+            fields.block_hash,
+            fields.sender_signature,
+            ctx,
+        )
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn handle_commit_message(
         &mut self,
         source: &MessageSource,
-        sequence: u64,
-        height: Height,
-        round: u64,
-        block_hash: Hash,
-        sender_signature: SignatureBytes,
+        fields: VotingMessageFields,
         ctx: &Context,
     ) -> ActionCollection<Action<IbftMessage>> {
         let msg = IbftMessage::Commit {
-            sequence,
-            height,
-            round,
-            block_hash,
-            sender_signature,
+            sequence: fields.sequence,
+            height: fields.height,
+            round: fields.round,
+            block_hash: fields.block_hash,
+            sender_signature: fields.sender_signature,
         };
-        if self.try_buffer_future_message(source, round, &msg) {
+        if self.try_buffer_future_message(source, fields.round, &msg) {
             return Self::empty_actions();
         }
-        if !self.accept_peer_message(source, height, 2, sequence) {
+        if !self.accept_peer_message(source, fields.height, 2, fields.sequence) {
             return Self::empty_actions();
         }
-        self.handle_commit(source, height, round, block_hash, sender_signature, ctx)
+        self.handle_commit(
+            source,
+            fields.height,
+            fields.round,
+            fields.block_hash,
+            fields.sender_signature,
+            ctx,
+        )
     }
 
     fn handle_view_change_message(
@@ -290,26 +316,21 @@ impl IbftProtocol {
         self.handle_view_change(source, height, round, prepared_certificate, ctx)
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn handle_new_view_message(
         &mut self,
         source: &MessageSource,
-        sequence: u64,
-        height: Height,
-        round: u64,
-        prepared_certificate: &Option<PreparedCertificate>,
-        view_change_senders: &[u64],
+        fields: NewViewMessageFields<'_>,
         ctx: &Context,
     ) {
-        if !self.accept_peer_message(source, height, 4, sequence) {
+        if !self.accept_peer_message(source, fields.height, 4, fields.sequence) {
             return;
         }
         self.handle_new_view(
             source,
-            height,
-            round,
-            prepared_certificate,
-            view_change_senders,
+            fields.height,
+            fields.round,
+            fields.prepared_certificate,
+            fields.view_change_senders,
             ctx,
         );
     }

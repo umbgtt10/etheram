@@ -16,6 +16,15 @@ use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
 
+pub struct AppendEntriesParams<P> {
+    pub from: PeerId,
+    pub term: u64,
+    pub prev_log_index: u64,
+    pub prev_log_term: u64,
+    pub entries: Vec<LogEntry<P>>,
+    pub leader_commit: u64,
+}
+
 pub fn handle_heartbeat<P: Clone>(ctx: &RaftContext<P>) -> Vec<RaftAction<P>> {
     if ctx.role != NodeRole::Leader {
         return Vec::new();
@@ -48,18 +57,19 @@ pub fn send_all_peers_with_next<P: Clone>(
         .collect()
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn handle_append_entries<P: Clone + AsRef<[u8]>>(
     protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,
-    from: PeerId,
-    term: u64,
-    _leader_id: PeerId,
-    prev_log_index: u64,
-    prev_log_term: u64,
-    entries: Vec<LogEntry<P>>,
-    leader_commit: u64,
+    params: AppendEntriesParams<P>,
 ) -> Vec<RaftAction<P>> {
+    let AppendEntriesParams {
+        from,
+        term,
+        prev_log_index,
+        prev_log_term,
+        entries,
+        leader_commit,
+    } = params;
     if term < ctx.current_term {
         return vec![RaftAction::SendMessage {
             to: from,

@@ -4,6 +4,7 @@
 
 use crate::brain::protocol::action::Action;
 use crate::brain::protocol::boxed_protocol::BoxedProtocol;
+use crate::common_types::block::Block;
 use crate::context::context_builder::ContextBuilder;
 use crate::execution::execution_engine::BoxedExecutionEngine;
 use crate::execution::transaction_receipt::TransactionReceipt;
@@ -90,59 +91,7 @@ impl<M: Clone + 'static> EtheramNode<M> {
             self.executor.execute_outputs(&outputs);
             for execution in executions.iter() {
                 if let Action::ExecuteBlock { block } = execution {
-                    let accounts = self.state.snapshot_accounts();
-                    let contract_storage = self.state.snapshot_contract_storage();
-                    let execution_result =
-                        self.execution_engine
-                            .execute(block, &accounts, &contract_storage);
-                    let block_height = block.height;
-                    let mut cumulative_gas_used: u64 = 0;
-                    let mut receipts = Vec::new();
-                    for tx_result in execution_result.transaction_results {
-                        cumulative_gas_used += tx_result.gas_used;
-                        receipts.push(TransactionReceipt {
-                            status: tx_result.status,
-                            gas_used: tx_result.gas_used,
-                            cumulative_gas_used,
-                        });
-                        match tx_result.status {
-                            TransactionStatus::Success => {
-                                for mutation in tx_result.mutations {
-                                    let mutation_kind = storage_mutation_kind(&mutation);
-                                    self.observer.mutation_applied(self.peer_id, &mutation_kind);
-                                    self.state.apply_single_mutation(mutation);
-                                }
-                            }
-                            TransactionStatus::OutOfGas => {
-                                self.observer.mutation_applied(
-                                    self.peer_id,
-                                    &ActionKind::TransactionReverted {
-                                        address: tx_result.from,
-                                    },
-                                );
-                            }
-                        }
-                    }
-                    let (success_count, out_of_gas_count) =
-                        receipts
-                            .iter()
-                            .fold((0usize, 0usize), |(s, o), r| match r.status {
-                                TransactionStatus::Success => (s + 1, o),
-                                TransactionStatus::OutOfGas => (s, o + 1),
-                            });
-                    self.observer.mutation_applied(
-                        self.peer_id,
-                        &ActionKind::StoreReceipts {
-                            height: block_height,
-                            success_count,
-                            out_of_gas_count,
-                        },
-                    );
-                    self.state
-                        .apply_single_mutation(StorageMutation::StoreReceipts(
-                            block_height,
-                            receipts,
-                        ));
+                    self.execute_block(block);
                 }
             }
             self.observer.step_completed(self.peer_id, true);
@@ -151,9 +100,64 @@ impl<M: Clone + 'static> EtheramNode<M> {
         self.observer.step_completed(self.peer_id, false);
         false
     }
+
+    fn execute_block(&mut self, block: &Block) {
+        let accounts = self.state.snapshot_accounts();
+        let contract_storage = self.state.snapshot_contract_storage();
+        let execution_result = self
+            .execution_engine
+            .execute(block, &accounts, &contract_storage);
+        let block_height = block.height;
+        let mut cumulative_gas_used: u64 = 0;
+        let mut receipts = Vec::new();
+        for tx_result in execution_result.transaction_results {
+            cumulative_gas_used += tx_result.gas_used;
+            receipts.push(TransactionReceipt {
+                status: tx_result.status,
+                gas_used: tx_result.gas_used,
+                cumulative_gas_used,
+            });
+            match tx_result.status {
+                TransactionStatus::Success => {
+                    for mutation in tx_result.mutations {
+                        let mutation_kind = storage_mutation_kind(&mutation);
+                        self.observer.mutation_applied(self.peer_id, &mutation_kind);
+                        self.state.apply_single_mutation(mutation);
+                    }
+                }
+                TransactionStatus::OutOfGas => {
+                    self.observer.mutation_applied(
+                        self.peer_id,
+                        &ActionKind::TransactionReverted {
+                            address: tx_result.from,
+                        },
+                    );
+                }
+            }
+        }
+        let (success_count, out_of_gas_count) =
+            receipts
+                .iter()
+                .fold((0usize, 0usize), |(s, o), r| match r.status {
+                    TransactionStatus::Success => (s + 1, o),
+                    TransactionStatus::OutOfGas => (s, o + 1),
+                });
+        self.observer.mutation_applied(
+            self.peer_id,
+            &ActionKind::StoreReceipts {
+                height: block_height,
+                success_count,
+                out_of_gas_count,
+            },
+        );
+        self.state
+            .apply_single_mutation(StorageMutation::StoreReceipts(block_height, receipts));
+    }
+
     pub fn peer_id(&self) -> PeerId {
         self.peer_id
     }
+
     pub fn state(&self) -> &EtheramState {
         &self.state
     }

@@ -10,6 +10,7 @@ use raft_node::implementations::raft::common;
 use raft_node::implementations::raft::election;
 use raft_node::implementations::raft::raft_protocol::RaftProtocol;
 use raft_node::implementations::raft::replication;
+use raft_node::implementations::raft::replication::AppendEntriesParams;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 
 #[test]
@@ -93,7 +94,18 @@ fn handle_append_entries_from_candidate_transitions_to_follower() {
     let ctx = make_ctx_with_term(1, vec![2, 3], NodeRole::Candidate, 1);
 
     // Act
-    let actions = replication::handle_append_entries(&mut protocol, &ctx, 2, 1, 2, 0, 0, vec![], 0);
+    let actions = replication::handle_append_entries(
+        &mut protocol,
+        &ctx,
+        AppendEntriesParams {
+            from: 2,
+            term: 1,
+            prev_log_index: 0,
+            prev_log_term: 0,
+            entries: vec![],
+            leader_commit: 0,
+        },
+    );
 
     // Assert
     assert!(actions

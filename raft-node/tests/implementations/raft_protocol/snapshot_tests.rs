@@ -7,6 +7,7 @@ use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::implementations::raft::raft_protocol::RaftProtocol;
 use raft_node::implementations::raft::snapshot;
+use raft_node::implementations::raft::snapshot::InstallSnapshotParams;
 
 use crate::common::test_context::make_ctx_with_term;
 
@@ -17,7 +18,18 @@ fn handle_install_snapshot_stale_term_returns_failure() {
     let ctx = make_ctx_with_term(1, vec![2, 3], NodeRole::Follower, 5);
 
     // Act
-    let actions = snapshot::handle_install_snapshot(&mut protocol, &ctx, 2, 3, 2, 1, 1, vec![]);
+    let actions = snapshot::handle_install_snapshot(
+        &mut protocol,
+        &ctx,
+        InstallSnapshotParams {
+            from: 2,
+            term: 3,
+            leader_id: 2,
+            snapshot_index: 1,
+            snapshot_term: 1,
+            data: vec![],
+        },
+    );
 
     // Assert
     assert!(actions.iter().any(|a| matches!(
@@ -37,7 +49,18 @@ fn handle_install_snapshot_already_committed_returns_success_without_install() {
     ctx.commit_index = 10;
 
     // Act
-    let actions = snapshot::handle_install_snapshot(&mut protocol, &ctx, 2, 1, 2, 5, 1, vec![]);
+    let actions = snapshot::handle_install_snapshot(
+        &mut protocol,
+        &ctx,
+        InstallSnapshotParams {
+            from: 2,
+            term: 1,
+            leader_id: 2,
+            snapshot_index: 5,
+            snapshot_term: 1,
+            data: vec![],
+        },
+    );
 
     // Assert
     assert!(actions.iter().any(|a| matches!(
@@ -59,7 +82,18 @@ fn handle_install_snapshot_valid_installs_snapshot_and_restores() {
     let ctx = make_ctx_with_term(1, vec![2, 3], NodeRole::Follower, 1);
 
     // Act
-    let actions = snapshot::handle_install_snapshot(&mut protocol, &ctx, 2, 1, 2, 5, 1, vec![9u8]);
+    let actions = snapshot::handle_install_snapshot(
+        &mut protocol,
+        &ctx,
+        InstallSnapshotParams {
+            from: 2,
+            term: 1,
+            leader_id: 2,
+            snapshot_index: 5,
+            snapshot_term: 1,
+            data: vec![9u8],
+        },
+    );
 
     // Assert
     assert!(actions
@@ -85,7 +119,18 @@ fn handle_install_snapshot_higher_term_steps_down_first() {
     ctx.leader_id = Some(1);
 
     // Act
-    let actions = snapshot::handle_install_snapshot(&mut protocol, &ctx, 2, 5, 2, 5, 1, vec![]);
+    let actions = snapshot::handle_install_snapshot(
+        &mut protocol,
+        &ctx,
+        InstallSnapshotParams {
+            from: 2,
+            term: 5,
+            leader_id: 2,
+            snapshot_index: 5,
+            snapshot_term: 1,
+            data: vec![],
+        },
+    );
 
     // Assert
     assert!(actions.iter().any(|a| matches!(a, RaftAction::SetTerm(5))));

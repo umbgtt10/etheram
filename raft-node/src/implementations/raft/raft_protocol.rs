@@ -10,7 +10,9 @@ use crate::context::context_dto::RaftContext;
 use crate::implementations::raft::client;
 use crate::implementations::raft::election;
 use crate::implementations::raft::replication;
+use crate::implementations::raft::replication::AppendEntriesParams;
 use crate::implementations::raft::snapshot;
+use crate::implementations::raft::snapshot::InstallSnapshotParams;
 use crate::incoming::external_interface::client_request::RaftClientRequest;
 use crate::incoming::timer::timer_event::RaftTimerEvent;
 use alloc::collections::BTreeMap;
@@ -161,7 +163,7 @@ fn handle_peer<P: Clone + 'static + AsRef<[u8]>>(
         }
         RaftMessage::AppendEntries {
             term,
-            leader_id,
+            leader_id: _,
             prev_log_index,
             prev_log_term,
             entries,
@@ -169,13 +171,14 @@ fn handle_peer<P: Clone + 'static + AsRef<[u8]>>(
         } => replication::handle_append_entries(
             protocol,
             ctx,
-            from,
-            *term,
-            *leader_id,
-            *prev_log_index,
-            *prev_log_term,
-            entries.clone(),
-            *leader_commit,
+            AppendEntriesParams {
+                from,
+                term: *term,
+                prev_log_index: *prev_log_index,
+                prev_log_term: *prev_log_term,
+                entries: entries.clone(),
+                leader_commit: *leader_commit,
+            },
         ),
         RaftMessage::AppendEntriesResponse {
             term,
@@ -198,12 +201,14 @@ fn handle_peer<P: Clone + 'static + AsRef<[u8]>>(
         } => snapshot::handle_install_snapshot(
             protocol,
             ctx,
-            from,
-            *term,
-            *leader_id,
-            *snapshot_index,
-            *snapshot_term,
-            data.clone(),
+            InstallSnapshotParams {
+                from,
+                term: *term,
+                leader_id: *leader_id,
+                snapshot_index: *snapshot_index,
+                snapshot_term: *snapshot_term,
+                data: data.clone(),
+            },
         ),
         RaftMessage::InstallSnapshotResponse { term, success } => {
             snapshot::handle_install_snapshot_response(protocol, ctx, from, *term, *success)

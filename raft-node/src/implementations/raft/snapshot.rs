@@ -14,17 +14,28 @@ use alloc::vec;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
 
-#[allow(clippy::too_many_arguments)]
+pub struct InstallSnapshotParams {
+    pub from: PeerId,
+    pub term: u64,
+    pub leader_id: PeerId,
+    pub snapshot_index: u64,
+    pub snapshot_term: u64,
+    pub data: Vec<u8>,
+}
+
 pub fn handle_install_snapshot<P: Clone>(
     _protocol: &mut RaftProtocol<P>,
     ctx: &RaftContext<P>,
-    from: PeerId,
-    term: u64,
-    leader_id: PeerId,
-    snapshot_index: u64,
-    snapshot_term: u64,
-    data: Vec<u8>,
+    params: InstallSnapshotParams,
 ) -> Vec<RaftAction<P>> {
+    let InstallSnapshotParams {
+        from,
+        term,
+        leader_id,
+        snapshot_index,
+        snapshot_term,
+        data,
+    } = params;
     if term < ctx.current_term {
         return vec![RaftAction::SendMessage {
             to: from,

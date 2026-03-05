@@ -9,6 +9,7 @@ use raft_node::common_types::log_entry::LogEntry;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::implementations::raft::raft_protocol::RaftProtocol;
 use raft_node::implementations::raft::replication;
+use raft_node::implementations::raft::replication::AppendEntriesParams;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
 
 #[test]
@@ -63,7 +64,18 @@ fn handle_append_entries_stale_term_returns_failure_response() {
     let ctx = make_ctx_with_term(1, vec![2, 3], NodeRole::Follower, 5);
 
     // Act
-    let actions = replication::handle_append_entries(&mut protocol, &ctx, 2, 3, 2, 0, 0, vec![], 0);
+    let actions = replication::handle_append_entries(
+        &mut protocol,
+        &ctx,
+        AppendEntriesParams {
+            from: 2,
+            term: 3,
+            prev_log_index: 0,
+            prev_log_term: 0,
+            entries: vec![],
+            leader_commit: 0,
+        },
+    );
 
     // Assert
     assert!(actions.iter().any(|a| matches!(
@@ -82,7 +94,18 @@ fn handle_append_entries_empty_consistent_log_returns_success() {
     let ctx = make_ctx_with_term(1, vec![2, 3], NodeRole::Follower, 1);
 
     // Act
-    let actions = replication::handle_append_entries(&mut protocol, &ctx, 2, 1, 2, 0, 0, vec![], 0);
+    let actions = replication::handle_append_entries(
+        &mut protocol,
+        &ctx,
+        AppendEntriesParams {
+            from: 2,
+            term: 1,
+            prev_log_index: 0,
+            prev_log_term: 0,
+            entries: vec![],
+            leader_commit: 0,
+        },
+    );
 
     // Assert
     assert!(actions.iter().any(|a| matches!(
@@ -106,8 +129,18 @@ fn handle_append_entries_valid_entries_appended_to_log() {
     }];
 
     // Act
-    let actions =
-        replication::handle_append_entries(&mut protocol, &ctx, 2, 1, 2, 0, 0, entries, 0);
+    let actions = replication::handle_append_entries(
+        &mut protocol,
+        &ctx,
+        AppendEntriesParams {
+            from: 2,
+            term: 1,
+            prev_log_index: 0,
+            prev_log_term: 0,
+            entries,
+            leader_commit: 0,
+        },
+    );
 
     // Assert
     assert!(actions
