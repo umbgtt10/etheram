@@ -4,13 +4,13 @@
 
 ---
 
-## Overall Score: 8.9 / 10
+## Overall Score: 9.2 / 10
 
 | Category | Score | Notes |
 |---|---|---|
 | Architecture & Design | 9.5 | 3-6 model enforced in code, step-loop consistent across protocol families |
 | Code Quality & Consistency | 9.0 | ✅ `#[allow(clippy::type_complexity)]` removed; `PartitionedActions<M>` type alias introduced |
-| Test Coverage & Organization | 9.0 | 748 tests, strict structure, dual-layer coverage, QEMU end-to-end |
+| Test Coverage & Organization | 9.5 | ✅ 5 new test files for no-op impls + value_transfer; 748+ tests, strict structure, dual-layer coverage, QEMU end-to-end |
 | Documentation | 8.0 | ✅ Stale metrics fixed; still no usage examples |
 | CI & Automation | 9.0 | ✅ Clippy + `RUSTFLAGS="-D warnings"` both hard gates; no GitHub Actions yet |
 | Dependency Governance | 9.0 | All workspace-level, clean no_std separation, spin-based shared state |
@@ -57,10 +57,10 @@
 
 | # | Action | Current State | Improvement | Est. Effort |
 |---|---|---|---|---|
-| 9 | Add test files for no-op implementations | 5 source files (`no_op_transport.rs`, `no_op_timer.rs`, `no_op_protocol.rs`, `no_op_external_interface.rs`, `value_transfer.rs`) lack dedicated test files | Even 2–3 tests per file would close the gap | 1 hr |
-| 10 | Add `InMemoryTransport` variant to etheram's `IncomingTransportVariant` | Etheram transport variants only have `NoOp` + `Custom`; Raft has `InMemory`, `NoOp`, `Custom` | Add `InMemory(...)` for symmetry and builder convenience | 30 min |
+| ~~9~~ | ~~Add test files for no-op implementations~~ | ✅ Done | `no_op_transport_tests`, `no_op_timer_tests`, `no_op_protocol_tests`, `no_op_external_interface_tests`, `value_transfer_tests` — all registered in `mod.rs` |
+| ~~10~~ | ~~Add `InMemoryTransport` variant to etheram's `IncomingTransportVariant`~~ | ✅ Done | `InMemory { state, node_id }` added to both `IncomingTransportVariant` and `OutgoingTransportVariant`; both builders updated |
 | 11 | Property-based testing | Listed in "Planned" section | Add `proptest` for core invariants: quorum arithmetic, vote tracker monotonicity, action collection ordering | 2–3 hr |
-| 12 | Split `TinyEvmEngine::execute_bytecode` | 76-line function, longest in the codebase | Break opcode dispatch into per-category helpers (arithmetic, storage, stack) | 45 min |
+| ~~12~~ | ~~Split `TinyEvmEngine::execute_bytecode`~~ | ✅ Done | `opcode_gas_cost`, `exec_add`, `exec_sload`, `exec_sstore`, `exec_push1` extracted; `execute_bytecode` body reduced from 76 to 24 lines |
 
 ### Tier 4 — Polish
 
@@ -78,12 +78,12 @@
 |---|---|---|
 | ~~Items 1–2~~ | ~~+0.15~~ | ✅ **8.6** |
 | ~~Items 3–4 (Tier 1 remainder)~~ | ~~+0.2~~ | ✅ **8.8** |
-| ~~Item 8 (partial Tier 2)~~ | ~~+0.1~~ | ✅ **8.9** (current) |
-| Items 5–7 (Tier 2 remainder) | +0.4 | **9.0** |
-| Items 9–12 (Tier 3) | +0.3 | **9.3** |
-| All remaining items | — | **9.5** |
+| ~~Item 8 (partial Tier 2)~~ | ~~+0.1~~ | ✅ **8.9** |
+| ~~Items 9, 10, 12 (Tier 3)~~ | ~~+0.3~~ | ✅ **9.2** (current) |
+| Items 5–7 (Tier 2 remainder) | +0.3 | **9.5** |
+| All remaining items | — | **9.7** |
 
-The remaining 0.5 to a perfect 10 would require: formal specification (TLA+), physical hardware validation, and crates.io publication with `rustdoc` documentation.
+The remaining 0.8 to a perfect 10 would require: completing items 5–7, 11, and 13–15, plus formal specification (TLA+), physical hardware validation, and crates.io publication with `rustdoc` documentation.
 
 ---
 
@@ -93,7 +93,7 @@ The remaining 0.5 to a perfect 10 would require: formal specification (TLA+), ph
 
 | File | Function | Lines |
 |---|---|---|
-| `etheram-node/src/implementations/tiny_evm_engine.rs` | `execute_bytecode()` | ~76 |
+| `etheram-node/src/implementations/tiny_evm_engine.rs` | `execute_bytecode()` | ✅ Refactored — 24 lines; `opcode_gas_cost`, `exec_add`, `exec_sload`, `exec_sstore`, `exec_push1` extracted |
 | `etheram-node/src/implementations/tiny_evm_engine.rs` | `execute()` | ~74 |
 | `etheram-node/src/etheram_node.rs` | `step()` | ~64 |
 | `raft-node/src/implementations/raft/replication.rs` | `handle_append_entries()` | ~55 |
@@ -112,11 +112,13 @@ The remaining 0.5 to a perfect 10 would require: formal specification (TLA+), ph
 
 Source files without dedicated test files in `etheram-node/src/implementations/`:
 
-- `no_op_transport.rs`
-- `no_op_timer.rs`
-- `no_op_protocol.rs`
-- `no_op_external_interface.rs`
-- `value_transfer.rs`
+- ~~`no_op_transport.rs`~~ ✅ Done
+- ~~`no_op_timer.rs`~~ ✅ Done
+- ~~`no_op_protocol.rs`~~ ✅ Done
+- ~~`no_op_external_interface.rs`~~ ✅ Done
+- ~~`value_transfer.rs`~~ ✅ Done
+
+All coverage gaps in `implementations/` are now closed.
 
 IBFT data types tested indirectly but without dedicated test files:
 

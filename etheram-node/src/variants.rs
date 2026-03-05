@@ -11,6 +11,7 @@ use crate::{
     context::context_builder::ContextBuilder,
     execution::execution_engine::BoxedExecutionEngine,
     executor::outgoing::external_interface::client_response::ClientResponse,
+    implementations::in_memory_transport::InMemoryTransportState,
     incoming::{external_interface::client_request::ClientRequest, timer::timer_event::TimerEvent},
     observer::Observer,
     partitioner::partition::Partitioner,
@@ -19,6 +20,7 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
 use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
 use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
 use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
@@ -69,11 +71,19 @@ pub enum TimerOutputVariant {
 }
 
 pub enum IncomingTransportVariant {
+    InMemory {
+        state: SpinSharedState<InMemoryTransportState<()>>,
+        node_id: u64,
+    },
     NoOp,
     Custom(Box<dyn TransportIncomingAdapter<()>>),
 }
 
 pub enum OutgoingTransportVariant {
+    InMemory {
+        state: SpinSharedState<InMemoryTransportState<()>>,
+        node_id: u64,
+    },
     NoOp,
     Custom(Box<dyn TransportOutgoingAdapter<()>>),
 }

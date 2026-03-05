@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::implementations::in_memory_transport::InMemoryTransport;
 use crate::implementations::no_op_transport::NoOpTransport;
 use crate::variants::IncomingTransportVariant;
 use alloc::boxed::Box;
@@ -18,6 +19,10 @@ impl TransportIncomingBuilder {
     }
     pub fn with_variant(mut self, variant: IncomingTransportVariant) -> Self {
         let transport = match variant {
+            IncomingTransportVariant::InMemory { state, node_id } => {
+                Box::new(InMemoryTransport::new(node_id, state))
+                    as Box<dyn TransportIncomingAdapter<()>>
+            }
             IncomingTransportVariant::NoOp => {
                 Box::new(NoOpTransport) as Box<dyn TransportIncomingAdapter<()>>
             }
