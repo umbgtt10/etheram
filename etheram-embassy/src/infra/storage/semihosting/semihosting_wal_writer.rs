@@ -5,8 +5,8 @@
 use alloc::format;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
-use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_etheram_variants::implementations::ibft::wal_writer::WalWriter;
+use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_node::implementations::ibft::wal_writer::WalWriter;
 
 pub struct SemihostingWalWriter {
     node_id: PeerId,

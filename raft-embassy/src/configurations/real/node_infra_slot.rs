@@ -8,8 +8,8 @@ use crate::infra::transport::udp::udp_raft_transport::RaftMessageReceiver;
 use crate::infra::transport::udp::udp_raft_transport::UdpOutboundRaftTransport;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
-use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
-use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
+use raft_node::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
+use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
 
 pub struct NodeInfraSlot {
     pub(super) storage: SemihostingRaftStorage<Vec<u8>>,

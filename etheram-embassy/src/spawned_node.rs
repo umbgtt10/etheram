@@ -8,13 +8,13 @@ use alloc::collections::BTreeMap;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Receiver;
 use embassy_sync::channel::Sender;
-use etheram::common_types::types::Address;
-use etheram::common_types::types::Hash;
-use etheram::common_types::types::Height;
-use etheram::incoming::timer::timer_event::TimerEvent;
-use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_etheram_variants::implementations::shared_state::SharedState;
+use etheram_core::node_common::shared_state::SharedState;
+use etheram_node::common_types::types::Address;
+use etheram_node::common_types::types::Hash;
+use etheram_node::common_types::types::Height;
+use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
 
 pub type TimerSender = Sender<'static, CriticalSectionRawMutex, TimerEvent, TIMER_COMMAND_CAPACITY>;
 

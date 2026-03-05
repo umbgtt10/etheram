@@ -23,33 +23,33 @@ use alloc::vec::Vec;
 use embassy_executor::Spawner;
 use embassy_futures::select::select4;
 use embassy_futures::select::Either4;
-use etheram::common_types::types::Address;
-use etheram::common_types::types::Hash;
-use etheram::common_types::types::Height;
-use etheram::etheram_node::EtheramNode;
-use etheram::execution::execution_engine::BoxedExecutionEngine;
-use etheram::executor::etheram_executor::EtheramExecutor;
-use etheram::executor::outgoing::outgoing_sources::OutgoingSources;
-use etheram::incoming::incoming_sources::IncomingSources;
-use etheram::observer::EventLevel;
-use etheram::state::etheram_state::EtheramState;
+use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::types::PeerId;
-use etheram_etheram_variants::implementations::eager_context_builder::EagerContextBuilder;
-use etheram_etheram_variants::implementations::ibft::consensus_wal::ConsensusWal;
-use etheram_etheram_variants::implementations::ibft::ed25519_signature_scheme::Ed25519SignatureScheme;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_etheram_variants::implementations::ibft::validator_set_update::ValidatorSetUpdate;
-use etheram_etheram_variants::implementations::ibft::wal_writer::CompositeWalWriter;
-use etheram_etheram_variants::implementations::in_memory_cache::InMemoryCache;
-use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimer;
-use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
-use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransport;
-use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
-use etheram_etheram_variants::implementations::shared_state::SharedState;
-use etheram_etheram_variants::implementations::tiny_evm_engine::TinyEvmEngine;
-use etheram_etheram_variants::implementations::type_based_partitioner::TypeBasedPartitioner;
+use etheram_node::common_types::types::Address;
+use etheram_node::common_types::types::Hash;
+use etheram_node::common_types::types::Height;
+use etheram_node::etheram_node::EtheramNode;
+use etheram_node::execution::execution_engine::BoxedExecutionEngine;
+use etheram_node::executor::etheram_executor::EtheramExecutor;
+use etheram_node::executor::outgoing::outgoing_sources::OutgoingSources;
+use etheram_node::implementations::eager_context_builder::EagerContextBuilder;
+use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
+use etheram_node::implementations::ibft::ed25519_signature_scheme::Ed25519SignatureScheme;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_node::implementations::ibft::validator_set_update::ValidatorSetUpdate;
+use etheram_node::implementations::ibft::wal_writer::CompositeWalWriter;
+use etheram_node::implementations::in_memory_cache::InMemoryCache;
+use etheram_node::implementations::in_memory_timer::InMemoryTimer;
+use etheram_node::implementations::in_memory_timer::InMemoryTimerState;
+use etheram_node::implementations::in_memory_transport::InMemoryTransport;
+use etheram_node::implementations::in_memory_transport::InMemoryTransportState;
+use etheram_node::implementations::tiny_evm_engine::TinyEvmEngine;
+use etheram_node::implementations::type_based_partitioner::TypeBasedPartitioner;
+use etheram_node::incoming::incoming_sources::IncomingSources;
+use etheram_node::observer::EventLevel;
+use etheram_node::state::etheram_state::EtheramState;
 
 fn create_execution_engine() -> BoxedExecutionEngine {
     Box::new(TinyEvmEngine)
@@ -138,8 +138,8 @@ impl SpawnedNode {
 
         let height = EmbassySharedState::new(0u64);
         let contract_storage = EmbassySharedState::new(BTreeMap::new());
-        let timer_sender = TIMER_CHANNELS[node_index].sender();
-        let timer_receiver = TIMER_CHANNELS[node_index].receiver();
+        let timer_sender = TIMER_CHANNELS.channel(node_index).sender();
+        let timer_receiver = TIMER_CHANNELS.channel(node_index).receiver();
 
         spawner
             .spawn(semihosting_udp_node_task(

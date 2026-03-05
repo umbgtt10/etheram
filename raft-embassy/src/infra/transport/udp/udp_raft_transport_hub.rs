@@ -2,8 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::transport::udp::network_bus::MockNetDriver;
-use crate::infra::transport::udp::network_bus::NetworkBus;
 use crate::infra::transport::udp::network_config::get_node_config;
 use crate::infra::transport::udp::network_config::make_node_resources;
 use crate::infra::transport::udp::udp_raft_transport::inbox_endpoints;
@@ -15,6 +13,8 @@ use crate::infra::transport::udp::udp_raft_transport::RaftMessageSender;
 use crate::infra::transport::udp::udp_raft_transport::UdpInboundRaftTransport;
 use crate::infra::transport::udp::udp_raft_transport::UdpOutboundRaftTransport;
 use alloc::vec::Vec;
+use embassy_core::network_bus::MockNetDriver;
+use embassy_core::network_bus::NetworkBus;
 use embassy_executor::Spawner;
 use embassy_net::Runner;
 use embassy_net::Stack;

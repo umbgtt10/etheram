@@ -2,12 +2,11 @@
 resolver = "2"
 members = [
     "core",
-    "etheram",
-    "etheram-variants",
+    "embassy-core",
+    "etheram-node",
     "etheram-embassy",
     "etheram-validation",
     "raft-node",
-    "raft-variants",
     "raft-validation",
     "raft-embassy",
 ]
@@ -39,10 +38,9 @@ spin = { version = "0.10.0", default-features = false, features = ["mutex", "spi
 ed25519-dalek = { version = "2", default-features = false }
 
 etheram-core = { path = "core" }
-etheram-etheram = { path = "etheram" }
-etheram-etheram-variants = { path = "etheram-variants", default-features = false }
-etheram-etheram-validation = { path = "etheram-validation" }
-raft-raft-node = { path = "raft-node" }
-raft-raft-variants = { path = "raft-variants", default-features = false }
-raft-raft-validation = { path = "raft-validation" }
-raft-raft-embassy = { path = "raft-embassy" }
+embassy-core = { path = "embassy-core" }
+etheram-node = { path = "etheram-node" }
+etheram-validation = { path = "etheram-validation" }
+raft-node = { path = "raft-node" }
+raft-validation = { path = "raft-validation" }
+raft-embassy = { path = "raft-embassy" }

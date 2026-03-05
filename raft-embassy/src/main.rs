@@ -20,6 +20,8 @@ mod raft_observer;
 mod spawned_node;
 mod time_driver;
 
+pub use embassy_core::info;
+
 use crate::cancellation_token::CancellationToken;
 use crate::config::MAX_NODES;
 use crate::raft_client::RaftClient;

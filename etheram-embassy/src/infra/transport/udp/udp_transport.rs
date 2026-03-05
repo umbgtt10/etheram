@@ -19,7 +19,7 @@ use embassy_time::Timer;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use serde::Deserialize;
 use serde::Serialize;
 

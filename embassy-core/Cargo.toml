@@ -1,0 +1,17 @@
+[package]
+name = "embassy-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+etheram-core.workspace = true
+
+critical-section.workspace = true
+cortex-m.workspace = true
+cortex-m-rt.workspace = true
+cortex-m-semihosting.workspace = true
+embassy-net-driver.workspace = true
+embassy-net.workspace = true
+embassy-sync.workspace = true
+embassy-time-driver.workspace = true
+embedded-alloc.workspace = true

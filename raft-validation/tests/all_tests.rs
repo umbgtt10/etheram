@@ -10,4 +10,3 @@ pub mod fault_tolerance_tests;
 pub mod replication_tests;
 pub mod snapshot_tests;
 pub mod state_machine_tests;
-pub mod std_shared_state_tests;

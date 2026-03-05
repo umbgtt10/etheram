@@ -2,48 +2,48 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::std_shared_state::StdSharedState;
-use etheram::common_types::account::Account;
-use etheram::common_types::types::{Address, Hash};
-use etheram::etheram_node::EtheramNode;
-use etheram::executor::etheram_executor::EtheramExecutor;
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram::executor::outgoing::outgoing_sources::OutgoingSources;
-use etheram::incoming::external_interface::client_request::ClientRequest;
-use etheram::incoming::incoming_sources::IncomingSources;
-use etheram::incoming::timer::timer_event::TimerEvent;
-use etheram::state::etheram_state::EtheramState;
+use etheram_core::node_common::shared_state::SharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
 use etheram_core::types::ClientId;
-use etheram_etheram_variants::implementations::eager_context_builder::EagerContextBuilder;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use etheram_etheram_variants::implementations::in_memory_cache::InMemoryCache;
-use etheram_etheram_variants::implementations::in_memory_external_interface::InMemoryExternalInterface;
-use etheram_etheram_variants::implementations::in_memory_external_interface::InMemoryExternalInterfaceState;
-use etheram_etheram_variants::implementations::in_memory_storage::InMemoryStorage;
-use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimer;
-use etheram_etheram_variants::implementations::in_memory_timer::InMemoryTimerState;
-use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransport;
-use etheram_etheram_variants::implementations::in_memory_transport::InMemoryTransportState;
-use etheram_etheram_variants::implementations::no_op_observer::NoOpObserver;
-use etheram_etheram_variants::implementations::shared_state::SharedState;
-use etheram_etheram_variants::implementations::type_based_partitioner::TypeBasedPartitioner;
-use etheram_etheram_variants::implementations::value_transfer_engine::ValueTransferEngine;
+use etheram_node::common_types::account::Account;
+use etheram_node::common_types::types::{Address, Hash};
+use etheram_node::etheram_node::EtheramNode;
+use etheram_node::executor::etheram_executor::EtheramExecutor;
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::executor::outgoing::outgoing_sources::OutgoingSources;
+use etheram_node::implementations::eager_context_builder::EagerContextBuilder;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_node::implementations::in_memory_cache::InMemoryCache;
+use etheram_node::implementations::in_memory_external_interface::InMemoryExternalInterface;
+use etheram_node::implementations::in_memory_external_interface::InMemoryExternalInterfaceState;
+use etheram_node::implementations::in_memory_storage::InMemoryStorage;
+use etheram_node::implementations::in_memory_timer::InMemoryTimer;
+use etheram_node::implementations::in_memory_timer::InMemoryTimerState;
+use etheram_node::implementations::in_memory_transport::InMemoryTransport;
+use etheram_node::implementations::in_memory_transport::InMemoryTransportState;
+use etheram_node::implementations::no_op_observer::NoOpObserver;
+use etheram_node::implementations::type_based_partitioner::TypeBasedPartitioner;
+use etheram_node::implementations::value_transfer_engine::ValueTransferEngine;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
+use etheram_node::incoming::incoming_sources::IncomingSources;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_node::state::etheram_state::EtheramState;
 
 pub const PEER_ID: u64 = 0;
 
 pub struct IbftTestNode {
     node: EtheramNode<IbftMessage>,
-    timer_state: StdSharedState<InMemoryTimerState>,
-    ei_state: StdSharedState<InMemoryExternalInterfaceState>,
+    timer_state: SpinSharedState<InMemoryTimerState>,
+    ei_state: SpinSharedState<InMemoryExternalInterfaceState>,
 }
 
 impl IbftTestNode {
     pub fn new(genesis_accounts: Vec<(Address, u128)>) -> Self {
-        let timer_state = StdSharedState::new(InMemoryTimerState::new());
-        let transport_state = StdSharedState::new(InMemoryTransportState::<IbftMessage>::new());
-        let ei_state = StdSharedState::new(InMemoryExternalInterfaceState::new());
+        let timer_state = SpinSharedState::new(InMemoryTimerState::new());
+        let transport_state = SpinSharedState::new(InMemoryTransportState::<IbftMessage>::new());
+        let ei_state = SpinSharedState::new(InMemoryExternalInterfaceState::new());
 
         let mut storage = InMemoryStorage::new();
         for (address, balance) in genesis_accounts {

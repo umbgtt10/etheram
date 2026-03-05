@@ -304,7 +304,7 @@ Seven traits defining capabilities:
 
 **Responsibility:** Define interfaces, not implementations.
 
-### Layer 2: Node Logic (etheram)
+### Layer 2: Node Logic (etheram-node)
 
 `EtheramNode<M>` composing the six dimensions:
 - `IncomingSources<M>` — Polls Timer, ExternalInterface, Transport
@@ -320,7 +320,7 @@ Plus common types: `Action<M>`, `MessageSource`, `Context`, `Transaction`, `Bloc
 
 **Responsibility:** Define the node contract and step loop.
 
-### Layer 3: Implementations (etheram-variants)
+### Layer 3: Implementations (etheram-node)
 
 Concrete types implementing the traits:
 - **Protocol:** `IbftProtocol<S>` (IBFT BFT consensus, generic over `SignatureScheme`), `NoOpProtocol`
@@ -362,7 +362,7 @@ The architecture is validated across three environments:
 - 5-node IBFT consensus with Ed25519 signatures
 - 12-act scenario: transfers, view changes, overdrafts, gas limits, validator set updates, WAL persistence, TinyEVM contract execution, OutOfGas reverts
 - Two independently maintained configurations verified end-to-end
-- Cross-environment proof: identical `etheram` and `etheram-variants` crates compile and execute correctly across std and no_std
+- Cross-environment proof: identical `etheram-node` crate logic compiles and executes correctly across std and no_std integration contexts
 
 ### Raft Validation (Protocol + Cluster + Embassy)
 - `RaftNode<P>` mirrors the same six dimensions and `step()` execution model used by `EtheramNode`
@@ -520,11 +520,11 @@ The six-dimensional decomposition generalizes beyond blockchain to any distribut
 
 ### Generality Proven: Raft as Second Protocol
 
-The 3-6 model is now validated across a second independent protocol family — **Raft** — implemented as its own crate family (`raft-node/`, `raft-variants/`, `raft-validation/`, `raft-embassy/`). Raft is maximally different from IBFT across every axis: crash-only vs Byzantine fault model, `⌊n/2⌋+1` vs `⌊2n/3⌋+1` quorum, randomized vs deterministic leader election, 2-phase vs 3-phase commit, append-only log vs single pending block.
+The 3-6 model is now validated across a second independent protocol family — **Raft** — implemented as its own crate family (`raft-node/`, `raft-validation/`, `raft-embassy/`). Raft is maximally different from IBFT across every axis: crash-only vs Byzantine fault model, `⌊n/2⌋+1` vs `⌊2n/3⌋+1` quorum, randomized vs deterministic leader election, 2-phase vs 3-phase commit, append-only log vs single pending block.
 
 Despite these protocol-level differences, the same six-dimensional decomposition and the same `step()` primitive emerge unchanged, with `core/` as the shared abstraction layer and no cross-dependencies between protocol families. This is the architectural validation target of EtheRAM.
 
-See [RAFT-ROADMAP.md](../etheram/RAFT-ROADMAP.md) for implementation details and milestone history.
+See [RAFT-ROADMAP.md](../etheram-node/RAFT-ROADMAP.md) for implementation details and milestone history.
 
 ---
 

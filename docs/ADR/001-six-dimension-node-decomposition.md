@@ -63,13 +63,13 @@ Time-based event scheduling. Triggers block proposals (`ProposeBlock`), round ti
 
 1. **Indirection Overhead** — More trait calls (vtable dispatch via `Box<dyn Trait>`) vs monolithic design (minimal in practice; Embassy QEMU execution validates acceptable overhead on Cortex-M4)
 2. **Design Complexity** — Requires upfront thinking about boundaries and partitioning of actions into mutations/outputs/executions
-3. **Type Verbosity** — Each dimension needs associated types defined; mitigated by builder pattern in `etheram-variants`
+3. **Type Verbosity** — Each dimension needs associated types defined; mitigated by builder patterns in `etheram-node` and `raft-node`
 
 ### Validation Evidence
 
 Etheram validates the six-dimension decomposition across three deployment environments:
 
-**Stage 1 — Unit and single-node tests (etheram + etheram-variants):**
+**Stage 1 — Unit and single-node tests (etheram-node):**
 - 557 deterministic tests using in-memory dimensions, zero external dependencies
 - Complete IBFT BFT consensus: pre-prepare, prepare, commit, view change, validator set updates, future-round buffering, deduplication, replay protection, WAL persistence
 - Two execution engines (`ValueTransferEngine`, `TinyEvmEngine`) demonstrating Engine swappability
@@ -86,11 +86,11 @@ Etheram validates the six-dimension decomposition across three deployment enviro
 - Same `EtheramNode` and `IbftProtocol` running on `no_std` ARM Cortex-M4 target
 - Two independently maintained configurations: all-in-memory (channel transport + in-memory storage + channel EI) and real (UDP transport + semihosting storage + UDP EI)
 - 12-act scenario exercising transfers, overdraft rejection, view changes, stale nonce rejection, gas limits, validator set updates, WAL round-trip, Ed25519 signatures, TinyEVM contract storage, and OutOfGas revert
-- Cross-environment proof: identical `etheram` and `etheram-variants` crates compile and execute correctly across std (testing), std (cluster validation), and no_std (ARM embedded)
+- Cross-environment proof: identical `etheram-node` logic compiles and executes correctly across std (testing), std (cluster validation), and no_std (ARM embedded)
 
 Raft independently validates the same six-dimension decomposition across the mirrored crate family:
 
-**Stage 1 — Protocol-level tests (raft-variants):**
+**Stage 1 — Protocol-level tests (raft-node):**
 - Pure `RaftProtocol<P>` logic tested for election, replication, snapshots, client handling, and role transitions
 - Uses the same decision/infrastructure split as Etheram, with protocol-specific Raft types
 

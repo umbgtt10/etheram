@@ -9,7 +9,7 @@ Byzantine consensus, real Ed25519 signatures, durable WAL, and async task isolat
 all without the standard library.
 
 **Parent:** [EtheRAM](../README.md)
-**Depends on:** [core](../core/README.md), [etheram](../etheram/README.md), [etheram-variants](../etheram-variants/README.md)
+**Depends on:** [core](../core/README.md), [embassy-core](../embassy-core/README.md), [etheram-node](../etheram-node/README.md)
 
 ---
 

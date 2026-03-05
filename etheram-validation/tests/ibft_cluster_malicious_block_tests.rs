@@ -3,20 +3,20 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common::ibft_cluster_test_helpers::validators;
-use etheram::brain::protocol::message::Message;
-use etheram::brain::protocol::message_source::MessageSource;
-use etheram::common_types::block::Block;
-use etheram::common_types::transaction::Transaction;
-use etheram::common_types::types::{Address, Balance};
-use etheram::context::context_dto::Context;
-use etheram::incoming::timer::timer_event::TimerEvent;
 use etheram_core::collection::Collection;
 use etheram_core::consensus_protocol::ConsensusProtocol;
-use etheram_etheram_validation::ibft_cluster::IbftCluster;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_etheram_variants::implementations::ibft::ibft_protocol::IbftProtocol;
-use etheram_etheram_variants::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
-use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::brain::protocol::message::Message;
+use etheram_node::brain::protocol::message_source::MessageSource;
+use etheram_node::common_types::block::Block;
+use etheram_node::common_types::transaction::Transaction;
+use etheram_node::common_types::types::{Address, Balance};
+use etheram_node::context::context_dto::Context;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
+use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_validation::ibft_cluster::IbftCluster;
 
 fn block(height: u64, proposer: u64, state_root: [u8; 32]) -> Block {
     Block::new(height, proposer, vec![], state_root)
@@ -561,7 +561,7 @@ fn follower_rejects_oversized_gas_block() {
     cluster.submit_request(
         1,
         1,
-        etheram::incoming::external_interface::client_request::ClientRequest::SubmitTransaction(
+        etheram_node::incoming::external_interface::client_request::ClientRequest::SubmitTransaction(
             Transaction::transfer(tx_sender, [2u8; 20], 1, 21_000, 0),
         ),
     );

@@ -4,7 +4,6 @@
 
 use crate::brain::protocol::action::RaftAction;
 use crate::brain::protocol::boxed_protocol::BoxedRaftProtocol;
-use crate::collections::action_collection::ActionCollection;
 use crate::common_types::state_machine::RaftStateMachine;
 use crate::context::context_builder::RaftContextBuilder;
 use crate::executor::outgoing::external_interface::client_response::RaftClientResponse;
@@ -16,6 +15,7 @@ use crate::partitioner::partition::RaftPartitioner;
 use crate::state::raft_state::RaftState;
 use alloc::boxed::Box;
 use etheram_core::collection::Collection;
+use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::types::PeerId;
 
 pub struct RaftNode<P: Clone + 'static> {

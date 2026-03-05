@@ -10,6 +10,7 @@ pub mod consensus_protocol;
 pub mod external_interface_incoming;
 pub mod external_interface_outgoing;
 pub mod node;
+pub mod node_common;
 pub mod storage;
 pub mod timer_input;
 pub mod timer_output;

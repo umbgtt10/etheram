@@ -10,14 +10,12 @@ EtheRAM is a **research framework** for blockchain node decomposition and abstra
 
 ```
 core/                       # Shared abstractions (PeerId, base traits)
-etheram/                    # Core node implementation (std Rust)
-etheram-variants/           # Concrete implementations + builder API
+etheram-node/               # Core Ethereum-like node (std/no_std-compatible crate)
 etheram-validation/         # Cluster/integration tests (multi-node)
 etheram-embassy/            # no-std + Embassy embedded port
 raft-node/                  # Raft node — 3-6 model (no_std, #![no_std])
-raft-variants/              # Raft concrete implementations + builders (planned)
 raft-validation/            # Raft cluster tests
-raft-embassy/               # Raft on Embassy — 2 configs (planned)
+raft-embassy/               # Raft on Embassy
 ```
 
 **The etheram ecosystem is designed to become a standalone repo.** Keep `etheram*` crates self-contained. They depend on `core` only.
@@ -47,7 +45,7 @@ Every node is decomposed across:
 
 ## EtheRAM Node Architecture
 
-### `etheram/` — Single Node Logic
+### `etheram-node/` — Single Node Logic
 
 ```rust
 pub struct EtheramNode {
@@ -78,12 +76,7 @@ fn step(&mut self) -> bool {
 }
 ```
 
-### `etheram-variants/` — Concrete Implementations + Builders
-
-Provides:
-- **`variants.rs`** — enums for each swappable slot (`StorageVariant`, `ProtocolVariant`, `PartitionerVariant`, etc.)
-- **`builders/`** — per-component builders (`StorageBuilder`, `ProtocolBuilder`, `EtheramNodeBuilder`, etc.)
-- **`implementations/`** — concrete types (`InMemoryStorage`, `InMemoryCache`, `InMemoryTransport`, `TypeBasedPartitioner`, `EagerContextBuilder`, `NoOpTransport`, `NoOpProtocol`, etc.)
+Concrete implementations, `*Variant` enums, and `*Builder` APIs live directly in `etheram-node/`.
 
 ### `etheram-validation/` — Multi-Node Cluster Testing
 
@@ -142,7 +135,7 @@ Both must compile, link, and execute successfully at all times. Do not break eit
 
 ### `raft-node/` — Raft Single Node Logic
 
-Mirrors `etheram/` structurally with Raft-specific types. `#![no_std]` from day one.
+Mirrors `etheram-node/` structurally with Raft-specific types. `#![no_std]` from day one.
 
 ```rust
 pub struct RaftNode<P: Clone + 'static> {
@@ -175,9 +168,7 @@ pub struct RaftNode<P: Clone + 'static> {
 **`RaftAction<P>` output variants** (go to outputs bucket):
 `SendMessage`, `BroadcastMessage`, `ScheduleTimeout`, `ApplyToStateMachine`, `SendClientResponse`, `Log`
 
-### `raft-variants/` — Concrete Raft Implementations + Builders
-
-Provides: `InMemoryRaftStorage`, `InMemoryRaftCache`, `InMemoryRaftTransport`, `NoOpRaftTransport`, `InMemoryRaftTimer`, `InMemoryRaftExternalInterface`, `EagerRaftContextBuilder`, `TypeBasedRaftPartitioner`, `InMemoryRaftStateMachine`, `NoOpRaftObserver`, `RaftNodeBuilder`
+Concrete Raft implementations, `*Variant` enums, and `*Builder` APIs live directly in `raft-node/`.
 
 ### `raft-validation/` — Raft Cluster Tests
 
@@ -212,7 +203,7 @@ Will provide two configurations:
 ## Architectural Principles
 
 ### 1. Element-Centered Design
-- `etheram/` implements a **single node** — no cluster concepts in node logic
+- `etheram-node/` implements a **single node** — no cluster concepts in node logic
 - Peer awareness is **protocol-scoped** (validator set as parameter), never global topology knowledge
 - "Cluster" lives only in `etheram-validation/`
 
@@ -250,7 +241,7 @@ Every layer is swappable at runtime:
 
 #### Pre-Feature IBFT Consistency Audit (run before every feature)
 
-1. Run `cargo test -p etheram-etheram-variants --test all_tests` — all protocol-level tests must pass with zero failures.
+1. Run `cargo test -p etheram-node --test all_tests` — all protocol-level tests must pass with zero failures.
 2. Run `cargo test -p etheram-etheram-validation --test all_tests` — all cluster-level tests must pass with zero failures.
 3. Manually verify each invariant below against the current source before touching it:
 
@@ -291,9 +282,9 @@ The mandatory invariants (must never be weakened by any change):
 
 ## Three-Stage Validation Workflow
 
-All three stages are **mandatory** for every new feature at the `etheram/` or protocol level. Do not mark a feature complete unless all three stages are satisfied.
+All three stages are **mandatory** for every new feature at the `etheram-node/` or protocol level. Do not mark a feature complete unless all three stages are satisfied.
 
-1. **Stage 1** — Implement in `etheram/` → unit tests in `etheram/tests/` for pure data types; single-node integration tests (`EtheramNode` + concrete protocol) in `etheram-validation/tests/` (required by the dependency direction constraint — `etheram` must never depend on `etheram-variants`)
+1. **Stage 1** — Implement in `etheram-node/` → unit tests in `etheram-node/tests/` for pure data types; single-node integration tests (`EtheramNode` + concrete protocol) in `etheram-validation/tests/`
    - Logic correctness, isolated component testing
 2. **Stage 2** — Validate in `etheram-validation/` → cluster tests in `etheram-validation/tests/`
    - Distributed correctness, multi-node scenarios, Byzantine fault injection
@@ -317,19 +308,19 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - Per-component builders with `PartitionerVariant`, `StorageVariant`, etc.
 - InMemoryTransport (incoming + outgoing), shared `Arc<Mutex<InMemoryTransportState>>` per cluster
 - etheram-validation cluster harness with `fire_timer`, `submit_request`, `drain_responses`, `step_all`, `push_transport_message`
-- `etheram/tests/block_tests.rs` — 3 tests; `etheram/tests/account_tests.rs` — 4 tests; `etheram/tests/state_root_tests.rs` — 5 tests
-- `etheram-variants/tests/implementations/in_memory_storage_tests.rs` — 7 tests
-- `etheram-variants/tests/implementations/in_memory_timer_tests.rs` — 5 tests
-- `etheram-variants/tests/implementations/in_memory_external_interface_tests.rs` — 5 tests
-- `etheram-variants/tests/implementations/type_based_partitioner_tests.rs` — 3 tests
-- `etheram-variants/tests/implementations/in_memory_transport_tests.rs` — 5 tests
-- IBFT Sprint 1: `ValidatorSet`, `VoteTracker`, `SignatureScheme` trait, `MockSignatureScheme`, `IbftMessage`, `IbftProtocol<S>` — under `etheram-variants/src/implementations/ibft/`
+- `etheram-node/tests/common_types/block_tests.rs` — 3 tests; `etheram-node/tests/common_types/account_tests.rs` — 4 tests; `etheram-node/tests/common_types/state_root_tests.rs` — 5 tests
+- `etheram-node/tests/implementations/in_memory_storage_tests.rs` — 7 tests
+- `etheram-node/tests/implementations/in_memory_timer_tests.rs` — 5 tests
+- `etheram-node/tests/implementations/in_memory_external_interface_tests.rs` — 5 tests
+- `etheram-node/tests/implementations/type_based_partitioner_tests.rs` — 3 tests
+- `etheram-node/tests/implementations/in_memory_transport_tests.rs` — 5 tests
+- IBFT Sprint 1: `ValidatorSet`, `VoteTracker`, `SignatureScheme` trait, `MockSignatureScheme`, `IbftMessage`, `IbftProtocol<S>` — under `etheram-node/src/implementations/ibft/`
 - `IbftCluster` harness — under `etheram-validation/src/ibft_cluster.rs`
 - `IbftTestNode` harness — under `etheram-validation/src/ibft_test_node.rs`
-- `etheram-variants/tests/implementations/ibft/validator_set_tests.rs` — 4 tests
-- `etheram-variants/tests/implementations/ibft/vote_tracker_tests.rs` — 5 tests
-- `etheram-variants/tests/implementations/ibft/mock_signature_scheme_tests.rs` — 2 tests
-- `etheram-variants/tests/implementations/ibft/ibft_protocol_propose_tests.rs`, `ibft_protocol_pre_prepare_tests.rs`, `ibft_protocol_prepare_tests.rs`, `ibft_protocol_commit_tests.rs`, `ibft_protocol_view_change_tests.rs`, `ibft_protocol_client_tests.rs`, `ibft_protocol_persistence_tests.rs`, `ibft_protocol_replay_tests.rs`, `ibft_protocol_validator_set_update_tests.rs`, `ibft_protocol_dedup_tests.rs`, `ibft_protocol_injection_tests.rs`, `ibft_protocol_malicious_block_tests.rs`, `ibft_protocol_signature_tests.rs`, `ibft_protocol_future_buffer_tests.rs` — per-behaviour protocol test files
+- `etheram-node/tests/implementations/ibft/validator_set_tests.rs` — 4 tests
+- `etheram-node/tests/implementations/ibft/vote_tracker_tests.rs` — 5 tests
+- `etheram-node/tests/implementations/ibft/mock_signature_scheme_tests.rs` — 2 tests
+- `etheram-node/tests/implementations/ibft/ibft_protocol_propose_tests.rs`, `ibft_protocol_pre_prepare_tests.rs`, `ibft_protocol_prepare_tests.rs`, `ibft_protocol_commit_tests.rs`, `ibft_protocol_view_change_tests.rs`, `ibft_protocol_client_tests.rs`, `ibft_protocol_persistence_tests.rs`, `ibft_protocol_replay_tests.rs`, `ibft_protocol_validator_set_update_tests.rs`, `ibft_protocol_dedup_tests.rs`, `ibft_protocol_injection_tests.rs`, `ibft_protocol_malicious_block_tests.rs`, `ibft_protocol_signature_tests.rs`, `ibft_protocol_future_buffer_tests.rs` — per-behaviour protocol test files
 - `etheram-validation/tests/etheram_node_tests.rs` — 3 single-node integration tests (Stage 1+2 bridge)
 - Stage 3 skeleton (Checkpoint 1): initial `no_std` wiring — `ChannelTransportHub`, `OutboxTransport`, `ClientChannelHub` / `EtheramClient` channel API, `node_task` spawning; 5-node IBFT consensus verified via QEMU
 - Stage 3 skeleton (Checkpoint 2): Async Embassy runtime — `ChannelTransportHub` (static `embassy_sync::Channel` arrays), `OutboxTransport` (sync-to-async bridge), `ClientChannelHub` + `EtheramClient` (channel-based client API), `node_task` (`#[embassy_executor::task(pool_size=5)]` with `select4`), `setup::initialize_client()` (spawns 5 async node tasks), ARM cross-compilation verified
@@ -350,7 +341,7 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 ### 🔄 Next: Raft Consensus — Sprint 6 (raft-embassy)
 - Sprints 0–5 (`raft-node/` skeleton, `RaftNode<P>` step loop, `RaftProtocol<P>`, infra implementations, protocol-level tests, cluster tests) are **complete**
 - Sprint 6: implement `raft-embassy/` with two configurations (all-in-memory + real) and a 5-act QEMU scenario
-- See [RAFT-ROADMAP.md](etheram/RAFT-ROADMAP.md) for the full implementation plan
+- See [RAFT-ROADMAP.md](etheram-node/RAFT-ROADMAP.md) for the full implementation plan
 - All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
 
 ### ✅ Raft Sprints 0–5 Implemented
@@ -361,28 +352,27 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
 - `RaftPartitioner<P>` producing 2-way partition (mutations, outputs) — no execution tier
 - All adapter blanket impls: `StorageAdapter<P>`, `CacheAdapter`, `TimerInputAdapter`, `TimerOutputAdapter`, `TransportIncomingAdapter`, `TransportOutgoingAdapter`, `ExternalInterfaceIncomingAdapter`, `ExternalInterfaceOutgoingAdapter`
 - `RaftIncomingSources<P>`, `RaftOutgoingSources<P>`, `RaftExecutor<P>` with poll and execute loops
-- Sprint 2 `RaftProtocol<P>` in `raft-variants/` — pure Raft consensus: pre-vote, election, leader promotion, heartbeat, log replication, snapshot install; `ELECTION_TIMEOUT_MS=300`, `HEARTBEAT_INTERVAL_MS=100`; quorum = `(n+1)/2 + 1`
-- Sprint 3 infra implementations in `raft-variants/`: `InMemoryRaftStorage<P>`, `InMemoryRaftCache`, `InMemoryRaftTransport<P,S>`, `InMemoryRaftTimer<S>`, `InMemoryRaftExternalInterface<S>`, `InMemoryRaftStateMachine`, `NoOpRaftTransport<P>`, `NoOpRaftObserver`, `TypeBasedRaftPartitioner`, `EagerRaftContextBuilder`, `SharedState<T>` trait; `RaftNodeBuilder<P>` builder
-- Sprint 4 tests in `raft-variants/tests/`: 42 protocol-level tests across `election_tests`, `replication_tests`, `snapshot_tests`, `client_tests`, `role_transition_tests`, `in_memory_raft_storage_tests`, `in_memory_raft_cache_tests` — all passing
+- Sprint 2 `RaftProtocol<P>` in `raft-node/` — pure Raft consensus: pre-vote, election, leader promotion, heartbeat, log replication, snapshot install; `ELECTION_TIMEOUT_MS=300`, `HEARTBEAT_INTERVAL_MS=100`; quorum = `(n+1)/2 + 1`
+- Sprint 3 infra implementations in `raft-node/`: `InMemoryRaftStorage<P>`, `InMemoryRaftCache`, `InMemoryRaftTransport<P,S>`, `InMemoryRaftTimer<S>`, `InMemoryRaftExternalInterface<S>`, `InMemoryRaftStateMachine`, `NoOpRaftTransport<P>`, `NoOpRaftObserver`, `TypeBasedRaftPartitioner`, `EagerRaftContextBuilder`, `SharedState<T>` trait; `RaftNodeBuilder<P>` builder
+- Sprint 4 tests in `raft-node/tests/`: 42 protocol-level tests across `election_tests`, `replication_tests`, `snapshot_tests`, `client_tests`, `role_transition_tests`, `in_memory_raft_storage_tests`, `in_memory_raft_cache_tests` — all passing
 - Sprint 5 cluster tests in `raft-validation/tests/`: 54 cluster-level tests across `election_tests`, `replication_tests`, `fault_tolerance_tests`, `snapshot_tests`, `state_machine_tests`, `client_tests` — all passing; `RaftCluster` harness with `step()`, `drain()`, `drain_all()`, `drain_except()`, `fire_timer()`, `inject_message()`, `submit_command()`, `drain_responses()`; pre-flight fixes to `raft_node.rs` (`state()` + `peer_id()` accessors, `P: AsRef<[u8]>` bound, correct state machine payload), `common.rs` (`SendClientResponse` now emitted in `advance_commit_index`), and `in_memory_raft_timer.rs` (`schedule()` is a no-op — test harness drives timer events explicitly)
 
 ---
 
 ## Key Constraints
 
-- `etheram/` must compile with no cluster-level dependencies
+- `etheram-node/` must compile with no cluster-level dependencies
 - Protocol logic must remain pure (no I/O)
 - **Circular dependencies are forbidden** — no crate may directly or transitively depend on itself, including via `[dev-dependencies]`. Before adding any dependency between crates, verify the full dependency chain contains no cycle.
-- **Dependency direction is one-way** — `etheram-variants` may depend on `etheram`; `etheram` must never depend on `etheram-variants`, not even via `[dev-dependencies]`. This means tests in `etheram/tests/` can only use what `etheram` itself exposes. Integration tests that require concrete implementations from `etheram-variants` (e.g. `IbftProtocol`, `InMemoryStorage`) belong in `etheram-variants/tests/`, not `etheram/tests/`.
-- All new swappable components need a corresponding `*Variant` enum entry and `*Builder` in `etheram-variants/`
+- **Dependency direction is one-way** — `etheram-validation` / `etheram-embassy` may depend on `etheram-node`; `etheram-node` must never depend on validation/embassy crates.
+- All new swappable components need a corresponding `*Variant` enum entry and `*Builder` in `etheram-node/` (and analogously in `raft-node/`).
 - Trait names: simple nouns. Concrete names: descriptive prefixes
-- `core`, `etheram`, and `etheram-variants` must be `no_std`-compatible — they carry `#![no_std]` and use `alloc` for heap types (`Box`, `Vec`, `String`, `BTreeMap`). No `std`-only types or imports are permitted in these crates
+- `core`, `etheram-node`, and `raft-node` must be `no_std`-compatible — they carry `#![no_std]` and use `alloc` for heap types (`Box`, `Vec`, `String`, `BTreeMap`). No `std`-only types or imports are permitted in these crates
 - `etheram-embassy/` must remain `no_std`-compatible
 - **`etheram-embassy/` must always maintain both configurations** — the all-in-memory configuration (`channel-transport` + `in-memory-storage` + `channel-external-interface`) and the real configuration (`udp-transport` + `semihosting-storage` + `udp-external-interface`) must both compile, link, and run at all times. Every change must be verified against both feature sets before marking complete.
 - **Workspace dependency governance is mandatory** — all dependency versions/features and all local crate links must be declared in the workspace root `Cargo.toml` under `[workspace.dependencies]`. Member crates must reference them via `.workspace = true` and must not declare per-crate `path =`, version, or feature overrides for those dependencies. The only allowed `path =` entries outside root dependency declarations are target declarations such as `[lib] path`, `[[bin]] path`, and `[[test]] path`.
-- **The raft crate family is independent from etheram** — `raft-node/`, `raft-variants/`, `raft-validation/`, and `raft-embassy/` depend only on `core/`. No `raft-*` crate may import from `etheram*` and no `etheram*` crate may import from `raft-*`. Cross-dependencies between protocol families are forbidden.
-- **`raft-node/` and `raft-variants/` must be `no_std`-compatible** — they carry `#![no_std]` and use `alloc` for heap types. No `std`-only types or imports are permitted in these crates.
-- **Raft dependency direction mirrors etheram** — `raft-variants` may depend on `raft-node`; `raft-node` must never depend on `raft-variants`. Tests in `raft-node/tests/` can only use what `raft-node` itself exposes. Integration tests requiring concrete implementations from `raft-variants` belong in `raft-variants/tests/`.
+- **The raft crate family is independent from etheram** — `raft-node/`, `raft-validation/`, and `raft-embassy/` depend only on `core/` and `raft-node` as appropriate. No `raft-*` crate may import from `etheram*` and no `etheram*` crate may import from `raft-*`. Cross-dependencies between protocol families are forbidden.
+- **Raft dependency direction mirrors etheram** — `raft-validation` / `raft-embassy` may depend on `raft-node`; `raft-node` must never depend on validation/embassy crates. Tests in `raft-node/tests/` can only use what `raft-node` itself exposes.
 
 ---
 
@@ -395,7 +385,7 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
   // http://www.apache.org/licenses/LICENSE-2.0
   ```
 - **No comments in production code** — code should be self-explanatory through naming and structure. The only permitted comments are `// TODO:` and `// FIXME:` (with a description). Doc comments (`///` and `//!`) are not allowed.
-- **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
+- **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram_node::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
 - **`use` blocks are compacted and sorted** — all `use` statements must be grouped together with no blank lines between them, and sorted alphabetically. This must be verified before completing any task.
 - **1 empty line after file header** — there must be exactly one blank line between the 3-line Apache 2.0 copyright header and the first `use` statement.
 - **1 empty line between every code block** — there must be exactly one blank line between every top-level code block: between the `use` block and the first item, and between any two consecutive items (struct, enum, trait, impl, fn). No double blank lines.
@@ -408,18 +398,20 @@ All three stages are **mandatory** for every new feature at the `etheram/` or pr
   mod common;
   use crate::common::test_node::TestNode;
   ```
+- **Remove mod-only folders** — if a folder contains only `mod.rs` and no other files/subfolders, flatten it by moving/removing the module declaration and deleting the redundant folder.
 - **Tests follow AAA** — every test must be structured in three labelled sections: `// Arrange`, `// Act`, `// Assert`. When act and assert collapse into a single expression, use `// Act & Assert`. No other comments are permitted in test bodies. Each section must be separated from the next by exactly one blank line.
 - **Run `cargo fmt` after every change** — always run `cargo fmt` from the workspace root after editing any Rust source file.
 - **No warnings** — the codebase must compile with zero warnings. Every unused import, dead code path, or missing trait implementation that triggers a compiler warning must be fixed before committing. `#[allow(...)]` attributes are not permitted except for `#[allow(clippy::too_many_arguments)]` on builder constructors.
-- **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p etheram-etheram-variants` and `cargo test -p etheram-etheram-validation` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
-- **Mandatory pre-feature Raft audit** — before writing any new protocol feature that touches `RaftProtocol`, run `cargo test -p raft-raft-variants` (once that crate exists) and confirm the following Raft invariants hold in source before beginning: (1) quorum = `⌊n/2⌋ + 1`; (2) leader never appends entries in a term other than its own; (3) voted_for is persisted before sending RequestVoteResponse; (4) commit_index only advances when a majority have acknowledged the entry; (5) step-down occurs immediately on receiving any message with a higher term. This is a hard gate — not a suggestion.
-- **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate and covers: `cargo fmt` on the whole workspace, `cargo nextest` for `etheram` + `etheram-variants` + `etheram-validation` + `raft-node`, the `etheram-variants` and `raft-node` no_std gate checks, and a full QEMU execution of both embassy configurations (`run_channel_in_memory.ps1` and `run_udp_semihosting.ps1`).
-- **Mandatory Raft no_std gate** — when working on `raft-node/` or `raft-variants/`, always run an explicit no_std compatibility check: `cargo check -p raft-raft-node --no-default-features` (and `cargo check -p raft-raft-variants --no-default-features` once that crate exists).
-- **Mandatory dual-layer test updates for Raft productive changes** — every time productive Raft code is added, changed, or fixed, update tests in both layers: protocol-level tests in `raft-variants` and cluster-level tests in `raft-validation`. The same rule applies as for etheram: do not mark work complete unless both layers are updated or explicitly justified as not applicable.
+- **Mandatory pre-feature IBFT audit** — before writing any new protocol feature that touches `IbftProtocol`, `ValidatorSet`, `VoteTracker`, or any handler in `ibft_protocol*.rs`, execute all five steps of the Pre-Feature IBFT Consistency Audit in Architectural Principle 7. Both `cargo test -p etheram-node --test all_tests` and `cargo test -p etheram-validation --test all_tests` must be green, and every invariant must be confirmed in source, before the first line of the new feature is written. This is a hard gate — not a suggestion.
+- **Mandatory pre-feature Raft audit** — before writing any new protocol feature that touches `RaftProtocol`, run `cargo test -p raft-node --test all_tests` and `cargo test -p raft-validation --test all_tests` and confirm the following Raft invariants hold in source before beginning: (1) quorum = `⌊n/2⌋ + 1`; (2) leader never appends entries in a term other than its own; (3) voted_for is persisted before sending RequestVoteResponse; (4) commit_index only advances when a majority have acknowledged the entry; (5) step-down occurs immediately on receiving any message with a higher term. This is a hard gate — not a suggestion.
+- **Run tests before marking complete** — always run `powershell -File scripts\test.ps1` from the workspace root before considering any task done. All tests must pass. `test.ps1` is the single authoritative gate for formatting, tests, no_std checks, and embassy scenarios.
+- **Mandatory no_std gate for core + embassy-core + nodes** — every completion gate must include explicit checks for all four crates: `cargo check -p etheram-core --no-default-features`, `cargo check -p embassy-core --no-default-features`, `cargo check -p etheram-node --no-default-features`, and `cargo check -p raft-node --no-default-features`.
+- **Mandatory Raft no_std gate** — when working on `raft-node/`, always run an explicit no_std compatibility check: `cargo check -p raft-node --no-default-features`.
+- **Mandatory dual-layer test updates for Raft productive changes** — every time productive Raft code is added, changed, or fixed, update tests in both layers: protocol-level tests in `raft-node` and cluster-level tests in `raft-validation`. The same rule applies as for etheram: do not mark work complete unless both layers are updated or explicitly justified as not applicable.
 - **Raft–etheram consistency check** — whenever productive code or tests are added or changed in either protocol family, check the parallel artefact in the other family for inconsistencies. This includes: structural divergence in equivalent types (e.g. `RaftNode` vs `EtheramNode`, `RaftPartitioner` vs `Partitioner`, `RaftObserver` vs `Observer`), naming convention drift, step-loop shape differences, test organisation deviations, and missing analogous tests. Inconsistencies that are intentional (protocol-specific types, Raft 2-way vs etheram 3-way partition) must be explicitly justified in a `// FIXME:` or `// TODO:` comment. Silent drift is not permitted.
-- **Mandatory Stage 3 no_std gate for variants** — when working on Stage 3 (`etheram-embassy/`), always run an explicit no_std compatibility check for `etheram-variants`: `cargo check -p etheram-etheram-variants --no-default-features`.
+- **Mandatory Stage 3 no_std gate for node crate** — when working on Stage 3 (`etheram-embassy/`), always run an explicit no_std compatibility check for `etheram-node`: `cargo check -p etheram-node --no-default-features`.
 - **Stage 3 test application never sleeps** — `main.rs` must not use fixed-duration sleeps (`Timer::after`) to wait for consensus or protocol progress. Use `EtheramClient::wait_for_height_above` (or an equivalent polling helper with a timeout ceiling) instead. Fixed sleeps are only permitted for non-observable housekeeping (e.g. a brief shutdown drain).
-- **Mandatory dual-layer test updates for productive changes** — every time productive code is added, changed, or fixed, update tests in both layers: protocol-level tests in `etheram-variants` and cluster-level tests in `etheram-validation`. Do not mark work complete unless both layers are updated or explicitly justified as not applicable.
+- **Mandatory dual-layer test updates for productive changes** — every time productive code is added, changed, or fixed, update tests in both layers: protocol-level tests in `etheram-node` and cluster-level tests in `etheram-validation`. Do not mark work complete unless both layers are updated or explicitly justified as not applicable.
 - **Mandatory test deduplication across files** — when identical or near-identical test setup/logic appears more than twice across test files in the same crate, refactor it into shared test helpers and update all affected files to remove duplication.
 - **No `#[path = "..."]` module imports in tests** — do not import test modules using path attributes. Add the helper module to the corresponding `mod.rs` and import it through the normal module tree.
 - **Method input/output contract** — methods must take immutable input parameters (`&T` for borrowed inputs), return computed results, and must not mutate input parameters. Do not use mutable out-parameters (for example `&mut Vec<_>`, `&mut Option<_>`, `&mut ActionCollection<_>`) to return data. Allowed mutation is limited to receiver state (`&mut self`) and local variables.

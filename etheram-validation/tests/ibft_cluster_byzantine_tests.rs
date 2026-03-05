@@ -8,11 +8,11 @@ use crate::common::ibft_cluster_test_helpers::commit;
 use crate::common::ibft_cluster_test_helpers::pre_prepare;
 use crate::common::ibft_cluster_test_helpers::prepare;
 use crate::common::ibft_cluster_test_helpers::validators;
-use etheram::incoming::timer::timer_event::TimerEvent;
-use etheram_etheram_validation::ibft_cluster::IbftCluster;
-use etheram_etheram_variants::implementations::ibft::ibft_message::IbftMessage;
-use etheram_etheram_variants::implementations::ibft::prepared_certificate::PreparedCertificate;
-use etheram_etheram_variants::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
+use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
+use etheram_node::incoming::timer::timer_event::TimerEvent;
+use etheram_validation::ibft_cluster::IbftCluster;
 
 fn sequence(height: u64, round: u64, phase: u64) -> u64 {
     (height * 100) + (round * 10) + phase

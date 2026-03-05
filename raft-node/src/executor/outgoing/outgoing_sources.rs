@@ -3,12 +3,12 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::brain::protocol::message::RaftMessage;
-use crate::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
-use crate::common_types::timer_output_adapter::TimerOutputAdapter;
-use crate::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use crate::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use crate::incoming::timer::timer_event::RaftTimerEvent;
 use alloc::boxed::Box;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram_core::types::{ClientId, PeerId};
 
 pub struct RaftOutgoingSources<P> {

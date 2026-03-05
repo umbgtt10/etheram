@@ -5,7 +5,7 @@
 `etheram-validation` provides the test infrastructure for Stage 2 validation: orchestrating multiple `EtheramNode` instances in a shared-memory cluster, driving consensus rounds, injecting faults, and asserting distributed correctness. This is the only `std` crate in the EtheRAM ecosystem — it uses `Arc`, `Mutex`, and standard library collections for cluster orchestration.
 
 **Parent:** [EtheRAM](../README.md)
-**Depends on:** [core](../core/README.md), [etheram](../etheram/README.md), [etheram-variants](../etheram-variants/README.md)
+**Depends on:** [core](../core/README.md), [etheram-node](../etheram-node/README.md)
 
 ---
 

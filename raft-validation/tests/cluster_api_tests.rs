@@ -6,7 +6,7 @@ use crate::common::raft_cluster_helpers::setup_elected_5_node_cluster;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
-use raft_raft_validation::raft_cluster::RaftCluster;
+use raft_validation::raft_cluster::RaftCluster;
 
 #[test]
 fn fire_timer_all_heartbeat_keeps_single_leader_and_followers() {

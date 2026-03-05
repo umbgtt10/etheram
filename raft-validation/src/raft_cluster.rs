@@ -2,25 +2,39 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::std_shared_state::StdSharedState;
+use etheram_core::node_common::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
+use etheram_core::node_common::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
+use etheram_core::node_common::shared_state::SharedState;
+use etheram_core::node_common::spin_shared_state::SpinSharedState;
+use etheram_core::node_common::timer_input_adapter::TimerInputAdapter;
+use etheram_core::node_common::timer_output_adapter::TimerOutputAdapter;
+use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
+use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram_core::types::ClientId;
 use etheram_core::types::PeerId;
 use raft_node::brain::protocol::boxed_protocol::BoxedRaftProtocol;
 use raft_node::brain::protocol::message::RaftMessage;
 use raft_node::common_types::cache_adapter::CacheAdapter;
-use raft_node::common_types::external_interface_incoming_adapter::ExternalInterfaceIncomingAdapter;
-use raft_node::common_types::external_interface_outgoing_adapter::ExternalInterfaceOutgoingAdapter;
 use raft_node::common_types::node_role::NodeRole;
 use raft_node::common_types::state_machine::RaftStateMachine;
 use raft_node::common_types::storage_adapter::StorageAdapter;
-use raft_node::common_types::timer_input_adapter::TimerInputAdapter;
-use raft_node::common_types::timer_output_adapter::TimerOutputAdapter;
-use raft_node::common_types::transport_incoming_adapter::TransportIncomingAdapter;
-use raft_node::common_types::transport_outgoing_adapter::TransportOutgoingAdapter;
 use raft_node::context::context_builder::RaftContextBuilder;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use raft_node::executor::outgoing::outgoing_sources::RaftOutgoingSources;
 use raft_node::executor::raft_executor::RaftExecutor;
+use raft_node::implementations::eager_raft_context_builder::EagerRaftContextBuilder;
+use raft_node::implementations::in_memory_raft_cache::InMemoryRaftCache;
+use raft_node::implementations::in_memory_raft_external_interface::InMemoryRaftExternalInterface;
+use raft_node::implementations::in_memory_raft_external_interface::InMemoryRaftExternalInterfaceState;
+use raft_node::implementations::in_memory_raft_state_machine::InMemoryRaftStateMachine;
+use raft_node::implementations::in_memory_raft_storage::InMemoryRaftStorage;
+use raft_node::implementations::in_memory_raft_timer::InMemoryRaftTimer;
+use raft_node::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
+use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransport;
+use raft_node::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
+use raft_node::implementations::no_op_raft_observer::NoOpRaftObserver;
+use raft_node::implementations::raft::raft_protocol::RaftProtocol;
+use raft_node::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 use raft_node::incoming::external_interface::client_request::RaftClientRequest;
 use raft_node::incoming::incoming_sources::RaftIncomingSources;
 use raft_node::incoming::timer::timer_event::RaftTimerEvent;
@@ -28,36 +42,22 @@ use raft_node::observer::RaftObserver;
 use raft_node::partitioner::partition::RaftPartitioner;
 use raft_node::raft_node::RaftNode;
 use raft_node::state::raft_state::RaftState;
-use raft_variants::implementations::eager_raft_context_builder::EagerRaftContextBuilder;
-use raft_variants::implementations::in_memory_raft_cache::InMemoryRaftCache;
-use raft_variants::implementations::in_memory_raft_external_interface::InMemoryRaftExternalInterface;
-use raft_variants::implementations::in_memory_raft_external_interface::InMemoryRaftExternalInterfaceState;
-use raft_variants::implementations::in_memory_raft_state_machine::InMemoryRaftStateMachine;
-use raft_variants::implementations::in_memory_raft_storage::InMemoryRaftStorage;
-use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimer;
-use raft_variants::implementations::in_memory_raft_timer::InMemoryRaftTimerState;
-use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransport;
-use raft_variants::implementations::in_memory_raft_transport::InMemoryRaftTransportState;
-use raft_variants::implementations::no_op_raft_observer::NoOpRaftObserver;
-use raft_variants::implementations::raft::raft_protocol::RaftProtocol;
-use raft_variants::implementations::shared_state::SharedState;
-use raft_variants::implementations::type_based_raft_partitioner::TypeBasedRaftPartitioner;
 use std::vec::Vec;
 
 pub struct RaftCluster {
     peer_ids: Vec<PeerId>,
     nodes: Vec<RaftNode<Vec<u8>>>,
-    timer_state: StdSharedState<InMemoryRaftTimerState>,
-    transport_state: StdSharedState<InMemoryRaftTransportState<Vec<u8>>>,
-    ei_state: StdSharedState<InMemoryRaftExternalInterfaceState>,
+    timer_state: SpinSharedState<InMemoryRaftTimerState>,
+    transport_state: SpinSharedState<InMemoryRaftTransportState<Vec<u8>>>,
+    ei_state: SpinSharedState<InMemoryRaftExternalInterfaceState>,
 }
 
 impl RaftCluster {
     pub fn new(node_count: usize) -> Self {
         let peer_ids: Vec<PeerId> = (1..=(node_count as u64)).collect();
-        let timer_state = StdSharedState::new(InMemoryRaftTimerState::new());
-        let transport_state = StdSharedState::new(InMemoryRaftTransportState::<Vec<u8>>::new());
-        let ei_state = StdSharedState::new(InMemoryRaftExternalInterfaceState::new());
+        let timer_state = SpinSharedState::new(InMemoryRaftTimerState::new());
+        let transport_state = SpinSharedState::new(InMemoryRaftTransportState::<Vec<u8>>::new());
+        let ei_state = SpinSharedState::new(InMemoryRaftExternalInterfaceState::new());
 
         let mut nodes = Vec::new();
         for &peer_id in &peer_ids {

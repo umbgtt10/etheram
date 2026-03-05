@@ -10,11 +10,11 @@ use alloc::vec::Vec;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
 use embassy_sync::channel::Receiver;
-use etheram::executor::outgoing::external_interface::client_response::ClientResponse;
-use etheram::incoming::external_interface::client_request::ClientRequest;
 use etheram_core::external_interface_incoming::ExternalInterfaceIncoming;
 use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
 use etheram_core::types::ClientId;
+use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
+use etheram_node::incoming::external_interface::client_request::ClientRequest;
 
 const EI_CAPACITY: usize = 16;
 

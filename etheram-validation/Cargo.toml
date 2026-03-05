@@ -1,13 +1,12 @@
 [package]
-name = "etheram-etheram-validation"
+name = "etheram-validation"
 version = "0.1.0"
 edition = "2021"
 autotests = false
 
 [dependencies]
 etheram-core.workspace = true
-etheram-etheram.workspace = true
-etheram-etheram-variants.workspace = true
+etheram-node.workspace = true
 
 indexmap.workspace = true
 rand.workspace = true

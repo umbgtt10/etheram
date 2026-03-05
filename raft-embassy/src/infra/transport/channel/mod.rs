@@ -3,4 +3,3 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod channel_transport_hub;
-pub mod outbox_transport;
