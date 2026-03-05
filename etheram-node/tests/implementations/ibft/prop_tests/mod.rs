@@ -2,9 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod client_tests;
-pub mod election_tests;
-pub mod prop_tests;
-pub mod replication_tests;
-pub mod role_transition_tests;
-pub mod snapshot_tests;
+pub mod client_proptest_tests;
+pub mod peer_message_proptest_tests;
+pub mod timer_proptest_tests;

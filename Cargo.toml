@@ -36,6 +36,7 @@ postcard = { version = "1.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 spin = { version = "0.10.0", default-features = false, features = ["mutex", "spin_mutex"] }
 ed25519-dalek = { version = "2", default-features = false }
+proptest = "1"
 
 etheram-core = { path = "core" }
 embassy-core = { path = "embassy-core" }

@@ -9,6 +9,9 @@ etheram-core.workspace = true
 
 ed25519-dalek.workspace = true
 
+[dev-dependencies]
+proptest.workspace = true
+
 [lib]
 name = "etheram_node"
 path = "src/lib.rs"

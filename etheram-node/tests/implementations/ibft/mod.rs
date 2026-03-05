@@ -24,6 +24,7 @@ pub mod ibft_protocol_view_change_tests;
 pub mod ibft_protocol_wal_writer_tests;
 pub mod mock_signature_scheme_tests;
 pub mod prepared_certificate_tests;
+pub mod prop_tests;
 pub mod signature_bytes_tests;
 pub mod signature_scheme_tests;
 pub mod validator_set_tests;

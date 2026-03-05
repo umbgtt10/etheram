@@ -7,6 +7,9 @@ autotests = false
 [dependencies]
 etheram-core.workspace = true
 
+[dev-dependencies]
+proptest.workspace = true
+
 [lib]
 name = "raft_node"
 path = "src/lib.rs"
