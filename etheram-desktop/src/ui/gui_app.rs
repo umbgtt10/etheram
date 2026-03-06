@@ -32,6 +32,7 @@ struct DesktopGuiApp {
     cluster_path: String,
     from_peer: String,
     to_peer: String,
+    isolate_peer: String,
     launched_nodes: Option<Vec<LaunchedNode>>,
     log_lines: Vec<UiLogLine>,
     log_filter_node: String,
@@ -59,6 +60,7 @@ impl DesktopGuiApp {
             cluster_path: initial_cluster_path.unwrap_or_default(),
             from_peer: String::new(),
             to_peer: String::new(),
+            isolate_peer: String::new(),
             launched_nodes: None,
             log_lines: Vec::new(),
             log_filter_node: String::new(),
@@ -414,6 +416,64 @@ impl DesktopGuiApp {
         }
     }
 
+    fn send_isolate_node(&mut self) {
+        let target = match Self::parse_peer_input(&self.isolate_peer, "node") {
+            Ok(value) => value,
+            Err(error) => {
+                self.status_line = error;
+                return;
+            }
+        };
+
+        let mut link_count = 0usize;
+        if self.with_nodes_mut(|nodes| {
+            let count = Launcher::broadcast_isolate_node_command(nodes, target)?;
+            link_count = count;
+            Ok(())
+        }) {
+            for node_id in self.latest_node_status.keys().copied() {
+                if node_id == target {
+                    continue;
+                }
+                self.blocked_links.insert((target, node_id));
+                self.blocked_links.insert((node_id, target));
+            }
+            self.push_ui_log(format!(
+                "desktop_control isolate node_peer={} links_blocked={}",
+                target, link_count
+            ));
+        }
+    }
+
+    fn send_heal_isolated_node(&mut self) {
+        let target = match Self::parse_peer_input(&self.isolate_peer, "node") {
+            Ok(value) => value,
+            Err(error) => {
+                self.status_line = error;
+                return;
+            }
+        };
+
+        let mut link_count = 0usize;
+        if self.with_nodes_mut(|nodes| {
+            let count = Launcher::broadcast_heal_isolated_node_command(nodes, target)?;
+            link_count = count;
+            Ok(())
+        }) {
+            for node_id in self.latest_node_status.keys().copied() {
+                if node_id == target {
+                    continue;
+                }
+                self.blocked_links.remove(&(target, node_id));
+                self.blocked_links.remove(&(node_id, target));
+            }
+            self.push_ui_log(format!(
+                "desktop_control heal_isolated node_peer={} links_healed={}",
+                target, link_count
+            ));
+        }
+    }
+
     fn send_shutdown(&mut self) {
         if self.with_nodes_mut(Launcher::broadcast_shutdown_command) {
             self.push_ui_log("desktop_control shutdown".to_string());
@@ -470,6 +530,17 @@ impl App for DesktopGuiApp {
                 ui.text_edit_singleline(&mut self.from_peer);
                 ui.label("To:");
                 ui.text_edit_singleline(&mut self.to_peer);
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Node:");
+                ui.text_edit_singleline(&mut self.isolate_peer);
+                if ui.button("Isolate Node (Both Directions)").clicked() {
+                    self.send_isolate_node();
+                }
+                if ui.button("Heal Isolated Node").clicked() {
+                    self.send_heal_isolated_node();
+                }
             });
 
             ui.horizontal(|ui| {

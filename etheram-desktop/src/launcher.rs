@@ -250,6 +250,48 @@ impl Launcher {
         Ok(())
     }
 
+    pub fn broadcast_isolate_node_command(
+        nodes: &mut [LaunchedNode],
+        target: u64,
+    ) -> Result<usize, String> {
+        let node_ids: Vec<u64> = nodes.iter().map(|node| node.node_id).collect();
+        if !node_ids.contains(&target) {
+            return Err(format!("node {} is not running", target));
+        }
+
+        let mut link_count = 0usize;
+        for peer_id in node_ids {
+            if peer_id == target {
+                continue;
+            }
+            Self::broadcast_partition_command(nodes, target, peer_id)?;
+            Self::broadcast_partition_command(nodes, peer_id, target)?;
+            link_count += 2;
+        }
+        Ok(link_count)
+    }
+
+    pub fn broadcast_heal_isolated_node_command(
+        nodes: &mut [LaunchedNode],
+        target: u64,
+    ) -> Result<usize, String> {
+        let node_ids: Vec<u64> = nodes.iter().map(|node| node.node_id).collect();
+        if !node_ids.contains(&target) {
+            return Err(format!("node {} is not running", target));
+        }
+
+        let mut link_count = 0usize;
+        for peer_id in node_ids {
+            if peer_id == target {
+                continue;
+            }
+            Self::broadcast_heal_command(nodes, target, peer_id)?;
+            Self::broadcast_heal_command(nodes, peer_id, target)?;
+            link_count += 2;
+        }
+        Ok(link_count)
+    }
+
     pub fn broadcast_clear_command(nodes: &mut [LaunchedNode]) -> Result<(), String> {
         for node in nodes {
             Self::send_clear_command(node)?;

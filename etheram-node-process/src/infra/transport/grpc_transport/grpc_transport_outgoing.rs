@@ -10,13 +10,28 @@ use crate::infra::transport::partitionable_transport::partition_table::global_pa
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
+use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::thread;
 use std::time::Duration;
+use std::time::Instant;
 
 const SEND_RETRY_COUNT: usize = 3;
 const SEND_RETRY_INTERVAL_MS: u64 = 30;
+const PARTITION_DROP_LOG_INTERVAL_MS: u64 = 1000;
+
+struct PartitionDropLogState {
+    last_logged_at: Instant,
+    suppressed_count: u64,
+}
+
+fn partition_drop_log_state() -> &'static Mutex<BTreeMap<(PeerId, PeerId), PartitionDropLogState>> {
+    static STATE: OnceLock<Mutex<BTreeMap<(PeerId, PeerId), PartitionDropLogState>>> =
+        OnceLock::new();
+    STATE.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
 
 pub struct GrpcTransportOutgoing {
     node_id: PeerId,
@@ -107,10 +122,38 @@ impl TransportOutgoing for GrpcTransportOutgoing {
         }
 
         if global_partition_table().is_blocked(self.node_id, peer_id) {
-            println!(
-                "partition_drop from_peer={} to_peer={}",
-                self.node_id, peer_id
-            );
+            let now = Instant::now();
+            let mut state = partition_drop_log_state()
+                .lock()
+                .expect("partition drop log state lock poisoned");
+            let key = (self.node_id, peer_id);
+            match state.entry(key) {
+                Entry::Vacant(slot) => {
+                    println!(
+                        "partition_drop from_peer={} to_peer={}",
+                        self.node_id, peer_id
+                    );
+                    slot.insert(PartitionDropLogState {
+                        last_logged_at: now,
+                        suppressed_count: 0,
+                    });
+                }
+                Entry::Occupied(mut slot) => {
+                    let entry = slot.get_mut();
+                    if entry.last_logged_at.elapsed()
+                        >= Duration::from_millis(PARTITION_DROP_LOG_INTERVAL_MS)
+                    {
+                        println!(
+                            "partition_drop from_peer={} to_peer={} suppressed={}",
+                            self.node_id, peer_id, entry.suppressed_count
+                        );
+                        entry.last_logged_at = now;
+                        entry.suppressed_count = 0;
+                    } else {
+                        entry.suppressed_count = entry.suppressed_count.saturating_add(1);
+                    }
+                }
+            }
             return;
         }
 
