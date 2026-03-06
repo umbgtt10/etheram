@@ -16,33 +16,21 @@ use std::rc::Rc;
 
 type SharedStorage = Rc<RefCell<Box<dyn StorageAdapter<Key = Address, Value = Account>>>>;
 
-pub struct InjectedStorage {
-    inner: SharedStorage,
-}
-
 #[derive(Clone)]
-pub struct InjectedStorageHandle {
+pub struct InMemoryStorage {
     inner: SharedStorage,
 }
 
-impl InjectedStorage {
+impl InMemoryStorage {
     pub fn new() -> Result<Self, String> {
         let storage = StorageBuilder::default()
             .build()
-            .map_err(|error| format!("failed to build injected storage: {error:?}"))?;
+            .map_err(|error| format!("failed to build in-memory storage: {error:?}"))?;
         Ok(Self {
             inner: Rc::new(RefCell::new(storage)),
         })
     }
 
-    pub fn handle(&self) -> InjectedStorageHandle {
-        InjectedStorageHandle {
-            inner: Rc::clone(&self.inner),
-        }
-    }
-}
-
-impl InjectedStorageHandle {
     pub fn apply_synced_blocks(&self, blocks: &[Block]) {
         let mut guard = self.inner.borrow_mut();
         for block in blocks {
@@ -52,7 +40,7 @@ impl InjectedStorageHandle {
     }
 }
 
-impl Storage for InjectedStorage {
+impl Storage for InMemoryStorage {
     type Key = Address;
     type Value = Account;
     type Query = StorageQuery;

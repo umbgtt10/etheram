@@ -104,10 +104,10 @@ pub mod sync {
 }
 
 pub mod storage {
-    pub mod injected_storage {
+    pub mod in_memory_storage {
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/src/infra/storage/injected_storage.rs"
+            "/src/infra/storage/in_memory_storage.rs"
         ));
     }
 }
