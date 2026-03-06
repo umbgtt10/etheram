@@ -17,6 +17,9 @@ toml.workspace = true
 [build-dependencies]
 tonic-build.workspace = true
 
+[dev-dependencies]
+proptest.workspace = true
+
 [[test]]
 name = "all_tests"
 path = "tests/all_tests.rs"

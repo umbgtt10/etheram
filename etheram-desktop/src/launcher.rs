@@ -382,7 +382,7 @@ fn read_node_process_program() -> String {
 
 fn read_step_limit() -> u64 {
     match std::env::var(NODE_STEP_LIMIT_ENV) {
-        Ok(value) => value.parse::<u64>().unwrap_or(1),
-        Err(_) => 1,
+        Ok(value) => value.parse::<u64>().unwrap_or(0),
+        Err(_) => 0,
     }
 }

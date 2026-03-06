@@ -56,7 +56,7 @@ pub fn spawn_partition_control_thread(partition_table: Arc<PartitionTable>) -> R
         .map_err(|error| format!("failed to spawn partition control thread: {error}"))
 }
 
-fn apply_control_line(partition_table: &PartitionTable, line: &str) -> Result<(), String> {
+pub fn apply_control_line(partition_table: &PartitionTable, line: &str) -> Result<(), String> {
     let mut parts = line.split_whitespace();
     let Some(raw_command) = parts.next() else {
         return Ok(());

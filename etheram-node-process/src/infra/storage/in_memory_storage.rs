@@ -3,18 +3,17 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::storage::Storage;
-use etheram_node::builders::storage_builder::StorageBuilder;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
-use etheram_node::common_types::storage_adapter::StorageAdapter;
 use etheram_node::common_types::types::Address;
+use etheram_node::implementations::in_memory_storage::InMemoryStorage as NodeInMemoryStorage;
 use etheram_node::state::storage::storage_mutation::StorageMutation;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Mutex;
 
-type SharedStorage = Rc<RefCell<Box<dyn StorageAdapter<Key = Address, Value = Account>>>>;
+type SharedStorage = Arc<Mutex<NodeInMemoryStorage>>;
 
 #[derive(Clone)]
 pub struct InMemoryStorage {
@@ -23,16 +22,13 @@ pub struct InMemoryStorage {
 
 impl InMemoryStorage {
     pub fn new() -> Result<Self, String> {
-        let storage = StorageBuilder::default()
-            .build()
-            .map_err(|error| format!("failed to build in-memory storage: {error:?}"))?;
         Ok(Self {
-            inner: Rc::new(RefCell::new(storage)),
+            inner: Arc::new(Mutex::new(NodeInMemoryStorage::new())),
         })
     }
 
     pub fn apply_synced_blocks(&self, blocks: &[Block]) {
-        let mut guard = self.inner.borrow_mut();
+        let mut guard = self.inner.lock().expect("storage lock poisoned");
         for block in blocks {
             guard.mutate(StorageMutation::StoreBlock(block.clone()));
             guard.mutate(StorageMutation::IncrementHeight);
@@ -48,12 +44,12 @@ impl Storage for InMemoryStorage {
     type QueryResult = StorageQueryResult;
 
     fn query(&self, query: Self::Query) -> Self::QueryResult {
-        let guard = self.inner.borrow();
+        let guard = self.inner.lock().expect("storage lock poisoned");
         guard.query(query)
     }
 
     fn mutate(&mut self, mutation: Self::Mutation) {
-        let mut guard = self.inner.borrow_mut();
+        let mut guard = self.inner.lock().expect("storage lock poisoned");
         guard.mutate(mutation);
     }
 }
