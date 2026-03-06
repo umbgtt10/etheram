@@ -74,6 +74,13 @@ pub mod transport {
 }
 
 pub mod sync {
+    pub mod sync_import {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/infra/sync/sync_import.rs"
+        ));
+    }
+
     pub mod sync_message {
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),

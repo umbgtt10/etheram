@@ -11,6 +11,7 @@ use crate::infra::scheduler::context_builder_factory::build_context_builder;
 use crate::infra::scheduler::partitioner_factory::build_partitioner;
 use crate::infra::std_shared_state::StdSharedState;
 use crate::infra::storage::storage_factory::build_storage;
+use crate::infra::sync::sync_import::decode_and_validate_blocks;
 use crate::infra::sync::sync_message::SyncMessage;
 use crate::infra::sync::sync_sender::build_sync_sender;
 use crate::infra::sync::sync_sender::SyncSender;
@@ -18,7 +19,6 @@ use crate::infra::sync::sync_state::SyncState;
 use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
 use crate::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
-use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize_block;
 use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 use crate::infra::transport::partitionable_transport::partition_control::spawn_partition_control_thread;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
@@ -264,14 +264,13 @@ impl NodeRuntime {
 
     fn handle_blocks(&mut self, peer_id: PeerId, start_height: u64, block_payloads: &[Vec<u8>]) {
         let local_height = self.current_height();
-        let mut decoded = 0u64;
-        for payload in block_payloads {
-            if deserialize_block(payload).is_ok() {
-                decoded += 1;
-            }
-        }
+        let decoded_blocks = decode_and_validate_blocks(local_height, start_height, block_payloads);
+        let decoded = decoded_blocks
+            .as_ref()
+            .map(|blocks| blocks.len() as u64)
+            .unwrap_or(0);
 
-        let malformed = decoded != block_payloads.len() as u64;
+        let malformed = decoded_blocks.is_none();
         let empty_while_lagging =
             block_payloads.is_empty() && self.sync_state.lag_distance(local_height).is_some();
 
@@ -292,7 +291,7 @@ impl NodeRuntime {
         if completed || failed {
             if let Some((target_peer, from_height, max_blocks)) = self
                 .sync_state
-                .next_request(local_height, SYNC_MAX_BLOCKS_PER_REQUEST)
+                .next_request(self.current_height(), SYNC_MAX_BLOCKS_PER_REQUEST)
             {
                 self.sync_sender.send_to_peer(
                     target_peer,
