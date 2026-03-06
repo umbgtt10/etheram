@@ -7,8 +7,14 @@ autotests = false
 [dependencies]
 etheram-core.workspace = true
 etheram-node.workspace = true
+prost.workspace = true
 serde.workspace = true
+tokio.workspace = true
+tonic.workspace = true
 toml.workspace = true
+
+[build-dependencies]
+tonic-build.workspace = true
 
 [[test]]
 name = "all_tests"

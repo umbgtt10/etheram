@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package etheram.transport;
+
+service TransportService {
+  rpc SendEnvelope(TransportEnvelope) returns (TransportAck);
+}
+
+message TransportEnvelope {
+  uint64 from_peer_id = 1;
+}
+
+message TransportAck {
+  bool accepted = 1;
+}

@@ -13,6 +13,10 @@ Thumbs.db
 # Logs
 *.log
 
+# Generated gRPC transport files
+etheram-node-process/src/infra/transport/grpc_transport/generated/*
+!etheram-node-process/src/infra/transport/grpc_transport/generated/.gitkeep
+
 # Temporary files
 *.tmp
 *.swp

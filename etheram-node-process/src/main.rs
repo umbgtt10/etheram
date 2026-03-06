@@ -8,6 +8,7 @@ mod infra;
 
 use crate::cluster_config::ClusterConfig;
 use crate::etheram_node::NodeRuntime;
+use std::collections::BTreeMap;
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;
@@ -42,6 +43,10 @@ fn run() -> Result<(), String> {
     let config = ClusterConfig::load_from_path(Path::new(&config_path))?;
     config.validate()?;
     let node = config.find_node(node_id)?;
+    let mut peer_addresses = BTreeMap::new();
+    for configured_node in &config.node {
+        peer_addresses.insert(configured_node.id, configured_node.transport_addr.clone());
+    }
 
     println!(
         "etheram-node-process bootstrap: node_id={}, transport_addr={}, client_addr={}, db_path={}, validators={}, log_level={}",
@@ -53,7 +58,7 @@ fn run() -> Result<(), String> {
         config.fleet.log_level
     );
 
-    let mut runtime = NodeRuntime::new(node.id, &node.transport_addr)?;
+    let mut runtime = NodeRuntime::new(node.id, &node.transport_addr, &peer_addresses)?;
     if step_limit == 0 {
         println!("etheram-node-process loop mode=forever");
         runtime.run_forever();

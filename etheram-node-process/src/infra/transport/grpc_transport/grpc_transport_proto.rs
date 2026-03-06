@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod grpc_transport_bus;
-pub mod grpc_transport_incoming;
-pub mod grpc_transport_outgoing;
-pub mod grpc_transport_proto;
+pub mod wire {
+    include!("generated/etheram.transport.rs");
+}

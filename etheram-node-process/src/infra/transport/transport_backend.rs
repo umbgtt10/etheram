@@ -4,13 +4,13 @@
 
 pub enum TransportBackend {
     LocalNoOp,
-    GrpcPlaceholder,
+    Grpc,
 }
 
 impl TransportBackend {
     pub fn from_env() -> Self {
         match std::env::var("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND") {
-            Ok(value) if value.eq_ignore_ascii_case("grpc") => Self::GrpcPlaceholder,
+            Ok(value) if value.eq_ignore_ascii_case("grpc") => Self::Grpc,
             _ => Self::LocalNoOp,
         }
     }

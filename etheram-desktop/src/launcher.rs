@@ -4,6 +4,7 @@
 
 use crate::cluster_config::ClusterConfig;
 use crate::cluster_config::NodeConfig;
+use std::io::stdin;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
@@ -19,6 +20,13 @@ const NODE_PROCESS_BIN_ENV: &str = "ETHERAM_NODE_PROCESS_BIN";
 const NODE_STEP_LIMIT_ENV: &str = "ETHERAM_DESKTOP_NODE_STEP_LIMIT";
 const SHUTDOWN_WAIT_ATTEMPTS: usize = 25;
 const SHUTDOWN_WAIT_INTERVAL_MS: u64 = 20;
+
+enum ControlCommand {
+    Partition(u64, u64),
+    Heal(u64, u64),
+    Clear,
+    Shutdown,
+}
 
 pub struct Launcher;
 
@@ -38,13 +46,65 @@ impl Launcher {
             config.fleet.validator_set.len()
         );
         let mut launched = Self::spawn_node_processes(config, config_path)?;
-        for node in &mut launched {
-            while let Some(line) = Self::read_stdout_line(node)? {
-                println!("node_stdout id={} line={}", node.node_id, line);
-            }
-        }
+        println!(
+            "desktop_control commands: partition <from> <to> | heal <from> <to> | clear | shutdown"
+        );
+        Self::run_command_loop(&mut launched)?;
         Self::stop_all(launched)?;
         Ok(())
+    }
+
+    pub fn run_command_loop(nodes: &mut [LaunchedNode]) -> Result<(), String> {
+        for line_result in stdin().lock().lines() {
+            let line =
+                line_result.map_err(|error| format!("failed reading desktop command: {error}"))?;
+            let command = match Self::parse_control_command(&line)? {
+                Some(value) => value,
+                None => continue,
+            };
+            match command {
+                ControlCommand::Partition(from, to) => {
+                    Self::broadcast_partition_command(nodes, from, to)?
+                }
+                ControlCommand::Heal(from, to) => Self::broadcast_heal_command(nodes, from, to)?,
+                ControlCommand::Clear => Self::broadcast_clear_command(nodes)?,
+                ControlCommand::Shutdown => {
+                    Self::broadcast_shutdown_command(nodes)?;
+                    break;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn parse_control_command(line: &str) -> Result<Option<ControlCommand>, String> {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            return Ok(None);
+        }
+        let mut parts = trimmed.split_whitespace();
+        let Some(command) = parts.next() else {
+            return Ok(None);
+        };
+
+        match command {
+            "partition" => {
+                let from = parse_peer(parts.next(), "from")?;
+                let to = parse_peer(parts.next(), "to")?;
+                Ok(Some(ControlCommand::Partition(from, to)))
+            }
+            "heal" => {
+                let from = parse_peer(parts.next(), "from")?;
+                let to = parse_peer(parts.next(), "to")?;
+                Ok(Some(ControlCommand::Heal(from, to)))
+            }
+            "clear" => Ok(Some(ControlCommand::Clear)),
+            "shutdown" => Ok(Some(ControlCommand::Shutdown)),
+            other => Err(format!(
+                "unknown command '{}', expected partition|heal|clear|shutdown",
+                other
+            )),
+        }
     }
 
     pub fn spawn_node_processes(
@@ -100,6 +160,19 @@ impl Launcher {
         to: u64,
     ) -> Result<(), String> {
         let command = format!("partition {} {}\n", from, to);
+        Self::send_raw_command(node, &command)
+    }
+
+    pub fn send_heal_command(node: &mut LaunchedNode, from: u64, to: u64) -> Result<(), String> {
+        let command = format!("heal {} {}\n", from, to);
+        Self::send_raw_command(node, &command)
+    }
+
+    pub fn send_clear_command(node: &mut LaunchedNode) -> Result<(), String> {
+        Self::send_raw_command(node, "clear\n")
+    }
+
+    pub fn send_raw_command(node: &mut LaunchedNode, command: &str) -> Result<(), String> {
         node.stdin.write_all(command.as_bytes()).map_err(|error| {
             format!("failed to write command to node {}: {error}", node.node_id)
         })?;
@@ -109,12 +182,43 @@ impl Launcher {
     }
 
     pub fn send_shutdown_command(node: &mut LaunchedNode) -> Result<(), String> {
-        node.stdin.write_all(b"shutdown\n").map_err(|error| {
-            format!("failed to write shutdown to node {}: {error}", node.node_id)
-        })?;
-        node.stdin
-            .flush()
-            .map_err(|error| format!("failed to flush shutdown to node {}: {error}", node.node_id))
+        Self::send_raw_command(node, "shutdown\n")
+    }
+
+    pub fn broadcast_partition_command(
+        nodes: &mut [LaunchedNode],
+        from: u64,
+        to: u64,
+    ) -> Result<(), String> {
+        for node in nodes {
+            Self::send_partition_command(node, from, to)?;
+        }
+        Ok(())
+    }
+
+    pub fn broadcast_heal_command(
+        nodes: &mut [LaunchedNode],
+        from: u64,
+        to: u64,
+    ) -> Result<(), String> {
+        for node in nodes {
+            Self::send_heal_command(node, from, to)?;
+        }
+        Ok(())
+    }
+
+    pub fn broadcast_clear_command(nodes: &mut [LaunchedNode]) -> Result<(), String> {
+        for node in nodes {
+            Self::send_clear_command(node)?;
+        }
+        Ok(())
+    }
+
+    pub fn broadcast_shutdown_command(nodes: &mut [LaunchedNode]) -> Result<(), String> {
+        for node in nodes {
+            Self::send_shutdown_command(node)?;
+        }
+        Ok(())
     }
 
     pub fn read_stdout_line(node: &mut LaunchedNode) -> Result<Option<String>, String> {
@@ -157,6 +261,14 @@ impl Launcher {
         }
         Ok(())
     }
+}
+
+fn parse_peer(value: Option<&str>, field: &str) -> Result<u64, String> {
+    let Some(raw) = value else {
+        return Err(format!("missing {} peer id", field));
+    };
+    raw.parse::<u64>()
+        .map_err(|error| format!("invalid {} peer id '{}': {}", field, raw, error))
 }
 
 fn read_node_process_program() -> String {

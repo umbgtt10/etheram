@@ -22,6 +22,7 @@ use crate::infra::transport::transport_factory::build_transport_outgoing;
 use etheram_core::types::PeerId;
 use etheram_node::builders::etheram_node_builder::EtheramNodeBuilder;
 use etheram_node::etheram_node::EtheramNode;
+use std::collections::BTreeMap;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -34,7 +35,11 @@ pub struct NodeRuntime {
 }
 
 impl NodeRuntime {
-    pub fn new(peer_id: PeerId, listen_addr: &str) -> Result<Self, String> {
+    pub fn new(
+        peer_id: PeerId,
+        listen_addr: &str,
+        peer_addresses: &BTreeMap<PeerId, String>,
+    ) -> Result<Self, String> {
         let transport_backend = TransportBackend::from_env();
         let blocked_count = global_partition_table().initialize_from_env()?;
         if blocked_count > 0 {
@@ -55,7 +60,7 @@ impl NodeRuntime {
             .with_transport_outgoing(build_transport_outgoing(
                 &transport_backend,
                 peer_id,
-                listen_addr,
+                peer_addresses,
             )?)
             .with_external_interface_incoming(build_external_interface_incoming()?)
             .with_external_interface_outgoing(build_external_interface_outgoing()?)

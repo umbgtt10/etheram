@@ -37,6 +37,10 @@ panic-semihosting = "0.6"
 postcard = { version = "1.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 toml = "0.9.8"
+tokio = { version = "1", features = ["rt-multi-thread", "time"] }
+tonic = { version = "0.13", features = ["transport"] }
+tonic-build = "0.13"
+prost = "0.13"
 spin = { version = "0.10.0", default-features = false, features = ["mutex", "spin_mutex"] }
 ed25519-dalek = { version = "2", default-features = false }
 proptest = "1"

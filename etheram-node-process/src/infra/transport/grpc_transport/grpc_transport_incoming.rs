@@ -3,6 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::infra::transport::grpc_transport::grpc_transport_bus::dequeue_for;
+use crate::infra::transport::grpc_transport::grpc_transport_bus::ensure_server_started;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::types::PeerId;
 
@@ -11,8 +12,9 @@ pub struct GrpcTransportIncoming {
 }
 
 impl GrpcTransportIncoming {
-    pub fn new(node_id: PeerId, _listen_addr: String) -> Self {
-        Self { node_id }
+    pub fn new(node_id: PeerId, listen_addr: String) -> Result<Self, String> {
+        ensure_server_started(node_id, &listen_addr)?;
+        Ok(Self { node_id })
     }
 }
 
