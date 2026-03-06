@@ -1,0 +1,53 @@
+// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
+pub mod transport {
+    pub mod grpc_transport {
+        pub mod grpc_transport_proto {
+            pub mod wire {
+                include!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/infra/transport/grpc_transport/generated/etheram.transport.rs"
+                ));
+            }
+        }
+
+        pub mod wire_ibft_message {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/grpc_transport/wire_ibft_message.rs"
+            ));
+        }
+
+        pub mod grpc_transport_bus {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/grpc_transport/grpc_transport_bus.rs"
+            ));
+        }
+
+        pub mod grpc_transport_incoming {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/grpc_transport/grpc_transport_incoming.rs"
+            ));
+        }
+
+        pub mod grpc_transport_outgoing {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/grpc_transport/grpc_transport_outgoing.rs"
+            ));
+        }
+    }
+
+    pub mod partitionable_transport {
+        pub mod partition_table {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/partitionable_transport/partition_table.rs"
+            ));
+        }
+    }
+}

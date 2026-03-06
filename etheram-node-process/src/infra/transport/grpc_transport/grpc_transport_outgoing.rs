@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::transport_service_client::TransportServiceClient;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::TransportEnvelope;
 use crate::infra::transport::grpc_transport::wire_ibft_message::serialize;
@@ -10,6 +11,7 @@ use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use std::collections::BTreeMap;
+use std::sync::OnceLock;
 use std::thread;
 use std::time::Duration;
 
@@ -29,30 +31,46 @@ impl GrpcTransportOutgoing {
         }
     }
 
+    fn runtime() -> &'static tokio::runtime::Runtime {
+        static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+        RUNTIME.get_or_init(|| {
+            tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .worker_threads(1)
+                .build()
+                .expect("failed building grpc runtime")
+        })
+    }
+
     fn send_with_retry(&self, peer_id: PeerId, address: &str, payload: &[u8]) {
+        let mut last_error: Option<String> = None;
         for attempt in 1..=SEND_RETRY_COUNT {
-            if Self::send_once(address, self.node_id, payload).is_ok() {
-                return;
+            match Self::send_once(address, self.node_id, payload) {
+                Ok(()) => {
+                    return;
+                }
+                Err(error) => {
+                    last_error = Some(error);
+                }
             }
+
             if attempt < SEND_RETRY_COUNT {
                 thread::sleep(Duration::from_millis(SEND_RETRY_INTERVAL_MS));
             }
         }
+
+        let error_message = last_error.unwrap_or_else(|| "unknown_error".to_string());
         println!(
-            "grpc_send_error from_peer={} to_peer={} addr={}",
-            self.node_id, peer_id, address
+            "grpc_send_error from_peer={} to_peer={} error={}",
+            self.node_id, peer_id, error_message
         );
     }
 
     fn send_once(address: &str, from_peer: PeerId, payload: &[u8]) -> Result<(), String> {
-        let endpoint = format!("http://{}", address);
         let payload_bytes = payload.to_vec();
-        let runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .map_err(|error| format!("failed building grpc runtime: {error}"))?;
+        let endpoint = format!("http://{}", address);
 
-        runtime.block_on(async move {
+        Self::runtime().block_on(async move {
             let mut client = TransportServiceClient::connect(endpoint)
                 .await
                 .map_err(|error| format!("failed connecting grpc client: {error}"))?;
@@ -72,13 +90,6 @@ impl TransportOutgoing for GrpcTransportOutgoing {
     type Message = IbftMessage;
 
     fn send(&self, peer_id: PeerId, message: Self::Message) {
-        if global_partition_table().is_blocked(self.node_id, peer_id) {
-            println!(
-                "partition_drop from_peer={} to_peer={}",
-                self.node_id, peer_id
-            );
-            return;
-        }
         let payload = match serialize(&message) {
             Ok(bytes) => bytes,
             Err(error) => {
@@ -89,6 +100,20 @@ impl TransportOutgoing for GrpcTransportOutgoing {
                 return;
             }
         };
+
+        if peer_id == self.node_id {
+            enqueue_to_local(self.node_id, self.node_id, payload);
+            return;
+        }
+
+        if global_partition_table().is_blocked(self.node_id, peer_id) {
+            println!(
+                "partition_drop from_peer={} to_peer={}",
+                self.node_id, peer_id
+            );
+            return;
+        }
+
         let Some(address) = self.peer_addresses.get(&peer_id) else {
             println!(
                 "grpc_send_error from_peer={} to_peer={} reason=unknown_peer",
@@ -96,6 +121,7 @@ impl TransportOutgoing for GrpcTransportOutgoing {
             );
             return;
         };
+
         self.send_with_retry(peer_id, address, &payload);
     }
 }

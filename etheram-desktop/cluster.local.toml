@@ -1,5 +1,5 @@
 [fleet]
-validator_set = [1, 2, 3]
+validator_set = [1, 2, 3, 4, 5]
 log_level = "info"
 
 [[node]]
@@ -19,3 +19,15 @@ id = 3
 transport_addr = "127.0.0.1:7803"
 client_addr = "127.0.0.1:8803"
 db_path = "./data/node3"
+
+[[node]]
+id = 4
+transport_addr = "127.0.0.1:7804"
+client_addr = "127.0.0.1:8804"
+db_path = "./data/node4"
+
+[[node]]
+id = 5
+transport_addr = "127.0.0.1:7805"
+client_addr = "127.0.0.1:8805"
+db_path = "./data/node5"

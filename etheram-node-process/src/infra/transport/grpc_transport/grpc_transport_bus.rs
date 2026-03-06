@@ -38,7 +38,7 @@ pub fn dequeue_for(node_id: PeerId) -> Option<(PeerId, Vec<u8>)> {
     queue.pop_front()
 }
 
-fn enqueue_to_local(to_peer: PeerId, from_peer: PeerId, payload: Vec<u8>) {
+pub fn enqueue_to_local(to_peer: PeerId, from_peer: PeerId, payload: Vec<u8>) {
     let mut guard = inbound().lock().expect("transport inbound lock poisoned");
     let queue = guard.entry(to_peer).or_default();
     queue.push_back((from_peer, payload));

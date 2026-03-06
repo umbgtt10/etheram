@@ -86,6 +86,12 @@ impl PartitionTable {
     }
 }
 
+impl Default for PartitionTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn parse_peer(raw: &str) -> Result<PeerId, String> {
     raw.trim()
         .parse::<PeerId>()
