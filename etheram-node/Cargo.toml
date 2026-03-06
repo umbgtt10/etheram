@@ -6,8 +6,8 @@ autotests = false
 
 [dependencies]
 etheram-core.workspace = true
-
 ed25519-dalek.workspace = true
+tiny-keccak.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

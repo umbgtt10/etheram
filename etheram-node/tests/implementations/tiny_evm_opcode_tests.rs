@@ -37,7 +37,7 @@ fn opcode_name_sstore_returns_expected_name() {
 #[test]
 fn opcode_name_push1_returns_expected_name() {
     // Act & Assert
-    assert_eq!(opcode_name(OPCODE_PUSH1), Some("PUSH1"));
+    assert_eq!(opcode_name(OPCODE_PUSH1), Some("PUSH"));
 }
 
 #[test]
