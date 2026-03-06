@@ -65,6 +65,22 @@ fn mutation_applied_does_not_panic() {
 
     // Act & Assert
     observer.mutation_applied(0, &ActionKind::UpdateAccount { address: [1u8; 20] });
+    observer.mutation_applied(0, &ActionKind::TransactionOutOfGas { address: [1u8; 20] });
+    observer.mutation_applied(0, &ActionKind::TransactionReverted { address: [1u8; 20] });
+    observer.mutation_applied(
+        0,
+        &ActionKind::TransactionInvalidOpcode { address: [1u8; 20] },
+    );
+    observer.mutation_applied(
+        0,
+        &ActionKind::StoreReceipts {
+            height: 1,
+            success_count: 1,
+            out_of_gas_count: 1,
+            reverted_count: 1,
+            invalid_opcode_count: 1,
+        },
+    );
     observer.mutation_applied(0, &ActionKind::IncrementHeight);
 }
 

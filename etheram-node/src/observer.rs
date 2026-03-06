@@ -32,13 +32,21 @@ pub enum ActionKind {
     UpdateContractStorage {
         address: Address,
     },
+    TransactionOutOfGas {
+        address: Address,
+    },
     TransactionReverted {
+        address: Address,
+    },
+    TransactionInvalidOpcode {
         address: Address,
     },
     StoreReceipts {
         height: Height,
         success_count: usize,
         out_of_gas_count: usize,
+        reverted_count: usize,
+        invalid_opcode_count: usize,
     },
     ScheduleTimeout {
         event: TimerEvent,

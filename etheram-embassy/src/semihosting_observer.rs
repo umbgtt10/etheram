@@ -129,9 +129,25 @@ impl Observer for SemihostingObserver {
                         address[1]
                     );
                 }
+                ActionKind::TransactionOutOfGas { address } => {
+                    crate::info!(
+                        "Node {} emitted TransactionOutOfGas from=[{} {} ...]",
+                        peer_id,
+                        address[0],
+                        address[1]
+                    );
+                }
                 ActionKind::TransactionReverted { address } => {
                     crate::info!(
                         "Node {} emitted TransactionReverted from=[{} {} ...]",
+                        peer_id,
+                        address[0],
+                        address[1]
+                    );
+                }
+                ActionKind::TransactionInvalidOpcode { address } => {
+                    crate::info!(
+                        "Node {} emitted TransactionInvalidOpcode from=[{} {} ...]",
                         peer_id,
                         address[0],
                         address[1]
@@ -141,13 +157,17 @@ impl Observer for SemihostingObserver {
                     height,
                     success_count,
                     out_of_gas_count,
+                    reverted_count,
+                    invalid_opcode_count,
                 } => {
                     crate::info!(
-                        "Node {} emitted StoreReceipts height={} success={} out_of_gas={}",
+                        "Node {} emitted StoreReceipts height={} success={} out_of_gas={} reverted={} invalid_opcode={}",
                         peer_id,
                         height,
                         success_count,
-                        out_of_gas_count
+                        out_of_gas_count,
+                        reverted_count,
+                        invalid_opcode_count
                     );
                 }
                 ActionKind::Log => {
@@ -161,9 +181,25 @@ impl Observer for SemihostingObserver {
     fn mutation_applied(&mut self, peer_id: PeerId, kind: &ActionKind) {
         if self.level >= EventLevel::Essential {
             match kind {
+                ActionKind::TransactionOutOfGas { address } => {
+                    crate::info!(
+                        "Node {} mutation TransactionOutOfGas from=[{} {} ...]",
+                        peer_id,
+                        address[0],
+                        address[1]
+                    );
+                }
                 ActionKind::TransactionReverted { address } => {
                     crate::info!(
                         "Node {} mutation TransactionReverted from=[{} {} ...]",
+                        peer_id,
+                        address[0],
+                        address[1]
+                    );
+                }
+                ActionKind::TransactionInvalidOpcode { address } => {
+                    crate::info!(
+                        "Node {} mutation TransactionInvalidOpcode from=[{} {} ...]",
                         peer_id,
                         address[0],
                         address[1]
@@ -173,13 +209,17 @@ impl Observer for SemihostingObserver {
                     height,
                     success_count,
                     out_of_gas_count,
+                    reverted_count,
+                    invalid_opcode_count,
                 } => {
                     crate::info!(
-                        "Node {} StoreReceipts height={} success={} out_of_gas={}",
+                        "Node {} StoreReceipts height={} success={} out_of_gas={} reverted={} invalid_opcode={}",
                         peer_id,
                         height,
                         success_count,
-                        out_of_gas_count
+                        out_of_gas_count,
+                        reverted_count,
+                        invalid_opcode_count
                     );
                 }
                 _ => {}

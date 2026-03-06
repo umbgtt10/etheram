@@ -125,7 +125,15 @@ impl<M: Clone + 'static> EtheramNode<M> {
                         self.state.apply_single_mutation(mutation);
                     }
                 }
-                _ => {
+                TransactionStatus::OutOfGas => {
+                    self.observer.mutation_applied(
+                        self.peer_id,
+                        &ActionKind::TransactionOutOfGas {
+                            address: tx_result.from,
+                        },
+                    );
+                }
+                TransactionStatus::Reverted => {
                     self.observer.mutation_applied(
                         self.peer_id,
                         &ActionKind::TransactionReverted {
@@ -133,21 +141,35 @@ impl<M: Clone + 'static> EtheramNode<M> {
                         },
                     );
                 }
+                TransactionStatus::InvalidOpcode => {
+                    self.observer.mutation_applied(
+                        self.peer_id,
+                        &ActionKind::TransactionInvalidOpcode {
+                            address: tx_result.from,
+                        },
+                    );
+                }
             }
         }
-        let (success_count, out_of_gas_count) =
-            receipts
-                .iter()
-                .fold((0usize, 0usize), |(s, o), r| match r.status {
-                    TransactionStatus::Success => (s + 1, o),
-                    _ => (s, o + 1),
-                });
+        let (success_count, out_of_gas_count, reverted_count, invalid_opcode_count) = receipts
+            .iter()
+            .fold(
+                (0usize, 0usize, 0usize, 0usize),
+                |(s, o, r, i), receipt| match receipt.status {
+                    TransactionStatus::Success => (s + 1, o, r, i),
+                    TransactionStatus::OutOfGas => (s, o + 1, r, i),
+                    TransactionStatus::Reverted => (s, o, r + 1, i),
+                    TransactionStatus::InvalidOpcode => (s, o, r, i + 1),
+                },
+            );
         self.observer.mutation_applied(
             self.peer_id,
             &ActionKind::StoreReceipts {
                 height: block_height,
                 success_count,
                 out_of_gas_count,
+                reverted_count,
+                invalid_opcode_count,
             },
         );
         self.state
@@ -176,16 +198,24 @@ fn storage_mutation_kind(mutation: &StorageMutation) -> ActionKind {
             height: block.height,
         },
         StorageMutation::StoreReceipts(height, receipts) => {
-            let (s, o) = receipts
-                .iter()
-                .fold((0usize, 0usize), |(s, o), r| match r.status {
-                    TransactionStatus::Success => (s + 1, o),
-                    _ => (s, o + 1),
-                });
+            let (s, o, r, i) =
+                receipts
+                    .iter()
+                    .fold(
+                        (0usize, 0usize, 0usize, 0usize),
+                        |(s, o, r, i), receipt| match receipt.status {
+                            TransactionStatus::Success => (s + 1, o, r, i),
+                            TransactionStatus::OutOfGas => (s, o + 1, r, i),
+                            TransactionStatus::Reverted => (s, o, r + 1, i),
+                            TransactionStatus::InvalidOpcode => (s, o, r, i + 1),
+                        },
+                    );
             ActionKind::StoreReceipts {
                 height: *height,
                 success_count: s,
                 out_of_gas_count: o,
+                reverted_count: r,
+                invalid_opcode_count: i,
             }
         }
     }
