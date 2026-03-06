@@ -4,6 +4,7 @@ members = [
     "core",
     "embassy-core",
     "etheram-desktop",
+    "etheram-node-process",
     "etheram-node",
     "etheram-embassy",
     "etheram-validation",
@@ -45,6 +46,7 @@ primitive-types = { version = "0.14.0", default-features = false }
 etheram-core = { path = "core" }
 embassy-core = { path = "embassy-core" }
 etheram-desktop = { path = "etheram-desktop" }
+etheram-node-process = { path = "etheram-node-process" }
 etheram-node = { path = "etheram-node" }
 etheram-validation = { path = "etheram-validation" }
 raft-node = { path = "raft-node" }
