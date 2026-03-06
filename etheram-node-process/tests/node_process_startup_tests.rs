@@ -62,6 +62,28 @@ fn main_valid_arguments_with_grpc_backend_returns_success_exit_code() {
     let _ = fs::remove_file(config_path);
 }
 
+#[test]
+fn main_invalid_partition_env_with_grpc_backend_returns_non_success_exit_code() {
+    // Arrange
+    let config_path = create_test_config();
+    let mut command = Command::new(env!("CARGO_BIN_EXE_etheram-node-process"));
+    command.arg(&config_path);
+    command.arg("1");
+    command.arg("1");
+    command.env("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND", "grpc");
+    command.env("ETHERAM_PARTITION_BLOCKS", "invalid-pair-format");
+
+    // Act
+    let output = command
+        .output()
+        .expect("failed to run etheram-node-process");
+
+    // Assert
+    assert!(!output.status.success());
+
+    let _ = fs::remove_file(config_path);
+}
+
 fn create_test_config() -> PathBuf {
     let mut path = std::env::temp_dir();
     let millis = SystemTime::now()

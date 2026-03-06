@@ -12,6 +12,7 @@ use crate::infra::scheduler::partitioner_factory::build_partitioner;
 use crate::infra::storage::storage_factory::build_storage;
 use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
+use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use crate::infra::transport::transport_backend::TransportBackend;
 use crate::infra::transport::transport_factory::build_transport_incoming;
 use crate::infra::transport::transport_factory::build_transport_outgoing;
@@ -32,6 +33,13 @@ pub struct NodeRuntime {
 impl NodeRuntime {
     pub fn new(peer_id: PeerId, listen_addr: &str) -> Result<Self, String> {
         let transport_backend = TransportBackend::from_env();
+        let blocked_count = global_partition_table().initialize_from_env()?;
+        if blocked_count > 0 {
+            println!(
+                "partition_table initialized blocked_links={}",
+                blocked_count
+            );
+        }
         let node = EtheramNodeBuilder::<()>::new()
             .with_peer_id(peer_id)
             .with_timer_input(build_timer_input()?)
