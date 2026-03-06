@@ -30,11 +30,11 @@ impl<M: 'static> IncomingSources<M> {
         }
     }
     pub fn poll(&self) -> Option<(MessageSource, Message<M>)> {
-        if let Some((peer_id, message)) = self.transport.poll() {
-            return Some((MessageSource::Peer(peer_id), Message::Peer(message)));
-        }
         if let Some(event) = self.timer.poll() {
             return Some((MessageSource::Timer, Message::Timer(event)));
+        }
+        if let Some((peer_id, message)) = self.transport.poll() {
+            return Some((MessageSource::Peer(peer_id), Message::Peer(message)));
         }
         if let Some((client_id, request)) = self.external_interface.poll_request() {
             return Some((MessageSource::Client(client_id), Message::Client(request)));

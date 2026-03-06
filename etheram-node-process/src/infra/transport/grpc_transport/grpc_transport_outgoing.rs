@@ -17,6 +17,8 @@ use std::sync::OnceLock;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
+use tonic::transport::Channel;
+use tonic::transport::Endpoint;
 
 const SEND_RETRY_COUNT: usize = 3;
 const SEND_RETRY_INTERVAL_MS: u64 = 30;
@@ -34,6 +36,7 @@ fn partition_drop_log_state() -> &'static Mutex<BTreeMap<(PeerId, PeerId), Parti
 }
 
 pub struct GrpcTransportOutgoing {
+    channel_cache: Mutex<BTreeMap<PeerId, Channel>>,
     node_id: PeerId,
     peer_addresses: BTreeMap<PeerId, String>,
 }
@@ -41,6 +44,7 @@ pub struct GrpcTransportOutgoing {
 impl GrpcTransportOutgoing {
     pub fn new(node_id: PeerId, peer_addresses: BTreeMap<PeerId, String>) -> Self {
         Self {
+            channel_cache: Mutex::new(BTreeMap::new()),
             node_id,
             peer_addresses,
         }
@@ -57,15 +61,41 @@ impl GrpcTransportOutgoing {
         })
     }
 
+    fn channel_for_peer(&self, peer_id: PeerId, address: &str) -> Result<Channel, String> {
+        let mut guard = self
+            .channel_cache
+            .lock()
+            .map_err(|_| "grpc channel cache lock poisoned".to_string())?;
+
+        if let Some(channel) = guard.get(&peer_id) {
+            return Ok(channel.clone());
+        }
+
+        let endpoint = Endpoint::from_shared(format!("http://{}", address))
+            .map_err(|error| format!("invalid grpc endpoint: {error}"))?;
+        let channel = Self::runtime()
+            .block_on(async { endpoint.connect().await })
+            .map_err(|error| format!("failed connecting grpc channel: {error}"))?;
+        guard.insert(peer_id, channel.clone());
+        Ok(channel)
+    }
+
+    fn invalidate_channel(&self, peer_id: PeerId) {
+        if let Ok(mut guard) = self.channel_cache.lock() {
+            guard.remove(&peer_id);
+        }
+    }
+
     fn send_with_retry(&self, peer_id: PeerId, address: &str, payload: &[u8]) {
         let mut last_error: Option<String> = None;
         for attempt in 1..=SEND_RETRY_COUNT {
-            match Self::send_once(address, self.node_id, payload) {
+            match self.send_once(peer_id, address, self.node_id, payload) {
                 Ok(()) => {
                     return;
                 }
                 Err(error) => {
                     last_error = Some(error);
+                    self.invalidate_channel(peer_id);
                 }
             }
 
@@ -81,14 +111,18 @@ impl GrpcTransportOutgoing {
         );
     }
 
-    fn send_once(address: &str, from_peer: PeerId, payload: &[u8]) -> Result<(), String> {
+    fn send_once(
+        &self,
+        peer_id: PeerId,
+        address: &str,
+        from_peer: PeerId,
+        payload: &[u8],
+    ) -> Result<(), String> {
+        let channel = self.channel_for_peer(peer_id, address)?;
         let payload_bytes = payload.to_vec();
-        let endpoint = format!("http://{}", address);
+        let mut client = TransportServiceClient::new(channel);
 
         Self::runtime().block_on(async move {
-            let mut client = TransportServiceClient::connect(endpoint)
-                .await
-                .map_err(|error| format!("failed connecting grpc client: {error}"))?;
             client
                 .send_envelope(TransportEnvelope {
                     from_peer_id: from_peer,
