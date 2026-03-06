@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -13,6 +13,7 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
@@ -97,7 +98,7 @@ fn handle_message_commit_quorum_without_pending_block_returns_empty() {
 fn handle_message_commit_quorum_stores_correct_block() {
     // Arrange
     let mut protocol = setup_protocol();
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -314,7 +315,7 @@ fn handle_commit_two_consecutive_heights_seen_messages_pruned_to_current_height(
 
     // Act
     let ctx_1 = setup_context(0, 1);
-    let block_1 = Block::new(1, 0, vec![], [0u8; 32]);
+    let block_1 = Block::new(1, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare_h1 = Message::Peer(IbftMessage::PrePrepare {
         sequence: 1,
         height: 1,

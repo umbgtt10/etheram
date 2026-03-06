@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,6 +6,7 @@ use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_node::brain::protocol::action::Action;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::Address;
 use etheram_node::implementations::in_memory_cache::InMemoryCache;
@@ -101,7 +102,7 @@ fn query_block_unknown_height_returns_none() {
 fn query_block_after_store_mutation_returns_block() {
     // Arrange
     let mut state = fresh_state();
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
 
     // Act
     apply::<()>(

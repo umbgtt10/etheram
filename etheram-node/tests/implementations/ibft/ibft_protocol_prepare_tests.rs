@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 
@@ -115,7 +116,7 @@ fn handle_message_prepare_wrong_block_hash_does_not_trigger_commit() {
     // Arrange
     let mut protocol = setup_protocol();
     let ctx = setup_context(1, 0);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let msg = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,

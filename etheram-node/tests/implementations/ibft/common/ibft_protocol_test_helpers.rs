@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::Address;
 use etheram_node::common_types::types::Hash;
@@ -154,7 +155,7 @@ pub fn build_block_with_commitments(
     contract_storage: &BTreeMap<(Address, Hash), Hash>,
     engine: &dyn ExecutionEngine,
 ) -> Block {
-    let mut block = Block::new(height, proposer, transactions, state_root);
+    let mut block = Block::new(height, proposer, transactions, state_root, BLOCK_GAS_LIMIT);
     let (post_state_root, receipts_root) =
         compute_block_commitments(&block, accounts, contract_storage, engine);
     block.post_state_root = post_state_root;

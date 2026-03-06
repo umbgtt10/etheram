@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -8,6 +8,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::context::context_dto::Context;
 use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
@@ -134,7 +135,7 @@ fn restart_mid_prepare_then_recover_wal_all_nodes_finalize_same_block() {
         Box::new(MockSignatureScheme::new(0)),
         wal,
     );
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     for from in 0..4u64 {
         for to in 0..4u64 {
@@ -234,7 +235,7 @@ fn restart_preserves_replay_state_and_rejects_stale_duplicate_messages() {
     let validators = vec![0, 1, 2, 3];
     let mut node = MiniNode::new(1, validators.clone());
     let ctx = node.context();
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     node.protocol.handle_message(
         &MessageSource::Peer(0),
         &Message::Peer(IbftMessage::PrePrepare {
@@ -255,7 +256,7 @@ fn restart_preserves_replay_state_and_rejects_stale_duplicate_messages() {
             sequence: 8,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [0u8; 32]),
+            block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -318,7 +319,7 @@ fn staggered_multi_node_restarts_mid_height_still_converge_on_same_block() {
         Box::new(MockSignatureScheme::new(0)),
         wal_node_3,
     );
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     for from in 0..4u64 {
         for to in 0..4u64 {
@@ -386,7 +387,7 @@ fn restart_after_commit_then_next_height_proposer_still_advances_consensus() {
         nodes[index].apply_local_mutations(&actions);
         queue.extend(queue_broadcasts(to, &actions, &validators));
     }
-    let block_zero = Block::new(0, 0, vec![], [0u8; 32]);
+    let block_zero = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash_zero = block_zero.compute_hash();
     for from in 0..4u64 {
         for to in 0..4u64 {
@@ -580,8 +581,8 @@ fn restart_at_update_boundary_old_proposer_stays_rejected_new_proposer_finalizes
     let wal = node.protocol.consensus_wal();
     node.protocol = IbftProtocol::from_wal(validators, Box::new(MockSignatureScheme::new(0)), wal);
     let height_one_ctx = node.context();
-    let old_block = Block::new(1, 1, vec![], [0u8; 32]);
-    let new_block = Block::new(1, 2, vec![], [0u8; 32]);
+    let old_block = Block::new(1, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
+    let new_block = Block::new(1, 2, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let new_block_hash = new_block.compute_hash();
 
     // Act
@@ -697,7 +698,7 @@ fn restart_after_first_update_second_update_still_applies_and_finalizes() {
         wal_after_height_zero,
     );
     let height_one_ctx = node.context();
-    let block_one = Block::new(1, 2, vec![], [0u8; 32]);
+    let block_one = Block::new(1, 2, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_one_hash = block_one.compute_hash();
     let pre_prepare_one_actions = node.protocol.handle_message(
         &MessageSource::Peer(2),
@@ -751,11 +752,11 @@ fn restart_after_first_update_second_update_still_applies_and_finalizes() {
             sequence: 460,
             height: 2,
             round: 0,
-            block: Block::new(2, 3, vec![], [0u8; 32]),
+            block: Block::new(2, 3, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
         }),
         &height_two_ctx,
     );
-    let block_two = Block::new(2, 4, vec![], [0u8; 32]);
+    let block_two = Block::new(2, 4, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_two_hash = block_two.compute_hash();
 
     // Act
@@ -900,7 +901,7 @@ fn all_nodes_restart_after_height_zero_then_height_one_advances_all_to_height_tw
         nodes[index].apply_local_mutations(&actions);
         queue.extend(queue_broadcasts(to, &actions, &validators));
     }
-    let block_zero = Block::new(0, 0, vec![], [0u8; 32]);
+    let block_zero = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash_zero = block_zero.compute_hash();
     for from in 0..4u64 {
         for to in 0..4u64 {
@@ -959,7 +960,7 @@ fn all_nodes_restart_after_height_zero_then_height_one_advances_all_to_height_tw
         nodes[index].apply_local_mutations(&actions);
         queue.extend(queue_broadcasts(to, &actions, &validators));
     }
-    let block_one = Block::new(1, 1, vec![], [0u8; 32]);
+    let block_one = Block::new(1, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash_one = block_one.compute_hash();
     for from in 0..4u64 {
         for to in 0..4u64 {

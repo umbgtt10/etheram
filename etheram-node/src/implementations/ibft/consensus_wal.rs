@@ -253,6 +253,7 @@ fn enc_block(buf: &mut Vec<u8>, block: &Block) {
     enc_hash(buf, &block.state_root);
     enc_hash(buf, &block.post_state_root);
     enc_hash(buf, &block.receipts_root);
+    enc_u64(buf, block.gas_limit);
 }
 
 fn enc_opt_block(buf: &mut Vec<u8>, block: Option<&Block>) {
@@ -396,6 +397,7 @@ impl<'a> Cursor<'a> {
         let state_root = self.hash()?;
         let post_state_root = self.hash()?;
         let receipts_root = self.hash()?;
+        let gas_limit = self.u64()?;
         Some(Block {
             height,
             proposer,
@@ -403,6 +405,7 @@ impl<'a> Cursor<'a> {
             state_root,
             post_state_root,
             receipts_root,
+            gas_limit,
         })
     }
 

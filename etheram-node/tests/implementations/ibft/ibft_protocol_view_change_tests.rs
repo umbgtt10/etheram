@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,6 +10,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::context::context_dto::Context;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
@@ -131,7 +132,7 @@ fn handle_message_new_view_round_one_allows_round_one_pre_prepare() {
         view_change_senders: vec![0, 1, 2],
     });
     protocol.handle_message(&MessageSource::Peer(1), &new_view, &ctx);
-    let block = Block::new(0, 1, vec![], [0u8; 32]);
+    let block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -208,7 +209,7 @@ fn handle_message_timeout_then_round_zero_pre_prepare_returns_empty() {
         &Message::Timer(TimerEvent::TimeoutRound),
         &ctx,
     );
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -755,7 +756,7 @@ fn handle_message_new_view_prepared_certificate_signers_subset_allows_round_tran
         view_change_senders: vec![0, 1, 2],
     });
     protocol.handle_message(&MessageSource::Peer(1), &new_view, &ctx);
-    let block = Block::new(0, 1, vec![], [0u8; 32]);
+    let block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -934,7 +935,7 @@ fn handle_message_propose_block_after_timeout_with_prepared_certificate_re_propo
     // Arrange
     let mut protocol = setup_protocol();
     let ctx = setup_context(1, 0);
-    let locked_block = Block::new(0, 0, vec![], [0u8; 32]);
+    let locked_block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let locked_block_hash = locked_block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -1089,7 +1090,7 @@ fn handle_message_new_view_cert_signers_not_subset_of_view_change_senders_accept
         view_change_senders: vec![0, 1, 3],
     });
     protocol.handle_message(&MessageSource::Peer(1), &new_view, &ctx);
-    let block = Block::new(0, 1, vec![], [0u8; 32]);
+    let block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -1127,7 +1128,7 @@ fn handle_message_new_view_without_local_view_change_votes_accepts() {
         view_change_senders: vec![0, 1, 3],
     });
     protocol.handle_message(&MessageSource::Peer(1), &new_view, &ctx);
-    let block = Block::new(0, 1, vec![], [0u8; 32]);
+    let block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,

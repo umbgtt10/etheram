@@ -1,10 +1,11 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::storage::Storage;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::types::Address;
 use etheram_node::common_types::types::Hash;
 use etheram_node::implementations::in_memory_storage::InMemoryStorage;
@@ -76,7 +77,7 @@ fn mutate_increment_height_query_returns_incremented_value() {
 fn mutate_store_block_query_returns_stored_block() {
     // Arrange
     let mut storage = InMemoryStorage::new();
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
 
     // Act
     storage.mutate(StorageMutation::StoreBlock(block.clone()));

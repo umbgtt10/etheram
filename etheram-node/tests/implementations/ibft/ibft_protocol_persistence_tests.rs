@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::context::context_dto::Context;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
@@ -65,7 +66,7 @@ fn handle_message_restore_from_wal_after_prepare_sent_rejects_second_pre_prepare
     // Arrange
     let mut protocol = IbftProtocol::new(vec![0, 1, 2, 3], Box::new(MockSignatureScheme::new(0)));
     let ctx = Context::new(1, 0, [0u8; 32]);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     protocol.handle_message(
         &MessageSource::Peer(0),
         &valid_pre_prepare_message(1, block.clone()),
@@ -91,7 +92,7 @@ fn handle_message_restore_from_wal_after_partial_prepare_votes_reaches_commit_qu
     // Arrange
     let mut protocol = IbftProtocol::new(vec![0, 1, 2, 3], Box::new(MockSignatureScheme::new(0)));
     let ctx = Context::new(1, 0, [0u8; 32]);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -152,7 +153,7 @@ fn handle_message_restore_from_wal_after_partial_commit_votes_stores_block_on_qu
     // Arrange
     let mut protocol = IbftProtocol::new(vec![0, 1, 2, 3], Box::new(MockSignatureScheme::new(0)));
     let ctx = Context::new(1, 0, [0u8; 32]);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -242,7 +243,7 @@ fn handle_message_restore_from_wal_with_replay_state_rejects_lower_or_equal_sequ
     // Arrange
     let mut protocol = IbftProtocol::new(vec![0, 1, 2, 3], Box::new(MockSignatureScheme::new(0)));
     let ctx = Context::new(1, 0, [0u8; 32]);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -278,7 +279,7 @@ fn handle_message_restore_from_wal_with_replay_state_rejects_lower_or_equal_sequ
     );
     let pre_prepare_actions = restored.handle_message(
         &MessageSource::Peer(0),
-        &valid_pre_prepare_message(3, Block::new(0, 0, vec![], [0u8; 32])),
+        &valid_pre_prepare_message(3, Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT)),
         &ctx,
     );
 
@@ -345,7 +346,7 @@ fn handle_message_restore_from_wal_with_round_one_rejects_round_zero_pre_prepare
             sequence: 4,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [0u8; 32]),
+            block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -455,7 +456,7 @@ fn handle_message_restore_from_wal_with_prepared_certificate_rejects_mismatched_
     // Arrange
     let mut protocol = IbftProtocol::new(vec![0, 1, 2, 3], Box::new(MockSignatureScheme::new(0)));
     let ctx = Context::new(1, 0, [0u8; 32]);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -584,7 +585,7 @@ fn consensus_wal_new_protocol_defaults_are_empty_and_round_zero() {
 #[test]
 fn handle_message_restore_from_wal_with_max_seen_sequence_rejects_equal_prepare_sequence() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let mut highest_seen_sequence = BTreeMap::new();
     highest_seen_sequence.insert((2, 1), u64::MAX - 1);
@@ -632,7 +633,7 @@ fn handle_message_restore_from_wal_with_max_seen_sequence_rejects_equal_prepare_
 #[test]
 fn handle_message_restore_from_inconsistent_wal_commit_sent_true_with_no_votes_is_safe() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let wal = setup_wal_with(|wal| {
         wal.pending_block = Some(block);
@@ -663,8 +664,8 @@ fn handle_message_restore_from_inconsistent_wal_commit_sent_true_with_no_votes_i
 #[test]
 fn handle_message_restore_from_wal_height_two_rejects_stale_height_and_accepts_current_height() {
     // Arrange
-    let stale_block = Block::new(1, 1, vec![], [0u8; 32]);
-    let current_block = Block::new(2, 2, vec![], [0u8; 32]);
+    let stale_block = Block::new(1, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
+    let current_block = Block::new(2, 2, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let wal = setup_wal_with(|wal| {
         wal.height = 2;
     });

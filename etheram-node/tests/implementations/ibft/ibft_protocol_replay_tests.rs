@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
@@ -73,8 +74,8 @@ fn handle_message_pre_prepare_higher_sequence_after_invalid_message_is_accepted(
     // Arrange
     let mut protocol = setup_protocol();
     let ctx = setup_context(1, 0);
-    let invalid_block = Block::new(1, 0, vec![], [0u8; 32]);
-    let valid_block = Block::new(0, 0, vec![], [0u8; 32]);
+    let invalid_block = Block::new(1, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
+    let valid_block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let invalid_pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 4,
         height: 1,
@@ -292,7 +293,7 @@ fn handle_message_new_view_lower_sequence_after_higher_invalid_does_not_advance_
         prepared_certificate: None,
         view_change_senders: vec![0, 1, 2],
     });
-    let block = Block::new(0, 1, vec![], [0u8; 32]);
+    let block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let round_one_pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 1,
         height: 0,
@@ -505,13 +506,13 @@ fn handle_message_pre_prepare_lower_sequence_after_higher_invalid_is_rejected() 
         sequence: 8,
         height: 1,
         round: 0,
-        block: Block::new(1, 0, vec![], [0u8; 32]),
+        block: Block::new(1, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     let valid_lower = Message::Peer(IbftMessage::PrePrepare {
         sequence: 7,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(0), &invalid_high, &ctx);
 
@@ -670,7 +671,7 @@ fn handle_message_new_view_equal_sequence_duplicate_is_rejected() {
         sequence: 1,
         height: 0,
         round: 1,
-        block: Block::new(0, 1, vec![], [0u8; 32]),
+        block: Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(1), &invalid_high, &ctx);
     protocol.handle_message(&MessageSource::Peer(1), &valid_equal, &ctx);
@@ -691,10 +692,10 @@ fn handle_message_pre_prepare_same_sequence_as_prepare_from_same_sender_is_indep
         sequence: 7,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(0), &pre_prepare, &ctx);
-    let block_hash = Block::new(0, 0, vec![], [0u8; 32]).compute_hash();
+    let block_hash = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT).compute_hash();
     let prepare_1 = Message::Peer(IbftMessage::Prepare {
         sequence: 7,
         height: 0,
@@ -748,7 +749,7 @@ fn handle_message_pre_prepare_same_sequence_as_view_change_from_same_sender_is_i
         sequence: 3,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
 
     // Act
@@ -771,7 +772,7 @@ fn handle_message_prepare_same_sequence_as_new_view_from_same_sender_is_independ
         view_change_senders: vec![0, 1, 2],
     });
     protocol.handle_message(&MessageSource::Peer(1), &new_view, &ctx);
-    let block = Block::new(0, 1, vec![], [0u8; 32]);
+    let block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 1,
@@ -828,7 +829,7 @@ fn handle_message_sequence_state_persists_across_height_increment_rejects_lower_
         &Message::Timer(TimerEvent::ProposeBlock),
         &ctx0,
     );
-    let block0 = Block::new(0, 0, vec![], [0u8; 32]);
+    let block0 = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash0 = block0.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(1),
@@ -875,7 +876,7 @@ fn handle_message_sequence_state_persists_across_height_increment_rejects_lower_
         &ctx0,
     );
     let ctx1 = setup_context(0, 1);
-    let block1 = Block::new(1, 1, vec![], [0u8; 32]);
+    let block1 = Block::new(1, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash1 = block1.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(1),
@@ -937,7 +938,7 @@ fn handle_message_new_height_higher_sequence_from_same_sender_is_accepted() {
         &Message::Timer(TimerEvent::ProposeBlock),
         &ctx0,
     );
-    let block0 = Block::new(0, 0, vec![], [0u8; 32]);
+    let block0 = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash0 = block0.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(1),
@@ -984,7 +985,7 @@ fn handle_message_new_height_higher_sequence_from_same_sender_is_accepted() {
         &ctx0,
     );
     let ctx1 = setup_context(0, 1);
-    let block1 = Block::new(1, 1, vec![], [0u8; 32]);
+    let block1 = Block::new(1, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let hash1 = block1.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(1),
@@ -1127,7 +1128,7 @@ fn handle_message_peer_message_with_timer_source_returns_empty() {
         sequence: 1,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
 
     // Act

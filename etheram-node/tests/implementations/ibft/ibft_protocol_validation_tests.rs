@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -13,6 +13,7 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::value_transfer_engine::ValueTransferEngine;
@@ -25,7 +26,7 @@ fn handle_message_pre_prepare_zero_gas_price_returns_empty() {
     let from = [1u8; 20];
     ctx.accounts.insert(from, Account::new(10));
     let tx = Transaction::transfer(from, [8u8; 20], 1, 21_000, 0, 0);
-    let block = Block::new(0, 0, vec![tx], [0u8; 32]);
+    let block = Block::new(0, 0, vec![tx], [0u8; 32], BLOCK_GAS_LIMIT);
     let msg = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -92,7 +93,7 @@ fn handle_message_pre_prepare_ascending_gas_price_returns_empty() {
     ctx.accounts.insert(from_b, Account::new(1_000));
     let tx_low = Transaction::transfer(from_a, [9u8; 20], 1, 21_000, 5, 0);
     let tx_high = Transaction::transfer(from_b, [9u8; 20], 1, 21_000, 10, 0);
-    let block = Block::new(0, 0, vec![tx_low, tx_high], [0u8; 32]);
+    let block = Block::new(0, 0, vec![tx_low, tx_high], [0u8; 32], BLOCK_GAS_LIMIT);
     let msg = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -146,4 +147,53 @@ fn handle_message_pre_prepare_equal_gas_price_broadcasts_prepare() {
             message: IbftMessage::Prepare { .. }
         })
     ));
+}
+
+#[test]
+fn handle_message_pre_prepare_wrong_block_gas_limit_returns_empty() {
+    // Arrange
+    let mut protocol = setup_protocol();
+    let ctx = setup_context(1, 0);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT - 1);
+    let msg = Message::Peer(IbftMessage::PrePrepare {
+        sequence: 0,
+        height: 0,
+        round: 0,
+        block,
+    });
+
+    // Act
+    let actions = protocol.handle_message(&MessageSource::Peer(0), &msg, &ctx);
+
+    // Assert
+    assert_eq!(actions.len(), 0);
+}
+
+#[test]
+fn handle_message_pre_prepare_aggregate_tx_gas_exceeds_block_gas_limit_returns_empty() {
+    // Arrange
+    let mut protocol = setup_protocol();
+    let ctx = setup_context(1, 0);
+    let tx = Transaction::transfer([1u8; 20], [2u8; 20], 0, BLOCK_GAS_LIMIT + 1, 1, 0);
+    let block = Block {
+        height: 0,
+        proposer: 0,
+        transactions: vec![tx],
+        state_root: [0u8; 32],
+        post_state_root: [0u8; 32],
+        receipts_root: [0u8; 32],
+        gas_limit: BLOCK_GAS_LIMIT,
+    };
+    let msg = Message::Peer(IbftMessage::PrePrepare {
+        sequence: 0,
+        height: 0,
+        round: 0,
+        block,
+    });
+
+    // Act
+    let actions = protocol.handle_message(&MessageSource::Peer(0), &msg, &ctx);
+
+    // Assert
+    assert_eq!(actions.len(), 0);
 }

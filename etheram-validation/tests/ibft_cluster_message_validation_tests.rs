@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -11,6 +11,7 @@ use crate::common::ibft_cluster_test_helpers::prepare;
 use crate::common::ibft_cluster_test_helpers::validators;
 use etheram_core::types::PeerId;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
@@ -233,7 +234,7 @@ fn prepare_mixed_valid_and_invalid_votes_requires_true_quorum() {
 fn pre_prepare_state_root_mismatch_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
-    let invalid_block = Block::new(0, 0, vec![], [1u8; 32]);
+    let invalid_block = Block::new(0, 0, vec![], [1u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
     // Act
@@ -248,7 +249,7 @@ fn pre_prepare_unknown_transaction_sender_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
     let tx = Transaction::transfer([9u8; 20], [8u8; 20], 1, 21_000, 1, 0);
-    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
+    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
     // Act
@@ -389,7 +390,7 @@ fn pre_prepare_insufficient_balance_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 1)]);
     let tx = Transaction::transfer([1u8; 20], [8u8; 20], 2, 21_000, 1, 0);
-    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
+    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
     // Act
@@ -404,7 +405,7 @@ fn pre_prepare_nonce_mismatch_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 100)]);
     let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 21_000, 1, 1);
-    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
+    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
     // Act
@@ -419,7 +420,7 @@ fn pre_prepare_zero_gas_limit_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 100)]);
     let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 0, 1, 0);
-    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
+    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
     // Act
@@ -434,7 +435,7 @@ fn pre_prepare_gas_limit_exceeds_max_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 100)]);
     let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 1_000_001, 1, 0);
-    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
+    let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
     // Act

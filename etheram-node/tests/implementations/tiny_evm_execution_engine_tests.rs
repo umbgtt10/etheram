@@ -1,10 +1,11 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use alloc::collections::BTreeMap;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::execution::execution_engine::ExecutionEngine;
 use etheram_node::execution::transaction_result::TransactionStatus;
@@ -32,7 +33,7 @@ fn execute_push_add_return_produces_no_contract_storage_mutation() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 21_009, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -66,7 +67,7 @@ fn execute_sstore_emits_contract_storage_mutation() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -110,7 +111,7 @@ fn execute_sload_with_seeded_slot_stores_loaded_value_in_new_slot() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 41_806, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::from([((contract, slot_zero), seeded_value)]);
     let engine = TinyEvmEngine;
@@ -147,7 +148,7 @@ fn execute_value_transfer_with_bytecode_updates_balances_and_contract_storage() 
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 25, 41_006, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(10))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -194,7 +195,7 @@ fn execute_same_block_with_different_engines_returns_different_mutations() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let value_transfer_engine = ValueTransferEngine;
@@ -232,7 +233,7 @@ fn execute_unknown_opcode_after_stop_does_not_change_behavior() {
     let contract = [12u8; 20];
     let bytecode = vec![OPCODE_STOP, 0xff, OPCODE_PUSH1, 0x2a, OPCODE_RETURN];
     let transaction = Transaction::new(sender, contract, 0, 21_000, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -255,7 +256,7 @@ fn execute_unknown_opcode_after_stop_does_not_change_behavior() {
 #[test]
 fn execute_empty_block_returns_no_mutations() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::new();
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -287,7 +288,7 @@ fn execute_unknown_opcode_mid_stream_halts_execution() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 21_003, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -311,7 +312,7 @@ fn execute_push1_at_end_of_bytecode_halts_gracefully() {
     let contract = [16u8; 20];
     let bytecode = vec![OPCODE_PUSH1];
     let transaction = Transaction::new(sender, contract, 0, 21_003, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -338,7 +339,7 @@ fn execute_add_on_empty_stack_uses_zero() {
     let contract = [18u8; 20];
     let bytecode = vec![OPCODE_ADD, OPCODE_PUSH1, 0x00, OPCODE_SSTORE, OPCODE_RETURN];
     let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -368,7 +369,7 @@ fn execute_sstore_on_empty_stack_uses_zero_slot_and_value() {
     let contract = [20u8; 20];
     let bytecode = vec![OPCODE_SSTORE, OPCODE_RETURN];
     let transaction = Transaction::new(sender, contract, 0, 41_000, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -406,7 +407,7 @@ fn execute_sload_on_empty_storage_pushes_zero() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 41_806, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -453,7 +454,7 @@ fn execute_multiple_transactions_isolates_contract_storage() {
     ];
     let tx_a = Transaction::new(sender, contract_a, 0, 41_006, 1, 0, bytecode_a);
     let tx_b = Transaction::new(sender, contract_b, 0, 41_006, 1, 1, bytecode_b);
-    let block = Block::new(0, 0, vec![tx_a, tx_b], [0u8; 32]);
+    let block = Block::new(0, 0, vec![tx_a, tx_b], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([
         (sender, Account::new(100)),
         (contract_a, Account::new(0)),
@@ -505,7 +506,7 @@ fn execute_single_transaction_returns_success_status() {
         OPCODE_RETURN,
     ];
     let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -528,7 +529,7 @@ fn execute_single_transaction_returns_intrinsic_gas_used() {
     let contract = [29u8; 20];
     let bytecode = vec![OPCODE_RETURN];
     let transaction = Transaction::new(sender, contract, 0, 21_000, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -558,7 +559,7 @@ fn execute_sstore_existing_slot_uses_reset_gas() {
     existing_value[31] = 0x01;
     let reset_gas = 21_000 + 3 + 3 + 5_000;
     let transaction = Transaction::new(sender, contract, 0, reset_gas, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::from([((contract, slot_zero), existing_value)]);
     let engine = TinyEvmEngine;
@@ -593,7 +594,7 @@ fn execute_sstore_existing_slot_with_set_gas_runs_out_of_gas() {
     existing_value[31] = 0x01;
     let only_set_gas = 21_000 + 3 + 3 + 5_000 - 1;
     let transaction = Transaction::new(sender, contract, 0, only_set_gas, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::from([((contract, slot_zero), existing_value)]);
     let engine = TinyEvmEngine;
@@ -624,7 +625,7 @@ fn execute_value_transfer_with_bytecode_oog_reverts_entire_transaction() {
     ];
     let too_little_gas = 21_003;
     let transaction = Transaction::new(sender, contract, 50, too_little_gas, 1, 0, bytecode);
-    let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
+    let block = Block::new(0, 0, vec![transaction], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(10))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;
@@ -666,7 +667,7 @@ fn execute_oog_second_tx_does_not_undo_first_tx_contract_storage() {
     let insufficient_gas = 21_003;
     let tx1 = Transaction::new(sender, contract, 0, sufficient_gas, 1, 0, bytecode_ok);
     let tx2 = Transaction::new(sender, contract, 0, insufficient_gas, 1, 1, bytecode_oog);
-    let block = Block::new(0, 0, vec![tx1, tx2], [0u8; 32]);
+    let block = Block::new(0, 0, vec![tx1, tx2], [0u8; 32], BLOCK_GAS_LIMIT);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
     let engine = TinyEvmEngine;

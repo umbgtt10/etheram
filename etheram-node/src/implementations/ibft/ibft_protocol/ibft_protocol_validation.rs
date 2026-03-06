@@ -8,8 +8,10 @@ use super::IbftProtocol;
 use crate::brain::protocol::message_source::MessageSource;
 use crate::common_types::account::Account;
 use crate::common_types::block::Block;
+use crate::common_types::block::BLOCK_GAS_LIMIT;
 use crate::common_types::transaction::Transaction;
 use crate::common_types::types::Address;
+use crate::common_types::types::Gas;
 use crate::common_types::types::Hash;
 use crate::common_types::types::Height;
 use crate::context::context_dto::Context;
@@ -67,6 +69,9 @@ impl IbftProtocol {
         if block.state_root != ctx.state_root {
             return false;
         }
+        if !Self::valid_block_gas(block) {
+            return false;
+        }
         if !Self::valid_transaction_ordering(&block.transactions) {
             return false;
         }
@@ -75,6 +80,14 @@ impl IbftProtocol {
         }
         let (post_state_root, receipts_root) = self.execute_and_compute_commitments(block, ctx);
         block.post_state_root == post_state_root && block.receipts_root == receipts_root
+    }
+
+    fn valid_block_gas(block: &Block) -> bool {
+        if block.gas_limit != BLOCK_GAS_LIMIT {
+            return false;
+        }
+        let total_gas: Gas = block.transactions.iter().map(|t| t.gas_limit).sum();
+        total_gas <= BLOCK_GAS_LIMIT
     }
 
     fn valid_transaction_ordering(transactions: &[Transaction]) -> bool {

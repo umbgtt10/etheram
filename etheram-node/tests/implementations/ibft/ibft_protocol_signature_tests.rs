@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -10,6 +10,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::implementations::ibft::ed25519_signature_scheme::Ed25519SignatureScheme;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
@@ -74,7 +75,7 @@ fn handle_message_peer_pre_prepare_accepted_without_outer_auth() {
     let mut protocol =
         IbftProtocol::new(vec![0, 1, 2, 3], Box::new(Ed25519SignatureScheme::new(1)));
     let ctx = setup_context(1, 0);
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
 
     // Act
     let actions = protocol.handle_message(
@@ -146,7 +147,7 @@ fn handle_message_new_view_with_cert_invalid_sigs_does_not_advance_round() {
 #[test]
 fn handle_message_ed25519_inner_prepare_signature_verified_in_certificate() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let prepare_payload = {
         let mut payload = Vec::with_capacity(1 + 8 + 8 + 32);

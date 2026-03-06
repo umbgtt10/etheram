@@ -34,6 +34,8 @@ use etheram_core::node_common::action_collection::ActionCollection;
 use etheram_core::types::PeerId;
 
 pub(crate) const MAX_GAS_LIMIT: Gas = 1_000_000;
+const BLOCK_GAS_LIMIT: Gas = crate::common_types::block::BLOCK_GAS_LIMIT;
+const MAX_TXS_PER_BLOCK: usize = 256;
 const MAX_FUTURE_BUFFER_SIZE: usize = 100;
 
 mod ibft_protocol_dispatch;
@@ -375,15 +377,31 @@ impl IbftProtocol {
         }
         let (mut block, needs_execution) = match (&self.prepared_certificate, &self.pending_block) {
             (Some(cert), Some(b)) if b.compute_hash() == cert.block_hash => (b.clone(), false),
-            _ => (
-                Block::new(
-                    ctx.current_height,
-                    ctx.peer_id,
-                    ctx.pending_txs.clone(),
-                    ctx.state_root,
-                ),
-                true,
-            ),
+            _ => {
+                let mut selected = Vec::new();
+                let mut accumulated_gas: Gas = 0;
+                for tx in &ctx.pending_txs {
+                    if selected.len() >= MAX_TXS_PER_BLOCK {
+                        break;
+                    }
+                    let next_gas = accumulated_gas.saturating_add(tx.gas_limit);
+                    if next_gas > BLOCK_GAS_LIMIT {
+                        continue;
+                    }
+                    accumulated_gas = next_gas;
+                    selected.push(tx.clone());
+                }
+                (
+                    Block::new(
+                        ctx.current_height,
+                        ctx.peer_id,
+                        selected,
+                        ctx.state_root,
+                        BLOCK_GAS_LIMIT,
+                    ),
+                    true,
+                )
+            }
         };
         if needs_execution {
             let (post_state_root, receipts_root) =

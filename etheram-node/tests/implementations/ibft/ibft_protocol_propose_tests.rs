@@ -12,6 +12,7 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::state_root::compute_state_root_with_contract_storage;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::execution::execution_engine::ExecutionEngine;
@@ -218,4 +219,56 @@ fn handle_message_proposer_timer_with_pending_tx_includes_tx_in_pre_prepare_bloc
         panic!("expected PrePrepare as first action");
     };
     assert_eq!(block.transactions, vec![tx]);
+}
+
+#[test]
+fn handle_message_proposer_timer_sets_block_gas_limit() {
+    // Arrange
+    let mut protocol = setup_protocol();
+    let ctx = setup_context(0, 0);
+
+    // Act
+    let actions = protocol.handle_message(
+        &MessageSource::Timer,
+        &Message::Timer(TimerEvent::ProposeBlock),
+        &ctx,
+    );
+
+    // Assert
+    let Some(Action::BroadcastMessage {
+        message: IbftMessage::PrePrepare { block, .. },
+    }) = actions.get(0)
+    else {
+        panic!("expected PrePrepare as first action");
+    };
+    assert_eq!(block.gas_limit, BLOCK_GAS_LIMIT);
+}
+
+#[test]
+fn handle_message_proposer_timer_skips_tx_exceeding_block_gas_limit() {
+    // Arrange
+    let mut protocol = setup_protocol();
+    let mut ctx = setup_context(0, 0);
+    let tx_a = Transaction::transfer([1u8; 20], [9u8; 20], 0, 6_000_000, 10, 0);
+    let tx_b = Transaction::transfer([2u8; 20], [9u8; 20], 0, 4_000_001, 5, 0);
+    let tx_c = Transaction::transfer([3u8; 20], [9u8; 20], 0, 4_000_000, 1, 0);
+    ctx.pending_txs = vec![tx_a.clone(), tx_b, tx_c.clone()];
+
+    // Act
+    let actions = protocol.handle_message(
+        &MessageSource::Timer,
+        &Message::Timer(TimerEvent::ProposeBlock),
+        &ctx,
+    );
+
+    // Assert
+    let Some(Action::BroadcastMessage {
+        message: IbftMessage::PrePrepare { block, .. },
+    }) = actions.get(0)
+    else {
+        panic!("expected PrePrepare as first action");
+    };
+    assert_eq!(block.transactions.len(), 2);
+    assert_eq!(block.transactions[0], tx_a);
+    assert_eq!(block.transactions[1], tx_c);
 }

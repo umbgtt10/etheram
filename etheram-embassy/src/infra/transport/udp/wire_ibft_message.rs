@@ -8,6 +8,7 @@ use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::Address;
 use etheram_node::common_types::types::Balance;
 use etheram_node::common_types::types::Gas;
+use etheram_node::common_types::types::GasPrice;
 use etheram_node::common_types::types::Hash;
 use etheram_node::common_types::types::Height;
 use etheram_node::common_types::types::Nonce;
@@ -23,6 +24,7 @@ pub struct WireTransaction {
     pub to: Address,
     pub value: Balance,
     pub gas_limit: Gas,
+    pub gas_price: GasPrice,
     pub nonce: Nonce,
     pub data: Vec<u8>,
 }
@@ -34,6 +36,7 @@ impl From<Transaction> for WireTransaction {
             to: tx.to,
             value: tx.value,
             gas_limit: tx.gas_limit,
+            gas_price: tx.gas_price,
             nonce: tx.nonce,
             data: tx.data,
         }
@@ -47,6 +50,7 @@ impl From<WireTransaction> for Transaction {
             to: wire.to,
             value: wire.value,
             gas_limit: wire.gas_limit,
+            gas_price: wire.gas_price,
             nonce: wire.nonce,
             data: wire.data,
         }
@@ -61,6 +65,7 @@ pub struct WireBlock {
     pub state_root: Hash,
     pub post_state_root: Hash,
     pub receipts_root: Hash,
+    pub gas_limit: Gas,
 }
 
 impl From<Block> for WireBlock {
@@ -76,6 +81,7 @@ impl From<Block> for WireBlock {
             state_root: block.state_root,
             post_state_root: block.post_state_root,
             receipts_root: block.receipts_root,
+            gas_limit: block.gas_limit,
         }
     }
 }
@@ -93,6 +99,7 @@ impl From<WireBlock> for Block {
             state_root: wire.state_root,
             post_state_root: wire.post_state_root,
             receipts_root: wire.receipts_root,
+            gas_limit: wire.gas_limit,
         }
     }
 }

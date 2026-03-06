@@ -1,16 +1,17 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common::ibft_cluster_test_helpers::validators;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_validation::ibft_cluster::IbftCluster;
 
 fn block(height: u64, proposer: u64) -> Block {
-    Block::new(height, proposer, vec![], [0u8; 32])
+    Block::new(height, proposer, vec![], [0u8; 32], BLOCK_GAS_LIMIT)
 }
 
 fn block_hash(block: &Block) -> [u8; 32] {

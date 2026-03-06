@@ -14,6 +14,7 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
@@ -29,13 +30,13 @@ fn handle_message_pre_prepare_conflicting_block_same_height_round_same_sender_re
         sequence: 1,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     let conflicting = Message::Peer(IbftMessage::PrePrepare {
         sequence: 2,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [1u8; 32]),
+        block: Block::new(0, 0, vec![], [1u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(0), &accepted, &ctx);
 
@@ -55,13 +56,13 @@ fn handle_message_pre_prepare_conflicting_block_new_sequence_same_sender_returns
         sequence: 10,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     let second = Message::Peer(IbftMessage::PrePrepare {
         sequence: 11,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [2u8; 32]),
+        block: Block::new(0, 0, vec![], [2u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(0), &first, &ctx);
 
@@ -83,6 +84,7 @@ fn handle_message_prepare_for_rejected_conflict_hash_does_not_emit_commit() {
         0,
         vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 1, 0)],
         [0u8; 32],
+        BLOCK_GAS_LIMIT,
     );
     let accepted_hash = accepted_block.compute_hash();
     let conflicting_block = Block::new(
@@ -90,6 +92,7 @@ fn handle_message_prepare_for_rejected_conflict_hash_does_not_emit_commit() {
         0,
         vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 1, 0)],
         [0u8; 32],
+        BLOCK_GAS_LIMIT,
     );
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -156,7 +159,7 @@ fn handle_message_prepare_for_rejected_conflict_hash_does_not_emit_commit() {
 #[test]
 fn handle_message_commit_for_rejected_conflict_hash_does_not_store_block() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let mut commit_votes = BTreeMap::new();
     commit_votes.insert((0, 0, block_hash), vec![0, 2]);
@@ -192,7 +195,7 @@ fn consensus_wal_malicious_tracking_roundtrip_restores_rejection_behavior() {
     // Arrange
     let mut protocol = setup_protocol();
     let ctx = setup_context(1, 0);
-    let accepted_block = Block::new(0, 0, vec![], [0u8; 32]);
+    let accepted_block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let accepted_hash = accepted_block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -210,7 +213,7 @@ fn consensus_wal_malicious_tracking_roundtrip_restores_rejection_behavior() {
             sequence: 51,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [4u8; 32]),
+            block: Block::new(0, 0, vec![], [4u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -243,13 +246,13 @@ fn handle_message_invalid_state_root_conflict_from_proposer_then_valid_pre_prepa
         sequence: 70,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [9u8; 32]),
+        block: Block::new(0, 0, vec![], [9u8; 32], BLOCK_GAS_LIMIT),
     });
     let valid = Message::Peer(IbftMessage::PrePrepare {
         sequence: 71,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(0), &invalid, &ctx);
 
@@ -269,19 +272,19 @@ fn handle_message_wrong_height_conflicts_do_not_mark_rejected_hashes() {
         sequence: 72,
         height: 1,
         round: 0,
-        block: Block::new(1, 0, vec![], [0u8; 32]),
+        block: Block::new(1, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     let stale_b = Message::Peer(IbftMessage::PrePrepare {
         sequence: 73,
         height: 1,
         round: 0,
-        block: Block::new(1, 0, vec![], [7u8; 32]),
+        block: Block::new(1, 0, vec![], [7u8; 32], BLOCK_GAS_LIMIT),
     });
     let valid = Message::Peer(IbftMessage::PrePrepare {
         sequence: 74,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     protocol.handle_message(&MessageSource::Peer(0), &stale_a, &ctx);
     protocol.handle_message(&MessageSource::Peer(0), &stale_b, &ctx);
@@ -304,7 +307,7 @@ fn handle_message_restart_after_invalid_conflict_noise_then_valid_path_progresse
             sequence: 75,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [8u8; 32]),
+            block: Block::new(0, 0, vec![], [8u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -314,7 +317,7 @@ fn handle_message_restart_after_invalid_conflict_noise_then_valid_path_progresse
             sequence: 76,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [9u8; 32]),
+            block: Block::new(0, 0, vec![], [9u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -328,7 +331,7 @@ fn handle_message_restart_after_invalid_conflict_noise_then_valid_path_progresse
             sequence: 77,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [0u8; 32]),
+            block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -392,7 +395,7 @@ fn handle_message_malicious_sender_prepare_does_not_help_reach_quorum() {
         &Message::Timer(TimerEvent::ProposeBlock),
         &ctx,
     );
-    let round_one_hash = Block::new(0, 1, vec![], [0u8; 32]).compute_hash();
+    let round_one_hash = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT).compute_hash();
 
     // Act
     let from_malicious = protocol.handle_message(
@@ -426,7 +429,7 @@ fn handle_message_malicious_sender_prepare_does_not_help_reach_quorum() {
 #[test]
 fn handle_message_restore_from_wal_malicious_sender_prepare_stays_ignored() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let mut prepare_votes = BTreeMap::new();
     prepare_votes.insert((0, 0, block_hash), vec![1, 2]);
@@ -540,7 +543,7 @@ fn handle_message_malicious_sender_new_view_is_ignored() {
     let wal = setup_wal_with(|wal| {
         wal.round = 1;
         wal.prepare_sent = true;
-        wal.pending_block = Some(Block::new(0, 1, vec![], [0u8; 32]));
+        wal.pending_block = Some(Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT));
         wal.malicious_senders = vec![(0, 0)];
         wal.view_change_votes.insert((0, 1), vec![0, 1, 2]);
     });
@@ -550,7 +553,7 @@ fn handle_message_malicious_sender_new_view_is_ignored() {
         sequence: 90,
         height: 0,
         round: 1,
-        block: Block::new(0, 1, vec![], [0u8; 32]),
+        block: Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
 
     // Act
@@ -585,7 +588,7 @@ fn handle_pre_prepare_with_oversized_gas_limit_is_rejected() {
         },
     );
     let oversized_tx = Transaction::transfer(from, [2u8; 20], 100, 2_000_000, 1, 0);
-    let block = Block::new(0, 0, vec![oversized_tx], [0u8; 32]);
+    let block = Block::new(0, 0, vec![oversized_tx], [0u8; 32], BLOCK_GAS_LIMIT);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 1,
         height: 0,

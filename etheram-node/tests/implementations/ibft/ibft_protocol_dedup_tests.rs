@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -13,6 +13,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node::implementations::ibft::signature_scheme::SignatureBytes;
 
@@ -25,7 +26,7 @@ fn handle_message_pre_prepare_duplicate_same_sender_same_sequence_processed_once
         sequence: 7,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
 
     // Act
@@ -46,7 +47,7 @@ fn handle_message_pre_prepare_duplicate_same_sender_same_sequence_processed_once
 #[test]
 fn handle_message_same_sequence_different_message_kind_remains_independent() {
     // Arrange
-    let block = Block::new(0, 0, vec![], [0u8; 32]);
+    let block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let block_hash = block.compute_hash();
     let mut protocol = setup_protocol();
     let ctx = setup_context(1, 0);
@@ -80,7 +81,7 @@ fn handle_message_restore_from_wal_seen_message_duplicate_is_ignored() {
         sequence: 9,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
     let wal = setup_wal_with(|wal| {
         wal.seen_messages = vec![(0, 0, 0, 9)];
@@ -233,7 +234,7 @@ fn handle_message_invalid_then_duplicate_invalid_pre_prepare_is_idempotent_noop(
         sequence: 30,
         height: 1,
         round: 0,
-        block: Block::new(1, 0, vec![], [0u8; 32]),
+        block: Block::new(1, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
 
     // Act
@@ -257,7 +258,7 @@ fn handle_message_restore_from_wal_seen_message_non_duplicate_is_accepted() {
         sequence: 9,
         height: 0,
         round: 0,
-        block: Block::new(0, 0, vec![], [0u8; 32]),
+        block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
     });
 
     // Act

@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -6,6 +6,7 @@ use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_
 use crate::implementations::ibft::common::ibft_protocol_test_helpers::setup_wal_with;
 use alloc::collections::BTreeMap;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::ibft::consensus_wal::ConsensusWal;
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
@@ -21,7 +22,7 @@ fn tx(value: u128) -> Transaction {
 }
 
 fn block_with_tx() -> Block {
-    Block::new(1, 0, vec![tx(500)], [0xabu8; 32])
+    Block::new(1, 0, vec![tx(500)], [0xabu8; 32], BLOCK_GAS_LIMIT)
 }
 
 #[test]

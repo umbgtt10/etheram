@@ -3,9 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use super::transaction::Transaction;
-use super::types::{Hash, Height};
+use super::types::{Gas, Hash, Height};
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
+
+pub const BLOCK_GAS_LIMIT: Gas = 10_000_000;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
@@ -15,6 +17,7 @@ pub struct Block {
     pub state_root: Hash,
     pub post_state_root: Hash,
     pub receipts_root: Hash,
+    pub gas_limit: Gas,
 }
 
 impl Block {
@@ -23,6 +26,7 @@ impl Block {
         proposer: PeerId,
         transactions: Vec<Transaction>,
         state_root: Hash,
+        gas_limit: Gas,
     ) -> Self {
         Self {
             height,
@@ -31,11 +35,12 @@ impl Block {
             state_root,
             post_state_root: [0u8; 32],
             receipts_root: [0u8; 32],
+            gas_limit,
         }
     }
 
     pub fn empty(height: Height, proposer: PeerId, state_root: Hash) -> Self {
-        Self::new(height, proposer, Vec::new(), state_root)
+        Self::new(height, proposer, Vec::new(), state_root, BLOCK_GAS_LIMIT)
     }
 
     pub fn compute_hash(&self) -> Hash {
@@ -70,6 +75,9 @@ impl Block {
         }
         for (i, b) in self.receipts_root.iter().enumerate() {
             hash[(i + 7) % 32] ^= *b;
+        }
+        for (i, b) in self.gas_limit.to_le_bytes().iter().enumerate() {
+            hash[(i + 11) % 32] ^= b;
         }
         hash
     }

@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -7,6 +7,7 @@ use crate::common::ibft_cluster_test_helpers::finalize_round_with_block;
 use crate::common::ibft_cluster_test_helpers::validators;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::state_root::compute_state_root;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
@@ -64,7 +65,7 @@ fn cluster_rejects_pre_prepare_with_ascending_gas_price_transactions() {
     let mut cluster = IbftCluster::new_with_execution_engine_factory(validators(), genesis, || {
         Box::new(ValueTransferEngine)
     });
-    let bad_block = Block::new(0, 0, vec![tx_low, tx_high], [0u8; 32]);
+    let bad_block = Block::new(0, 0, vec![tx_low, tx_high], [0u8; 32], BLOCK_GAS_LIMIT);
 
     // Act
     finalize_round_with_block(&mut cluster, 0, 0, 0, &bad_block);
@@ -80,7 +81,7 @@ fn cluster_rejects_pre_prepare_with_zero_gas_price_transaction() {
     let to = [9u8; 20];
     let tx_zero_price = Transaction::transfer(from, to, 1, 21_000, 0, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1_000)]);
-    let bad_block = Block::new(0, 0, vec![tx_zero_price], [0u8; 32]);
+    let bad_block = Block::new(0, 0, vec![tx_zero_price], [0u8; 32], BLOCK_GAS_LIMIT);
 
     // Act
     finalize_round_with_block(&mut cluster, 0, 0, 0, &bad_block);
@@ -108,4 +109,39 @@ fn submit_zero_gas_price_tx_returns_rejection() {
         &responses[0],
         ClientResponse::TransactionRejected { .. }
     ));
+}
+
+#[test]
+fn cluster_rejects_pre_prepare_with_wrong_block_gas_limit() {
+    // Arrange
+    let mut cluster = IbftCluster::new(validators(), vec![]);
+    let bad_block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT - 1);
+
+    // Act
+    finalize_round_with_block(&mut cluster, 0, 0, 0, &bad_block);
+
+    // Assert
+    assert_eq!(cluster.node_height(0), 0);
+}
+
+#[test]
+fn cluster_rejects_pre_prepare_block_aggregate_gas_exceeds_limit() {
+    // Arrange
+    let mut cluster = IbftCluster::new(validators(), vec![]);
+    let tx = Transaction::transfer([1u8; 20], [2u8; 20], 0, BLOCK_GAS_LIMIT + 1, 1, 0);
+    let bad_block = Block {
+        height: 0,
+        proposer: 0,
+        transactions: vec![tx],
+        state_root: [0u8; 32],
+        post_state_root: [0u8; 32],
+        receipts_root: [0u8; 32],
+        gas_limit: BLOCK_GAS_LIMIT,
+    };
+
+    // Act
+    finalize_round_with_block(&mut cluster, 0, 0, 0, &bad_block);
+
+    // Assert
+    assert_eq!(cluster.node_height(0), 0);
 }

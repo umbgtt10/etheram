@@ -1,4 +1,4 @@
-// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
+﻿// Copyright 2025 Umberto Gotti <umberto.gotti@umbertogotti.dev>
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
@@ -16,6 +16,7 @@ use etheram_node::brain::protocol::action::Action;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::implementations::ibft::ibft_protocol::IbftProtocol;
 use etheram_node::implementations::ibft::mock_signature_scheme::MockSignatureScheme;
 use etheram_node::implementations::ibft::prepared_certificate::PreparedCertificate;
@@ -566,7 +567,7 @@ fn handle_message_pre_prepare_from_removed_validator_after_update_is_ignored() {
             sequence: 950,
             height: 1,
             round: 0,
-            block: Block::new(1, 0, vec![], [0u8; 32]),
+            block: Block::new(1, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
         }),
         &height_one_context,
     );

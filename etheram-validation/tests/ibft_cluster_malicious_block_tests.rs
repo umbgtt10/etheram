@@ -8,6 +8,7 @@ use etheram_core::consensus_protocol::ConsensusProtocol;
 use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::block::Block;
+use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::{Address, Balance};
 use etheram_node::context::context_dto::Context;
@@ -19,7 +20,7 @@ use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_validation::ibft_cluster::IbftCluster;
 
 fn block(height: u64, proposer: u64, state_root: [u8; 32]) -> Block {
-    Block::new(height, proposer, vec![], state_root)
+    Block::new(height, proposer, vec![], state_root, BLOCK_GAS_LIMIT)
 }
 
 fn block_hash(block: &Block) -> [u8; 32] {
@@ -74,12 +75,14 @@ fn valid_conflicting_blocks(height: u64, proposer: u64) -> (Block, Block) {
         proposer,
         vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 1, 0)],
         [0u8; 32],
+        BLOCK_GAS_LIMIT,
     );
     let second = Block::new(
         height,
         proposer,
         vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 1, 0)],
         [0u8; 32],
+        BLOCK_GAS_LIMIT,
     );
     (first, second)
 }
@@ -420,7 +423,7 @@ fn malicious_sender_cannot_help_round_one_finalize_after_timeout() {
     cluster.drain(1);
     cluster.fire_timer(1, TimerEvent::TimeoutRound);
     cluster.drain(1);
-    let round_one_block = Block::new(0, 1, vec![], [0u8; 32]);
+    let round_one_block = Block::new(0, 1, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     cluster.inject_message(1, 1, pre_prepare(335, 0, 1, &round_one_block));
     cluster.drain(1);
     let round_one_hash = block_hash(&round_one_block);
@@ -448,7 +451,7 @@ fn restart_after_invalid_conflict_noise_then_valid_path_progresses() {
             sequence: 330,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [7u8; 32]),
+            block: Block::new(0, 0, vec![], [7u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -458,7 +461,7 @@ fn restart_after_invalid_conflict_noise_then_valid_path_progresses() {
             sequence: 331,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [9u8; 32]),
+            block: Block::new(0, 0, vec![], [9u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -473,7 +476,7 @@ fn restart_after_invalid_conflict_noise_then_valid_path_progresses() {
             sequence: 332,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [0u8; 32]),
+            block: Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -488,7 +491,7 @@ fn malicious_rejection_survives_wal_restart() {
     let validators = vec![0, 1, 2, 3];
     let mut protocol = IbftProtocol::new(validators.clone(), Box::new(MockSignatureScheme::new(0)));
     let ctx = Context::new(1, 0, [0u8; 32]);
-    let accepted_block = Block::new(0, 0, vec![], [0u8; 32]);
+    let accepted_block = Block::new(0, 0, vec![], [0u8; 32], BLOCK_GAS_LIMIT);
     let accepted_hash = accepted_block.compute_hash();
     protocol.handle_message(
         &MessageSource::Peer(0),
@@ -506,7 +509,7 @@ fn malicious_rejection_survives_wal_restart() {
             sequence: 131,
             height: 0,
             round: 0,
-            block: Block::new(0, 0, vec![], [8u8; 32]),
+            block: Block::new(0, 0, vec![], [8u8; 32], BLOCK_GAS_LIMIT),
         }),
         &ctx,
     );
@@ -555,7 +558,7 @@ fn follower_rejects_oversized_gas_block() {
     // Arrange
     let tx_sender: Address = [1u8; 20];
     let oversized_tx = Transaction::transfer(tx_sender, [2u8; 20], 1, 2_000_000, 1, 0);
-    let oversized_block = Block::new(0, 0, vec![oversized_tx], [0u8; 32]);
+    let oversized_block = Block::new(0, 0, vec![oversized_tx], [0u8; 32], BLOCK_GAS_LIMIT);
     let oversized_hash = block_hash(&oversized_block);
     let mut cluster = IbftCluster::new(validators(), funded_genesis());
     cluster.submit_request(
