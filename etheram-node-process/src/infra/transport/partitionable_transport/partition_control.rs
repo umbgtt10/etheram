@@ -3,6 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use crate::infra::transport::partitionable_transport::shutdown_signal::request_shutdown;
 use etheram_core::types::PeerId;
 use std::io;
 use std::io::BufRead;
@@ -12,6 +13,7 @@ enum PartitionControlCommand {
     Partition,
     Heal,
     Clear,
+    Shutdown,
 }
 
 impl PartitionControlCommand {
@@ -20,6 +22,7 @@ impl PartitionControlCommand {
             "partition" => Some(Self::Partition),
             "heal" => Some(Self::Heal),
             "clear" => Some(Self::Clear),
+            "shutdown" => Some(Self::Shutdown),
             _ => None,
         }
     }
@@ -59,7 +62,7 @@ fn apply_control_line(line: &str) -> Result<(), String> {
     };
     let command = PartitionControlCommand::parse(raw_command).ok_or_else(|| {
         format!(
-            "unknown command '{}', expected partition|heal|clear",
+            "unknown command '{}', expected partition|heal|clear|shutdown",
             raw_command
         )
     })?;
@@ -82,6 +85,11 @@ fn apply_control_line(line: &str) -> Result<(), String> {
         PartitionControlCommand::Clear => {
             global_partition_table().clear();
             println!("partition_update cleared");
+            Ok(())
+        }
+        PartitionControlCommand::Shutdown => {
+            request_shutdown();
+            println!("partition_update shutdown_requested");
             Ok(())
         }
     }

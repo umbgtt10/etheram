@@ -2,12 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-mod cluster_config;
-mod launcher;
-mod ui;
-
-use crate::cluster_config::ClusterConfig;
-use crate::launcher::Launcher;
+use etheram_desktop::cluster_config::ClusterConfig;
+use etheram_desktop::launcher::Launcher;
+use etheram_desktop::ui;
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;
@@ -19,7 +16,7 @@ fn run() -> Result<(), String> {
         return Err("usage: etheram-desktop <cluster.toml>".to_string());
     };
     let config = ClusterConfig::load_from_path(Path::new(&config_path))?;
-    Launcher::run(&config)?;
+    Launcher::run(&config, &config_path)?;
     ui::print_startup_banner();
     Ok(())
 }

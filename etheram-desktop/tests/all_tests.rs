@@ -3,3 +3,4 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod desktop_startup_tests;
+pub mod launcher_tests;

@@ -2,4 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+pub mod common;
 pub mod node_process_startup_tests;
+pub mod shutdown_tests;

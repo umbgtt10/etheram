@@ -14,6 +14,8 @@ use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
 use crate::infra::transport::partitionable_transport::partition_control::spawn_partition_control_thread;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use crate::infra::transport::partitionable_transport::shutdown_signal::is_shutdown_requested;
+use crate::infra::transport::partitionable_transport::shutdown_signal::reset_shutdown;
 use crate::infra::transport::transport_backend::TransportBackend;
 use crate::infra::transport::transport_factory::build_transport_incoming;
 use crate::infra::transport::transport_factory::build_transport_outgoing;
@@ -80,6 +82,7 @@ impl NodeRuntime {
     }
 
     pub fn run_forever(&mut self) {
+        reset_shutdown();
         if let Err(error) = spawn_partition_control_thread() {
             println!("partition_control_error {}", error);
         }
@@ -89,6 +92,11 @@ impl NodeRuntime {
         let mut last_status_at = Instant::now();
 
         loop {
+            if is_shutdown_requested() {
+                println!("etheram-node-process shutdown requested");
+                break;
+            }
+
             let progressed = self.node.step();
             attempted_steps += 1;
             if progressed {

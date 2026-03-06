@@ -57,6 +57,7 @@ fn run() -> Result<(), String> {
     if step_limit == 0 {
         println!("etheram-node-process loop mode=forever");
         runtime.run_forever();
+        return Ok(());
     }
     let executed_steps = runtime.run_steps(step_limit);
     println!(
