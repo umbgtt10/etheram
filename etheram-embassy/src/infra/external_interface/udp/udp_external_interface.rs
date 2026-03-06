@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::external_interface::udp::wire_client_message::deserialize_ei_request;
-use crate::infra::external_interface::udp::wire_client_message::deserialize_ei_response;
-use crate::infra::external_interface::udp::wire_client_message::serialize_ei_request;
-use crate::infra::external_interface::udp::wire_client_message::serialize_ei_response;
+use crate::infra::external_interface::udp::wire_client_message::ei_codec::deserialize_ei_request;
+use crate::infra::external_interface::udp::wire_client_message::ei_codec::deserialize_ei_response;
+use crate::infra::external_interface::udp::wire_client_message::ei_codec::serialize_ei_request;
+use crate::infra::external_interface::udp::wire_client_message::ei_codec::serialize_ei_response;
 use alloc::vec::Vec;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;

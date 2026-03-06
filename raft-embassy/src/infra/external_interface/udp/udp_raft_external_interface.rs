@@ -2,7 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use alloc::string::String;
+use crate::infra::external_interface::udp::wire_raft_client_message::ei_codec::deserialize_ei_request;
+use crate::infra::external_interface::udp::wire_raft_client_message::ei_codec::deserialize_ei_response;
+use crate::infra::external_interface::udp::wire_raft_client_message::ei_codec::serialize_ei_request;
+use crate::infra::external_interface::udp::wire_raft_client_message::ei_codec::serialize_ei_response;
 use alloc::vec::Vec;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::channel::Channel;
@@ -12,8 +15,6 @@ use etheram_core::external_interface_outgoing::ExternalInterfaceOutgoing;
 use etheram_core::types::ClientId;
 use raft_node::executor::outgoing::external_interface::client_response::RaftClientResponse;
 use raft_node::incoming::external_interface::client_request::RaftClientRequest;
-use serde::Deserialize;
-use serde::Serialize;
 
 const EI_CAPACITY: usize = 16;
 
@@ -39,78 +40,6 @@ static UDP_RAFT_EI_RESPONSE_1: EiPacketChannel = Channel::new();
 static UDP_RAFT_EI_RESPONSE_2: EiPacketChannel = Channel::new();
 static UDP_RAFT_EI_RESPONSE_3: EiPacketChannel = Channel::new();
 static UDP_RAFT_EI_RESPONSE_4: EiPacketChannel = Channel::new();
-
-#[derive(Serialize, Deserialize)]
-enum WireRaftClientRequest {
-    Command(Vec<u8>),
-    Query(String),
-}
-
-#[derive(Serialize, Deserialize)]
-enum WireRaftClientResponse {
-    Applied(Vec<u8>),
-    QueryResult(Vec<u8>),
-    NotLeader(Option<u64>),
-    Timeout,
-}
-
-#[derive(Serialize, Deserialize)]
-struct WireEiRequestPacket {
-    client_id: ClientId,
-    payload: WireRaftClientRequest,
-}
-
-#[derive(Serialize, Deserialize)]
-struct WireEiResponsePacket {
-    client_id: ClientId,
-    payload: WireRaftClientResponse,
-}
-
-fn serialize_ei_request(client_id: ClientId, request: RaftClientRequest) -> Vec<u8> {
-    let wire_payload = match request {
-        RaftClientRequest::Command(data) => WireRaftClientRequest::Command(data),
-        RaftClientRequest::Query(q) => WireRaftClientRequest::Query(q),
-    };
-    let packet = WireEiRequestPacket {
-        client_id,
-        payload: wire_payload,
-    };
-    postcard::to_allocvec(&packet).unwrap_or_default()
-}
-
-fn deserialize_ei_request(bytes: &[u8]) -> Option<(ClientId, RaftClientRequest)> {
-    let packet: WireEiRequestPacket = postcard::from_bytes(bytes).ok()?;
-    let request = match packet.payload {
-        WireRaftClientRequest::Command(data) => RaftClientRequest::Command(data),
-        WireRaftClientRequest::Query(q) => RaftClientRequest::Query(q),
-    };
-    Some((packet.client_id, request))
-}
-
-fn serialize_ei_response(client_id: ClientId, response: RaftClientResponse) -> Vec<u8> {
-    let wire_payload = match response {
-        RaftClientResponse::Applied(data) => WireRaftClientResponse::Applied(data),
-        RaftClientResponse::QueryResult(data) => WireRaftClientResponse::QueryResult(data),
-        RaftClientResponse::NotLeader(peer) => WireRaftClientResponse::NotLeader(peer),
-        RaftClientResponse::Timeout => WireRaftClientResponse::Timeout,
-    };
-    let packet = WireEiResponsePacket {
-        client_id,
-        payload: wire_payload,
-    };
-    postcard::to_allocvec(&packet).unwrap_or_default()
-}
-
-fn deserialize_ei_response(bytes: &[u8]) -> Option<(ClientId, RaftClientResponse)> {
-    let packet: WireEiResponsePacket = postcard::from_bytes(bytes).ok()?;
-    let response = match packet.payload {
-        WireRaftClientResponse::Applied(data) => RaftClientResponse::Applied(data),
-        WireRaftClientResponse::QueryResult(data) => RaftClientResponse::QueryResult(data),
-        WireRaftClientResponse::NotLeader(peer) => RaftClientResponse::NotLeader(peer),
-        WireRaftClientResponse::Timeout => RaftClientResponse::Timeout,
-    };
-    Some((packet.client_id, response))
-}
 
 pub fn udp_raft_ei_notify_receiver(node_index: usize) -> UdpRaftEiNotifyReceiver {
     match node_index {
