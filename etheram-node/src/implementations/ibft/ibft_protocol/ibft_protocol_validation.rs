@@ -11,7 +11,6 @@ use crate::common_types::block::Block;
 use crate::common_types::block::BLOCK_GAS_LIMIT;
 use crate::common_types::transaction::Transaction;
 use crate::common_types::types::Address;
-use crate::common_types::types::Gas;
 use crate::common_types::types::Hash;
 use crate::common_types::types::Height;
 use crate::context::context_dto::Context;
@@ -86,7 +85,14 @@ impl IbftProtocol {
         if block.gas_limit != BLOCK_GAS_LIMIT {
             return false;
         }
-        let total_gas: Gas = block.transactions.iter().map(|t| t.gas_limit).sum();
+        let Some(total_gas) = block
+            .transactions
+            .iter()
+            .map(|t| t.gas_limit)
+            .try_fold(0u64, |acc, gas| acc.checked_add(gas))
+        else {
+            return false;
+        };
         total_gas <= BLOCK_GAS_LIMIT
     }
 

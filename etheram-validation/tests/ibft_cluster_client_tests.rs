@@ -174,3 +174,29 @@ fn submit_transaction_gas_limit_exceeded_returns_rejected() {
         }
     );
 }
+
+#[test]
+fn get_receipts_after_empty_block_commit_returns_zero_summary() {
+    // Arrange
+    let mut cluster = IbftCluster::new(validators(), vec![]);
+    let proposed_block = block(0, 0);
+    finalize_round_after_proposer_timer(&mut cluster, 0, 0, 0, &proposed_block);
+    cluster.submit_request(0, 16, ClientRequest::GetReceipts(0));
+
+    // Act
+    cluster.drain(0);
+    let responses = cluster.drain_client_responses(16);
+
+    // Assert
+    assert_eq!(responses.len(), 1);
+    assert_eq!(
+        responses[0],
+        ClientResponse::ReceiptsSummary {
+            height: 0,
+            success_count: 0,
+            out_of_gas_count: 0,
+            reverted_count: 0,
+            invalid_opcode_count: 0,
+        }
+    );
+}

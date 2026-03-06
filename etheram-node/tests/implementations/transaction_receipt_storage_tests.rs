@@ -3,6 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use etheram_core::storage::Storage;
+use etheram_node::execution::transaction_receipt::summarize_receipts;
 use etheram_node::execution::transaction_receipt::TransactionReceipt;
 use etheram_node::execution::transaction_result::TransactionStatus;
 use etheram_node::implementations::in_memory_storage::InMemoryStorage;
@@ -73,4 +74,62 @@ fn query_receipts_unknown_height_returns_empty() {
 
     // Assert
     assert!(result.is_empty());
+}
+
+#[test]
+fn summarize_receipts_mixed_statuses_returns_correct_counts() {
+    // Arrange
+    let receipts = vec![
+        TransactionReceipt {
+            status: TransactionStatus::Success,
+            gas_used: 21_000,
+            cumulative_gas_used: 21_000,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::OutOfGas,
+            gas_used: 10,
+            cumulative_gas_used: 21_010,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::Reverted,
+            gas_used: 11,
+            cumulative_gas_used: 21_021,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::InvalidOpcode,
+            gas_used: 12,
+            cumulative_gas_used: 21_033,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::Success,
+            gas_used: 13,
+            cumulative_gas_used: 21_046,
+        },
+    ];
+
+    // Act
+    let (success_count, out_of_gas_count, reverted_count, invalid_opcode_count) =
+        summarize_receipts(&receipts);
+
+    // Assert
+    assert_eq!(success_count, 2);
+    assert_eq!(out_of_gas_count, 1);
+    assert_eq!(reverted_count, 1);
+    assert_eq!(invalid_opcode_count, 1);
+}
+
+#[test]
+fn summarize_receipts_empty_returns_zero_counts() {
+    // Arrange
+    let receipts: Vec<TransactionReceipt> = Vec::new();
+
+    // Act
+    let (success_count, out_of_gas_count, reverted_count, invalid_opcode_count) =
+        summarize_receipts(&receipts);
+
+    // Assert
+    assert_eq!(success_count, 0);
+    assert_eq!(out_of_gas_count, 0);
+    assert_eq!(reverted_count, 0);
+    assert_eq!(invalid_opcode_count, 0);
 }

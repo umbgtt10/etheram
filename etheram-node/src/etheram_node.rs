@@ -7,6 +7,7 @@ use crate::brain::protocol::boxed_protocol::BoxedProtocol;
 use crate::common_types::block::Block;
 use crate::context::context_builder::ContextBuilder;
 use crate::execution::execution_engine::BoxedExecutionEngine;
+use crate::execution::transaction_receipt::summarize_receipts;
 use crate::execution::transaction_receipt::TransactionReceipt;
 use crate::execution::transaction_result::TransactionStatus;
 use crate::executor::etheram_executor::EtheramExecutor;
@@ -151,17 +152,8 @@ impl<M: Clone + 'static> EtheramNode<M> {
                 }
             }
         }
-        let (success_count, out_of_gas_count, reverted_count, invalid_opcode_count) = receipts
-            .iter()
-            .fold(
-                (0usize, 0usize, 0usize, 0usize),
-                |(s, o, r, i), receipt| match receipt.status {
-                    TransactionStatus::Success => (s + 1, o, r, i),
-                    TransactionStatus::OutOfGas => (s, o + 1, r, i),
-                    TransactionStatus::Reverted => (s, o, r + 1, i),
-                    TransactionStatus::InvalidOpcode => (s, o, r, i + 1),
-                },
-            );
+        let (success_count, out_of_gas_count, reverted_count, invalid_opcode_count) =
+            summarize_receipts(&receipts);
         self.observer.mutation_applied(
             self.peer_id,
             &ActionKind::StoreReceipts {
@@ -198,18 +190,7 @@ fn storage_mutation_kind(mutation: &StorageMutation) -> ActionKind {
             height: block.height,
         },
         StorageMutation::StoreReceipts(height, receipts) => {
-            let (s, o, r, i) =
-                receipts
-                    .iter()
-                    .fold(
-                        (0usize, 0usize, 0usize, 0usize),
-                        |(s, o, r, i), receipt| match receipt.status {
-                            TransactionStatus::Success => (s + 1, o, r, i),
-                            TransactionStatus::OutOfGas => (s, o + 1, r, i),
-                            TransactionStatus::Reverted => (s, o, r + 1, i),
-                            TransactionStatus::InvalidOpcode => (s, o, r, i + 1),
-                        },
-                    );
+            let (s, o, r, i) = summarize_receipts(receipts);
             ActionKind::StoreReceipts {
                 height: *height,
                 success_count: s,

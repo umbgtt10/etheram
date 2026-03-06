@@ -13,7 +13,7 @@ use crate::common_types::account::Account;
 use crate::common_types::block::Block;
 use crate::common_types::types::{Hash, Height};
 use crate::context::context_dto::Context;
-use crate::execution::transaction_result::TransactionStatus;
+use crate::execution::transaction_receipt::summarize_receipts;
 use crate::executor::outgoing::external_interface::client_response::ClientResponse;
 use crate::executor::outgoing::external_interface::transaction_rejection_reason::TransactionRejectionReason;
 use crate::incoming::external_interface::client_request::ClientRequest;
@@ -73,26 +73,15 @@ impl IbftProtocol {
                 });
             }
             ClientRequest::GetReceipts(height) => {
-                let (success_count, out_of_gas_count, reverted_count, invalid_opcode_count) = ctx
-                    .receipts
-                    .iter()
-                    .fold(
-                        (0u64, 0u64, 0u64, 0u64),
-                        |(s, o, r, i), receipt| match receipt.status {
-                            TransactionStatus::Success => (s + 1, o, r, i),
-                            TransactionStatus::OutOfGas => (s, o + 1, r, i),
-                            TransactionStatus::Reverted => (s, o, r + 1, i),
-                            TransactionStatus::InvalidOpcode => (s, o, r, i + 1),
-                        },
-                    );
+                let (s, o, r, i) = summarize_receipts(&ctx.receipts);
                 actions.push(Action::SendClientResponse {
                     client_id: *client_id,
                     response: ClientResponse::ReceiptsSummary {
                         height: *height,
-                        success_count,
-                        out_of_gas_count,
-                        reverted_count,
-                        invalid_opcode_count,
+                        success_count: s as u64,
+                        out_of_gas_count: o as u64,
+                        reverted_count: r as u64,
+                        invalid_opcode_count: i as u64,
                     },
                 });
             }

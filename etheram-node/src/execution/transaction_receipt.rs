@@ -11,3 +11,15 @@ pub struct TransactionReceipt {
     pub gas_used: Gas,
     pub cumulative_gas_used: Gas,
 }
+
+pub fn summarize_receipts(receipts: &[TransactionReceipt]) -> (usize, usize, usize, usize) {
+    receipts.iter().fold(
+        (0usize, 0usize, 0usize, 0usize),
+        |(s, o, r, i), receipt| match receipt.status {
+            TransactionStatus::Success => (s + 1, o, r, i),
+            TransactionStatus::OutOfGas => (s, o + 1, r, i),
+            TransactionStatus::Reverted => (s, o, r + 1, i),
+            TransactionStatus::InvalidOpcode => (s, o, r, i + 1),
+        },
+    )
+}

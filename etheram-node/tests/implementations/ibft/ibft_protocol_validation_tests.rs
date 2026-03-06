@@ -232,3 +232,33 @@ fn handle_message_pre_prepare_equal_gas_wrong_sender_tiebreak_returns_empty() {
     // Assert
     assert_eq!(actions.len(), 0);
 }
+
+#[test]
+fn handle_message_pre_prepare_overflowing_aggregate_gas_returns_empty() {
+    // Arrange
+    let mut protocol = setup_protocol();
+    let ctx = setup_context(1, 0);
+    let tx_a = Transaction::transfer([1u8; 20], [2u8; 20], 0, u64::MAX, 1, 0);
+    let tx_b = Transaction::transfer([3u8; 20], [4u8; 20], 0, u64::MAX, 1, 0);
+    let block = Block {
+        height: 0,
+        proposer: 0,
+        transactions: vec![tx_a, tx_b],
+        state_root: [0u8; 32],
+        post_state_root: [0u8; 32],
+        receipts_root: [0u8; 32],
+        gas_limit: BLOCK_GAS_LIMIT,
+    };
+    let msg = Message::Peer(IbftMessage::PrePrepare {
+        sequence: 0,
+        height: 0,
+        round: 0,
+        block,
+    });
+
+    // Act
+    let actions = protocol.handle_message(&MessageSource::Peer(0), &msg, &ctx);
+
+    // Assert
+    assert_eq!(actions.len(), 0);
+}
