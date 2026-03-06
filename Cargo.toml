@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "core",
     "embassy-core",
+    "etheram-desktop",
     "etheram-node",
     "etheram-embassy",
     "etheram-validation",
@@ -34,14 +35,16 @@ heapless = "0.9.2"
 panic-semihosting = "0.6"
 postcard = { version = "1.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+toml = "0.9.8"
 spin = { version = "0.10.0", default-features = false, features = ["mutex", "spin_mutex"] }
 ed25519-dalek = { version = "2", default-features = false }
 proptest = "1"
 tiny-keccak = { version = "2", features = ["keccak"] }
-primitive-types = { version = "0.12", default-features = false }
+primitive-types = { version = "0.14.0", default-features = false }
 
 etheram-core = { path = "core" }
 embassy-core = { path = "embassy-core" }
+etheram-desktop = { path = "etheram-desktop" }
 etheram-node = { path = "etheram-node" }
 etheram-validation = { path = "etheram-validation" }
 raft-node = { path = "raft-node" }

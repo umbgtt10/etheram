@@ -20,7 +20,7 @@ foreach ($crate in @("etheram-core", "embassy-core", "etheram-node", "raft-node"
     Invoke-Step "no_std check $crate" { cargo check -p $crate --no-default-features }
 }
 
-foreach ($crate in @("etheram-core", "etheram-node", "etheram-validation", "raft-node", "raft-validation")) {
+foreach ($crate in @("etheram-core", "etheram-node", "etheram-validation", "etheram-desktop", "raft-node", "raft-validation")) {
     Invoke-Step "Testing $crate" { cargo nextest run -p $crate }
 }
 

@@ -693,9 +693,7 @@ fn word_from_u128(value: u128) -> Hash {
 }
 
 fn word_from_u256(value: U256) -> Hash {
-    let mut word = [0u8; 32];
-    value.to_big_endian(&mut word);
-    word
+    value.to_big_endian()
 }
 
 fn word_to_u256(word: &Hash) -> U256 {

@@ -1,0 +1,10 @@
+[package]
+name = "etheram-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+etheram-core.workspace = true
+etheram-node.workspace = true
+serde.workspace = true
+toml.workspace = true
