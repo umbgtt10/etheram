@@ -4,7 +4,9 @@
 
 use crate::infra::transport::grpc_transport::grpc_transport_bus::dequeue_for;
 use crate::infra::transport::grpc_transport::grpc_transport_bus::ensure_server_started;
-use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize;
+use crate::infra::transport::grpc_transport::sync_bus::enqueue_sync_for;
+use crate::infra::transport::grpc_transport::wire_node_message::deserialize;
+use crate::infra::transport::grpc_transport::wire_node_message::NodeIncomingMessage;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::types::PeerId;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
@@ -26,7 +28,11 @@ impl TransportIncoming for GrpcTransportIncoming {
     fn poll(&self) -> Option<(PeerId, Self::Message)> {
         let (peer_id, payload) = dequeue_for(self.node_id)?;
         match deserialize(&payload) {
-            Ok(message) => Some((peer_id, message)),
+            Ok(NodeIncomingMessage::Ibft(message)) => Some((peer_id, message)),
+            Ok(NodeIncomingMessage::Sync(message)) => {
+                enqueue_sync_for(self.node_id, peer_id, message);
+                None
+            }
             Err(error) => {
                 println!(
                     "grpc_receive_decode_error node_id={} from_peer={} error={}",

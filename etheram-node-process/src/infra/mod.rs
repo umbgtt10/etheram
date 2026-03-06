@@ -9,5 +9,6 @@ pub mod protocol;
 pub mod scheduler;
 pub mod std_shared_state;
 pub mod storage;
+pub mod sync;
 pub mod timer;
 pub mod transport;

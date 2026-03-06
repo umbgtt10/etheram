@@ -11,8 +11,13 @@ use crate::infra::scheduler::context_builder_factory::build_context_builder;
 use crate::infra::scheduler::partitioner_factory::build_partitioner;
 use crate::infra::std_shared_state::StdSharedState;
 use crate::infra::storage::storage_factory::build_storage;
+use crate::infra::sync::sync_message::SyncMessage;
+use crate::infra::sync::sync_sender::build_sync_sender;
+use crate::infra::sync::sync_sender::SyncSender;
+use crate::infra::sync::sync_state::SyncState;
 use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
+use crate::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
 use crate::infra::transport::partitionable_transport::partition_control::spawn_partition_control_thread;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use crate::infra::transport::partitionable_transport::shutdown_signal::is_shutdown_requested;
@@ -43,6 +48,8 @@ const TIMEOUT_TICK_MS: u64 = 1500;
 
 pub struct NodeRuntime {
     node: EtheramNode<IbftMessage>,
+    sync_sender: Box<dyn SyncSender>,
+    sync_state: SyncState,
     timer_state: StdSharedState<InMemoryTimerState>,
 }
 
@@ -71,6 +78,7 @@ impl NodeRuntime {
             build_transport_incoming(&transport_backend, peer_id, listen_addr)?;
         let transport_outgoing =
             build_transport_outgoing(&transport_backend, peer_id, peer_addresses)?;
+        let sync_sender = build_sync_sender(&transport_backend, peer_id, peer_addresses);
         let external_interface_incoming = build_external_interface_incoming()?;
         let external_interface_outgoing = build_external_interface_outgoing()?;
         let storage = build_storage()?;
@@ -104,7 +112,12 @@ impl NodeRuntime {
             execution_engine,
             observer,
         );
-        Ok(Self { node, timer_state })
+        Ok(Self {
+            node,
+            sync_sender,
+            sync_state: SyncState::new(),
+            timer_state,
+        })
     }
 
     pub fn run_steps(&mut self, step_limit: u64) -> u64 {
@@ -158,7 +171,11 @@ impl NodeRuntime {
                 thread::sleep(Duration::from_millis(IDLE_SLEEP_MS));
             }
 
+            self.process_sync_messages();
+
             if last_status_at.elapsed() >= Duration::from_millis(STATUS_INTERVAL_MS) {
+                self.sync_sender
+                    .broadcast_status(self.current_height(), self.last_block_hash());
                 println!(
                     "node_status peer_id={} height={} last_hash={} attempted_steps={} progressed_steps={}",
                     self.node.peer_id(),
@@ -176,21 +193,47 @@ impl NodeRuntime {
         self.node.state().query_height()
     }
 
-    fn last_block_hash_short(&self) -> String {
+    fn process_sync_messages(&mut self) {
+        while let Some((peer_id, message)) = dequeue_sync_for(self.node.peer_id()) {
+            if let SyncMessage::Status { height, .. } = message {
+                self.sync_state.observe_status(peer_id, height);
+                let local_height = self.current_height();
+                if let Some(lag_distance) = self.sync_state.lag_distance(local_height) {
+                    if lag_distance > 0 {
+                        println!(
+                            "sync_state peer_id={} lagging_by={} best_peer_height={}",
+                            self.node.peer_id(),
+                            lag_distance,
+                            local_height + lag_distance
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    fn last_block_hash(&self) -> [u8; 32] {
         let height = self.current_height();
         if height == 0 {
+            return [0u8; 32];
+        }
+
+        self.node
+            .state()
+            .query_block(height - 1)
+            .map(|block| block.compute_hash())
+            .unwrap_or([0u8; 32])
+    }
+
+    fn last_block_hash_short(&self) -> String {
+        let hash = self.last_block_hash();
+        if hash == [0u8; 32] {
             return "none".to_string();
         }
 
-        match self.node.state().query_block(height - 1) {
-            Some(block) => {
-                let hash = block.compute_hash();
-                format!(
-                    "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-                    hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7]
-                )
-            }
-            None => "none".to_string(),
-        }
+        format!(
+            "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7]
+        )
     }
 }

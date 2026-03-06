@@ -8,3 +8,5 @@ pub mod infra;
 pub mod node_process_startup_tests;
 pub mod shutdown_tests;
 pub mod std_shared_state_tests;
+pub mod sync_state_tests;
+pub mod wire_node_message_tests;

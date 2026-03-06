@@ -5,7 +5,7 @@
 use crate::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::transport_service_client::TransportServiceClient;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::TransportEnvelope;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize;
+use crate::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
@@ -90,7 +90,7 @@ impl TransportOutgoing for GrpcTransportOutgoing {
     type Message = IbftMessage;
 
     fn send(&self, peer_id: PeerId, message: Self::Message) {
-        let payload = match serialize(&message) {
+        let payload = match serialize_ibft(&message) {
             Ok(bytes) => bytes,
             Err(error) => {
                 println!(

@@ -2,10 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::infra::sync::sync_message::SyncMessage;
 use crate::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
 use crate::infra::transport::grpc_transport::grpc_transport_incoming::GrpcTransportIncoming;
 use crate::infra::transport::grpc_transport::grpc_transport_outgoing::GrpcTransportOutgoing;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize;
+use crate::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
+use crate::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
+use crate::infra::transport::grpc_transport::wire_node_message::serialize_sync;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
@@ -165,7 +168,7 @@ fn poll_invalid_payload_then_valid_payload_returns_valid_message() {
         GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
     enqueue_to_local(node_id, from_peer, vec![1, 2, 3, 4]);
     let valid = sample_message();
-    let payload = serialize(&valid).expect("failed to serialize valid message");
+    let payload = serialize_ibft(&valid).expect("failed to serialize valid message");
     enqueue_to_local(node_id, from_peer, payload);
 
     // Act
@@ -178,4 +181,31 @@ fn poll_invalid_payload_then_valid_payload_returns_valid_message() {
     let (sender, message) = second.expect("expected valid message after invalid payload");
     assert_eq!(sender, from_peer);
     assert_eq!(message, valid);
+}
+
+#[test]
+fn poll_sync_payload_routes_to_sync_queue_returns_none() {
+    // Arrange
+    let node_id = 26;
+    let from_peer = 27;
+    let listen_addr = format!("127.0.0.1:{}", next_port());
+    let incoming =
+        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let sync_message = SyncMessage::Status {
+        height: 7,
+        last_hash: [3u8; 32],
+    };
+    let payload = serialize_sync(&sync_message).expect("failed to serialize sync message");
+    enqueue_to_local(node_id, from_peer, payload);
+
+    // Act
+    let observed = incoming.poll();
+    let queued_sync = dequeue_sync_for(node_id);
+
+    // Assert
+    assert!(observed.is_none());
+    assert!(queued_sync.is_some());
+    let (queued_peer, queued_message) = queued_sync.expect("expected queued sync message");
+    assert_eq!(queued_peer, from_peer);
+    assert_eq!(queued_message, sync_message);
 }

@@ -20,10 +20,24 @@ pub mod transport {
             ));
         }
 
+        pub mod wire_node_message {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/grpc_transport/wire_node_message.rs"
+            ));
+        }
+
         pub mod grpc_transport_bus {
             include!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
                 "/src/infra/transport/grpc_transport/grpc_transport_bus.rs"
+            ));
+        }
+
+        pub mod sync_bus {
+            include!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/src/infra/transport/grpc_transport/sync_bus.rs"
             ));
         }
 
@@ -49,5 +63,21 @@ pub mod transport {
                 "/src/infra/transport/partitionable_transport/partition_table.rs"
             ));
         }
+    }
+}
+
+pub mod sync {
+    pub mod sync_message {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/infra/sync/sync_message.rs"
+        ));
+    }
+
+    pub mod sync_state {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/infra/sync/sync_state.rs"
+        ));
     }
 }
