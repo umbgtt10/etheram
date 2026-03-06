@@ -3,6 +3,13 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod transport {
+    pub mod transport_backend {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/infra/transport/transport_backend.rs"
+        ));
+    }
+
     pub mod grpc_transport {
         pub mod grpc_transport_proto {
             pub mod wire {
@@ -71,6 +78,13 @@ pub mod sync {
         include!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/src/infra/sync/sync_message.rs"
+        ));
+    }
+
+    pub mod sync_sender {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/infra/sync/sync_sender.rs"
         ));
     }
 

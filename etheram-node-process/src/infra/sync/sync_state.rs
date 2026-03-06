@@ -5,10 +5,12 @@
 use etheram_core::types::PeerId;
 use etheram_node::common_types::types::Height;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 pub struct SyncState {
     observed_heights: BTreeMap<PeerId, Height>,
     in_flight_request: Option<(PeerId, Height)>,
+    failed_peers_by_height: BTreeMap<Height, BTreeSet<PeerId>>,
 }
 
 impl SyncState {
@@ -16,6 +18,7 @@ impl SyncState {
         Self {
             observed_heights: BTreeMap::new(),
             in_flight_request: None,
+            failed_peers_by_height: BTreeMap::new(),
         }
     }
 
@@ -49,14 +52,16 @@ impl SyncState {
         let best_peer = self
             .observed_heights
             .iter()
+            .filter(|(peer_id, height)| {
+                **height > local_height
+                    && !self
+                        .failed_peers_by_height
+                        .get(&local_height)
+                        .map(|failed| failed.contains(peer_id))
+                        .unwrap_or(false)
+            })
             .max_by_key(|(_, height)| *height)
-            .and_then(|(peer_id, height)| {
-                if *height > local_height {
-                    Some(*peer_id)
-                } else {
-                    None
-                }
-            })?;
+            .map(|(peer_id, _)| *peer_id)?;
 
         self.in_flight_request = Some((best_peer, local_height));
         Some((best_peer, local_height, max_blocks))
@@ -68,6 +73,23 @@ impl SyncState {
                 if expected_peer == peer_id && expected_height == start_height =>
             {
                 self.in_flight_request = None;
+                self.failed_peers_by_height.remove(&start_height);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn fail_in_flight_request(&mut self, peer_id: PeerId, start_height: Height) -> bool {
+        match self.in_flight_request {
+            Some((expected_peer, expected_height))
+                if expected_peer == peer_id && expected_height == start_height =>
+            {
+                self.in_flight_request = None;
+                self.failed_peers_by_height
+                    .entry(start_height)
+                    .or_default()
+                    .insert(peer_id);
                 true
             }
             _ => false,

@@ -263,6 +263,7 @@ impl NodeRuntime {
     }
 
     fn handle_blocks(&mut self, peer_id: PeerId, start_height: u64, block_payloads: &[Vec<u8>]) {
+        let local_height = self.current_height();
         let mut decoded = 0u64;
         for payload in block_payloads {
             if deserialize_block(payload).is_ok() {
@@ -270,17 +271,49 @@ impl NodeRuntime {
             }
         }
 
-        let completed = self
-            .sync_state
-            .complete_in_flight_request(peer_id, start_height);
+        let malformed = decoded != block_payloads.len() as u64;
+        let empty_while_lagging =
+            block_payloads.is_empty() && self.sync_state.lag_distance(local_height).is_some();
+
+        let completed = if malformed || empty_while_lagging {
+            false
+        } else {
+            self.sync_state
+                .complete_in_flight_request(peer_id, start_height)
+        };
+
+        let failed = if malformed || empty_while_lagging {
+            self.sync_state
+                .fail_in_flight_request(peer_id, start_height)
+        } else {
+            false
+        };
+
+        if completed || failed {
+            if let Some((target_peer, from_height, max_blocks)) = self
+                .sync_state
+                .next_request(local_height, SYNC_MAX_BLOCKS_PER_REQUEST)
+            {
+                self.sync_sender.send_to_peer(
+                    target_peer,
+                    &SyncMessage::GetBlocks {
+                        from_height,
+                        max_blocks,
+                    },
+                );
+            }
+        }
         println!(
-            "sync_blocks peer_id={} from_peer={} start_height={} payloads={} decoded={} completed_request={}",
+            "sync_blocks peer_id={} from_peer={} start_height={} payloads={} decoded={} malformed={} empty_while_lagging={} completed_request={} failed_request={}",
             self.node.peer_id(),
             peer_id,
             start_height,
             block_payloads.len(),
             decoded,
-            completed
+            malformed,
+            empty_while_lagging,
+            completed,
+            failed
         );
     }
 
