@@ -2,12 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-mod cluster_config;
-mod etheram_node;
-mod infra;
-
-use crate::cluster_config::ClusterConfig;
-use crate::etheram_node::NodeRuntime;
+use etheram_node_process::cluster_config::ClusterConfig;
+use etheram_node_process::etheram_node::NodeRuntime;
 use std::collections::BTreeMap;
 use std::env;
 use std::path::Path;

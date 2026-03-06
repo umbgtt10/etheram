@@ -2,5 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+pub mod cluster_state;
 pub mod gui_app;
 pub mod startup_banner;

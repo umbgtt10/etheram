@@ -4,3 +4,4 @@
 
 pub mod desktop_startup_tests;
 pub mod launcher_tests;
+pub mod ui;

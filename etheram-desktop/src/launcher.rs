@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::cluster_config::ClusterConfig;
-use crate::cluster_config::NodeConfig;
+use etheram_node_process::cluster_config::ClusterConfig;
+use etheram_node_process::cluster_config::NodeConfig;
 use std::io::stdin;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -137,8 +137,20 @@ impl Launcher {
         args: &[String],
         node: &NodeConfig,
     ) -> Result<LaunchedNode, String> {
+        Self::spawn_node_with_command_and_env(program, args, node, &[])
+    }
+
+    pub fn spawn_node_with_command_and_env(
+        program: &str,
+        args: &[String],
+        node: &NodeConfig,
+        envs: &[(&str, &str)],
+    ) -> Result<LaunchedNode, String> {
         let mut command = Command::new(program);
         command.args(args);
+        for (key, value) in envs {
+            command.env(key, value);
+        }
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());
         command.stderr(Stdio::piped());
@@ -250,6 +262,48 @@ impl Launcher {
         Ok(())
     }
 
+    pub fn broadcast_isolate_node_command(
+        nodes: &mut [LaunchedNode],
+        target: u64,
+    ) -> Result<usize, String> {
+        let node_ids: Vec<u64> = nodes.iter().map(|node| node.node_id).collect();
+        if !node_ids.contains(&target) {
+            return Err(format!("node {} is not running", target));
+        }
+
+        let mut link_count = 0usize;
+        for peer_id in node_ids {
+            if peer_id == target {
+                continue;
+            }
+            Self::broadcast_partition_command(nodes, target, peer_id)?;
+            Self::broadcast_partition_command(nodes, peer_id, target)?;
+            link_count += 2;
+        }
+        Ok(link_count)
+    }
+
+    pub fn broadcast_heal_isolated_node_command(
+        nodes: &mut [LaunchedNode],
+        target: u64,
+    ) -> Result<usize, String> {
+        let node_ids: Vec<u64> = nodes.iter().map(|node| node.node_id).collect();
+        if !node_ids.contains(&target) {
+            return Err(format!("node {} is not running", target));
+        }
+
+        let mut link_count = 0usize;
+        for peer_id in node_ids {
+            if peer_id == target {
+                continue;
+            }
+            Self::broadcast_heal_command(nodes, target, peer_id)?;
+            Self::broadcast_heal_command(nodes, peer_id, target)?;
+            link_count += 2;
+        }
+        Ok(link_count)
+    }
+
     pub fn broadcast_clear_command(nodes: &mut [LaunchedNode]) -> Result<(), String> {
         for node in nodes {
             Self::send_clear_command(node)?;
@@ -328,7 +382,7 @@ fn read_node_process_program() -> String {
 
 fn read_step_limit() -> u64 {
     match std::env::var(NODE_STEP_LIMIT_ENV) {
-        Ok(value) => value.parse::<u64>().unwrap_or(1),
-        Err(_) => 1,
+        Ok(value) => value.parse::<u64>().unwrap_or(0),
+        Err(_) => 0,
     }
 }

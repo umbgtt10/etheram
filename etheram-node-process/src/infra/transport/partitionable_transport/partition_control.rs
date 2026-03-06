@@ -2,11 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use crate::infra::transport::partitionable_transport::partition_table::PartitionTable;
 use crate::infra::transport::partitionable_transport::shutdown_signal::request_shutdown;
 use etheram_core::types::PeerId;
 use std::io;
 use std::io::BufRead;
+use std::sync::Arc;
 use std::thread;
 
 enum PartitionControlCommand {
@@ -28,7 +29,7 @@ impl PartitionControlCommand {
     }
 }
 
-pub fn spawn_partition_control_thread() -> Result<(), String> {
+pub fn spawn_partition_control_thread(partition_table: Arc<PartitionTable>) -> Result<(), String> {
     let builder = thread::Builder::new().name("partition-control".to_string());
     builder
         .spawn(move || {
@@ -40,7 +41,7 @@ pub fn spawn_partition_control_thread() -> Result<(), String> {
                         if line.trim().is_empty() {
                             continue;
                         }
-                        if let Err(error) = apply_control_line(&line) {
+                        if let Err(error) = apply_control_line(&partition_table, &line) {
                             println!("partition_control_error {}", error);
                         }
                     }
@@ -55,7 +56,7 @@ pub fn spawn_partition_control_thread() -> Result<(), String> {
         .map_err(|error| format!("failed to spawn partition control thread: {error}"))
 }
 
-fn apply_control_line(line: &str) -> Result<(), String> {
+pub fn apply_control_line(partition_table: &PartitionTable, line: &str) -> Result<(), String> {
     let mut parts = line.split_whitespace();
     let Some(raw_command) = parts.next() else {
         return Ok(());
@@ -71,19 +72,19 @@ fn apply_control_line(line: &str) -> Result<(), String> {
         PartitionControlCommand::Partition => {
             let from = parse_peer(parts.next(), "from")?;
             let to = parse_peer(parts.next(), "to")?;
-            global_partition_table().block(from, to);
+            partition_table.block(from, to);
             println!("partition_update blocked from_peer={} to_peer={}", from, to);
             Ok(())
         }
         PartitionControlCommand::Heal => {
             let from = parse_peer(parts.next(), "from")?;
             let to = parse_peer(parts.next(), "to")?;
-            global_partition_table().heal(from, to);
+            partition_table.heal(from, to);
             println!("partition_update healed from_peer={} to_peer={}", from, to);
             Ok(())
         }
         PartitionControlCommand::Clear => {
-            global_partition_table().clear();
+            partition_table.clear();
             println!("partition_update cleared");
             Ok(())
         }

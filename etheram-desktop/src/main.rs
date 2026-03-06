@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_desktop::cluster_config::ClusterConfig;
 use etheram_desktop::launcher::Launcher;
 use etheram_desktop::ui::gui_app::run_gui;
 use etheram_desktop::ui::startup_banner::print_startup_banner;
+use etheram_node_process::cluster_config::ClusterConfig;
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;

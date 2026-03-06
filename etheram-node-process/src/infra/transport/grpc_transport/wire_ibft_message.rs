@@ -323,3 +323,12 @@ pub fn deserialize(bytes: &[u8]) -> Result<IbftMessage, postcard::Error> {
     let wire: WireIbftMessage = postcard::from_bytes(bytes)?;
     Ok(IbftMessage::from(wire))
 }
+
+pub fn serialize_block(block: &Block) -> Result<Vec<u8>, postcard::Error> {
+    postcard::to_allocvec(&WireBlock::from(block.clone()))
+}
+
+pub fn deserialize_block(bytes: &[u8]) -> Result<Block, postcard::Error> {
+    let wire: WireBlock = postcard::from_bytes(bytes)?;
+    Ok(Block::from(wire))
+}

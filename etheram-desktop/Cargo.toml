@@ -8,6 +8,7 @@ autotests = false
 eframe.workspace = true
 etheram-core.workspace = true
 etheram-node.workspace = true
+etheram-node-process.workspace = true
 serde.workspace = true
 toml.workspace = true
 

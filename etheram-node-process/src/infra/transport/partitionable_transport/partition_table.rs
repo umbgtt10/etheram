@@ -5,7 +5,6 @@
 use etheram_core::types::PeerId;
 use std::collections::BTreeSet;
 use std::sync::Mutex;
-use std::sync::OnceLock;
 
 const PARTITION_BLOCKS_ENV: &str = "ETHERAM_PARTITION_BLOCKS";
 
@@ -96,9 +95,4 @@ fn parse_peer(raw: &str) -> Result<PeerId, String> {
     raw.trim()
         .parse::<PeerId>()
         .map_err(|error| format!("invalid peer id '{}': {error}", raw.trim()))
-}
-
-pub fn global_partition_table() -> &'static PartitionTable {
-    static GLOBAL_PARTITION_TABLE: OnceLock<PartitionTable> = OnceLock::new();
-    GLOBAL_PARTITION_TABLE.get_or_init(PartitionTable::new)
 }

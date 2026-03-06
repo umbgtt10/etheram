@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_desktop::cluster_config::ClusterConfig;
-use etheram_desktop::cluster_config::NodeConfig;
 use etheram_desktop::launcher::Launcher;
+use etheram_node_process::cluster_config::ClusterConfig;
+use etheram_node_process::cluster_config::NodeConfig;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -14,16 +14,16 @@ use std::time::Duration;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
-fn create_node_config() -> NodeConfig {
+fn create_node_config(node_id: u64) -> NodeConfig {
     NodeConfig {
-        id: 1,
+        id: node_id,
         transport_addr: "127.0.0.1:7001".to_string(),
         client_addr: "127.0.0.1:8001".to_string(),
         db_path: "./data/node1".to_string(),
     }
 }
 
-fn spawn_echo_process() -> etheram_desktop::launcher::LaunchedNode {
+fn spawn_echo_process(node_id: u64) -> etheram_desktop::launcher::LaunchedNode {
     let program = "powershell".to_string();
     let args = vec![
         "-NoProfile".to_string(),
@@ -31,14 +31,14 @@ fn spawn_echo_process() -> etheram_desktop::launcher::LaunchedNode {
         "while (($line = [Console]::In.ReadLine()) -ne $null) { Write-Output \"partition_update $line\"; if ($line -eq \"shutdown\") { break } }"
             .to_string(),
     ];
-    let node = create_node_config();
+    let node = create_node_config(node_id);
     Launcher::spawn_node_with_command(&program, &args, &node).expect("failed to spawn echo process")
 }
 
 fn spawn_echo_processes(count: usize) -> Vec<etheram_desktop::launcher::LaunchedNode> {
     let mut nodes = Vec::new();
-    for _ in 0..count {
-        nodes.push(spawn_echo_process());
+    for index in 0..count {
+        nodes.push(spawn_echo_process(index as u64 + 1));
     }
     nodes
 }
@@ -137,7 +137,7 @@ fn read_until_contains(
 #[test]
 fn send_partition_command_powershell_echo_process_returns_partition_update_line() {
     // Arrange
-    let mut launched = spawn_echo_process();
+    let mut launched = spawn_echo_process(1);
 
     // Act
     Launcher::send_partition_command(&mut launched, 1, 2)
@@ -154,7 +154,7 @@ fn send_partition_command_powershell_echo_process_returns_partition_update_line(
 #[test]
 fn send_shutdown_command_powershell_echo_process_returns_shutdown_line() {
     // Arrange
-    let mut launched = spawn_echo_process();
+    let mut launched = spawn_echo_process(1);
 
     // Act
     Launcher::send_shutdown_command(&mut launched).expect("failed to send shutdown command");
@@ -206,18 +206,99 @@ fn broadcast_partition_and_heal_three_processes_all_receive_recovery_signals() {
 }
 
 #[test]
+fn broadcast_isolate_and_heal_isolated_node_three_processes_all_receive_bidirectional_links() {
+    // Arrange
+    let mut launched = spawn_echo_processes(3);
+
+    // Act
+    let test_result = (|| -> Result<(), String> {
+        let isolated_links = Launcher::broadcast_isolate_node_command(&mut launched, 1)
+            .map_err(|error| format!("failed to broadcast isolate command: {error}"))?;
+        let mut isolate_lines = Vec::new();
+        for node in &mut launched {
+            for _ in 0..isolated_links {
+                isolate_lines.push(
+                    Launcher::read_stdout_line(node)
+                        .map_err(|error| format!("failed to read isolate line: {error}"))?
+                        .ok_or_else(|| "expected isolate line".to_string())?,
+                );
+            }
+        }
+
+        let healed_links = Launcher::broadcast_heal_isolated_node_command(&mut launched, 1)
+            .map_err(|error| format!("failed to broadcast heal isolated command: {error}"))?;
+        let mut heal_lines = Vec::new();
+        for node in &mut launched {
+            for _ in 0..healed_links {
+                heal_lines.push(
+                    Launcher::read_stdout_line(node)
+                        .map_err(|error| format!("failed to read heal isolated line: {error}"))?
+                        .ok_or_else(|| "expected heal isolated line".to_string())?,
+                );
+            }
+        }
+
+        if isolated_links != 4 {
+            return Err(format!("expected 4 isolated links, got {isolated_links}"));
+        }
+        for line in isolate_lines {
+            if !(line == "partition_update partition 1 2"
+                || line == "partition_update partition 2 1"
+                || line == "partition_update partition 1 3"
+                || line == "partition_update partition 3 1")
+            {
+                return Err(format!("unexpected isolate line: {line}"));
+            }
+        }
+
+        if healed_links != 4 {
+            return Err(format!("expected 4 healed links, got {healed_links}"));
+        }
+        for line in heal_lines {
+            if !(line == "partition_update heal 1 2"
+                || line == "partition_update heal 2 1"
+                || line == "partition_update heal 1 3"
+                || line == "partition_update heal 3 1")
+            {
+                return Err(format!("unexpected heal line: {line}"));
+            }
+        }
+
+        Ok(())
+    })();
+
+    let stop_result = Launcher::stop_all(launched);
+
+    // Assert
+    assert!(
+        stop_result.is_ok(),
+        "failed to stop processes: {:?}",
+        stop_result
+    );
+    assert!(test_result.is_ok(), "{test_result:?}");
+}
+
+#[test]
 fn broadcast_partition_and_heal_real_node_processes_emit_partition_logs() {
     // Arrange
     let binary_path = node_process_binary_path();
+    let binary_str = binary_path.to_string_lossy().to_string();
     let config_path = create_three_node_cluster_config();
-    env::set_var("ETHERAM_NODE_PROCESS_BIN", &binary_path);
-    env::set_var("ETHERAM_DESKTOP_NODE_STEP_LIMIT", "0");
-    env::set_var("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND", "grpc");
-
     let config = ClusterConfig::load_from_path(&config_path).expect("failed to load config");
     let config_path_text = config_path.to_string_lossy().to_string();
-    let mut launched = Launcher::spawn_node_processes(&config, &config_path_text)
-        .expect("failed to spawn node-process children");
+    let child_envs: Vec<(&str, &str)> = vec![("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND", "grpc")];
+    let mut launched: Vec<etheram_desktop::launcher::LaunchedNode> = Vec::new();
+    for node in &config.node {
+        let args = vec![
+            config_path_text.clone(),
+            node.id.to_string(),
+            "0".to_string(),
+        ];
+        let process =
+            Launcher::spawn_node_with_command_and_env(&binary_str, &args, node, &child_envs)
+                .expect("failed to spawn node-process child");
+        launched.push(process);
+    }
 
     thread::sleep(Duration::from_millis(300));
 
@@ -237,11 +318,7 @@ fn broadcast_partition_and_heal_real_node_processes_emit_partition_logs() {
     })();
 
     let stop_result = Launcher::stop_all(launched);
-
     let _ = fs::remove_file(config_path);
-    env::remove_var("ETHERAM_NODE_PROCESS_BIN");
-    env::remove_var("ETHERAM_DESKTOP_NODE_STEP_LIMIT");
-    env::remove_var("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND");
 
     // Assert
     assert!(

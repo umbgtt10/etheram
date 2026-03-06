@@ -28,6 +28,8 @@ fn main_valid_arguments_returns_success_exit_code() {
     command.arg(&config_path);
     command.arg("1");
     command.arg("1");
+    command.env_remove("ETHERAM_PARTITION_BLOCKS");
+    command.env_remove("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND");
 
     // Act
     let output = command
@@ -48,6 +50,7 @@ fn main_valid_arguments_with_grpc_backend_returns_success_exit_code() {
     command.arg(&config_path);
     command.arg("1");
     command.arg("1");
+    command.env_remove("ETHERAM_PARTITION_BLOCKS");
     command.env("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND", "grpc");
 
     // Act

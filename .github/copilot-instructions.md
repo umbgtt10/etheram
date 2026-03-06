@@ -398,6 +398,7 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
 - **No unit tests unless explicitly requested** — do not add or modify unit tests by default. In particular, do not add inline test modules (`#[cfg(test)] mod tests { ... }`) in `src/` files.
 - **Integration-test-first policy** — when tests are requested or clearly appropriate, add integration tests under `tests/` (not inline in `src/`), and within reason structure production code so integration tests can be added cleanly.
 - **Single-primary-type per file (default)** — each production Rust file should define one primary `struct` or `enum`, and the filename should match that primary type in snake_case. Additional `struct`/`enum` items are allowed only when tightly coupled and small (for example helper DTOs/wire mirrors, companion conversion wrappers, or context carrier pairs). When a file grows or carries multiple independent responsibilities, split it.
+- **Prefer methods over free functions** — all behaviour associated with a `struct` or `enum` must live in an `impl` block as methods. Avoid standalone free functions that operate on a struct's data. Free functions are acceptable only when they are truly stateless utilities with no struct affinity (e.g. pure converters, top-level entry points).
 - **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram_node::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
 - **`use` blocks are compacted and sorted** — all `use` statements must be grouped together with no blank lines between them, and sorted alphabetically. This must be verified before completing any task.
 - **1 empty line after file header** — there must be exactly one blank line between the 3-line Apache 2.0 copyright header and the first `use` statement.
@@ -447,7 +448,7 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
   tests/implementations/ibft/vote_tracker_tests.rs
   ```
 - **Direction H crate bootstrap rule** — `etheram-desktop/` and `etheram-node-process/` must be created with a `tests/` folder and `tests/all_tests.rs` from day one. Every new production module added under `src/` during Direction H work must either add a corresponding integration test in `tests/` in the same task or include an explicit justification for deferral.
-- **Direction H dependency boundary** — `etheram-desktop` and `etheram-node-process` may depend on `etheram-core` and `etheram-node` only (plus external ecosystem crates). They must not depend on `raft-*` crates.
+- **Direction H dependency boundary** — `etheram-desktop` may depend on `etheram-core`, `etheram-node`, and `etheram-node-process` (plus external ecosystem crates). `etheram-node-process` may depend on `etheram-core` and `etheram-node` only (plus external ecosystem crates). Neither may depend on `raft-*` crates.
 
 ---
 
