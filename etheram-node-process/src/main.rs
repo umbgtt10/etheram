@@ -3,10 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 mod cluster_config;
-mod node_runtime;
+mod etheram_node;
+mod infra;
 
 use crate::cluster_config::ClusterConfig;
-use crate::node_runtime::NodeRuntime;
+use crate::etheram_node::NodeRuntime;
 use std::env;
 use std::path::Path;
 use std::process::ExitCode;
@@ -53,9 +54,13 @@ fn run() -> Result<(), String> {
     );
 
     let mut runtime = NodeRuntime::new(node.id)?;
+    if step_limit == 0 {
+        println!("etheram-node-process loop mode=forever");
+        runtime.run_forever();
+    }
     let executed_steps = runtime.run_steps(step_limit);
     println!(
-        "etheram-node-process loop completed: executed_steps={}",
+        "etheram-node-process loop mode=finite executed_steps={}",
         executed_steps
     );
     Ok(())

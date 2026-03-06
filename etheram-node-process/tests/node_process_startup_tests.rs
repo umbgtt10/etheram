@@ -28,7 +28,7 @@ fn main_valid_arguments_returns_success_exit_code() {
     let mut command = Command::new(env!("CARGO_BIN_EXE_etheram-node-process"));
     command.arg(&config_path);
     command.arg("1");
-    command.arg("0");
+    command.arg("1");
 
     // Act
     let output = command
