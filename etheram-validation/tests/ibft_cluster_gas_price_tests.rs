@@ -145,3 +145,30 @@ fn cluster_rejects_pre_prepare_block_aggregate_gas_exceeds_limit() {
     // Assert
     assert_eq!(cluster.node_height(0), 0);
 }
+
+#[test]
+fn cluster_rejects_pre_prepare_equal_gas_wrong_sender_tiebreak() {
+    // Arrange
+    let lower_sender = [1u8; 20];
+    let higher_sender = [2u8; 20];
+    let to = [9u8; 20];
+    let tx_lower_sender = Transaction::transfer(lower_sender, to, 1, 21_000, 5, 0);
+    let tx_higher_sender = Transaction::transfer(higher_sender, to, 1, 21_000, 5, 0);
+    let genesis = vec![(lower_sender, 1_000), (higher_sender, 1_000)];
+    let mut cluster = IbftCluster::new_with_execution_engine_factory(validators(), genesis, || {
+        Box::new(ValueTransferEngine)
+    });
+    let bad_block = Block::new(
+        0,
+        0,
+        vec![tx_higher_sender, tx_lower_sender],
+        [0u8; 32],
+        BLOCK_GAS_LIMIT,
+    );
+
+    // Act
+    finalize_round_with_block(&mut cluster, 0, 0, 0, &bad_block);
+
+    // Assert
+    assert_eq!(cluster.node_height(0), 0);
+}

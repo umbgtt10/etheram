@@ -13,6 +13,8 @@ pub fn compute_receipts_root(results: &[TransactionResult]) -> Hash {
         let status_byte: u8 = match result.status {
             TransactionStatus::Success => 0x01,
             TransactionStatus::OutOfGas => 0x02,
+            TransactionStatus::Reverted => 0x03,
+            TransactionStatus::InvalidOpcode => 0x04,
         };
         hash[position as usize % 32] ^= status_byte.wrapping_mul(mix);
         for (i, b) in result.gas_used.to_le_bytes().iter().enumerate() {

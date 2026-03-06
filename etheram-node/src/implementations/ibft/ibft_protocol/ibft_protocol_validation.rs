@@ -91,9 +91,7 @@ impl IbftProtocol {
     }
 
     fn valid_transaction_ordering(transactions: &[Transaction]) -> bool {
-        transactions
-            .windows(2)
-            .all(|w| w[0].gas_price >= w[1].gas_price)
+        transactions.windows(2).all(|w| w[0] >= w[1])
     }
 
     fn valid_transactions(

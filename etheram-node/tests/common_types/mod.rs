@@ -6,3 +6,4 @@ pub mod account_tests;
 pub mod block_tests;
 pub mod receipts_root_tests;
 pub mod state_root_tests;
+pub mod transaction_tests;

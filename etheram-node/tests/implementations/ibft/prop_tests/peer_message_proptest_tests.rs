@@ -160,7 +160,10 @@ proptest! {
         // Assert
         let status = &result.transaction_results[0].status;
         prop_assert!(
-            matches!(status, TransactionStatus::Success) || matches!(status, TransactionStatus::OutOfGas)
+            matches!(status, TransactionStatus::Success)
+                || matches!(status, TransactionStatus::OutOfGas)
+                || matches!(status, TransactionStatus::Reverted)
+                || matches!(status, TransactionStatus::InvalidOpcode)
         );
     }
 }

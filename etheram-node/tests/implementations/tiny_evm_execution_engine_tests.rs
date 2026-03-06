@@ -300,7 +300,7 @@ fn execute_unknown_opcode_mid_stream_halts_execution() {
     assert_eq!(result.transaction_results.len(), 1);
     assert_eq!(
         result.transaction_results[0].status,
-        TransactionStatus::OutOfGas
+        TransactionStatus::InvalidOpcode
     );
     assert!(result.transaction_results[0].mutations.is_empty());
 }

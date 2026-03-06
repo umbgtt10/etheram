@@ -89,6 +89,7 @@ use alloc::collections::BTreeMap;
 use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
 use core::slice::from_ref;
+use primitive_types::U256;
 use tiny_keccak::Hasher;
 use tiny_keccak::Keccak;
 
@@ -147,10 +148,26 @@ impl ExecutionEngine for TinyEvmEngine {
                             mutations,
                         });
                     }
-                    _ => {
+                    TransactionStatus::OutOfGas => {
                         transaction_results.push(TransactionResult {
                             from: transaction.from,
                             status: TransactionStatus::OutOfGas,
+                            gas_used: transaction.gas_limit,
+                            mutations: Vec::new(),
+                        });
+                    }
+                    TransactionStatus::Reverted => {
+                        transaction_results.push(TransactionResult {
+                            from: transaction.from,
+                            status: TransactionStatus::Reverted,
+                            gas_used: INTRINSIC_GAS + (gas_after_intrinsic - gas_left),
+                            mutations: Vec::new(),
+                        });
+                    }
+                    TransactionStatus::InvalidOpcode => {
+                        transaction_results.push(TransactionResult {
+                            from: transaction.from,
+                            status: TransactionStatus::InvalidOpcode,
                             gas_used: transaction.gas_limit,
                             mutations: Vec::new(),
                         });
@@ -238,87 +255,91 @@ fn precompute_jumpdests(bytecode: &[u8]) -> BTreeSet<usize> {
 fn exec_add(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = word_from_u128(word_to_u128(&left).wrapping_add(word_to_u128(&right)));
+    let result = word_from_u256(word_to_u256(&left).overflowing_add(word_to_u256(&right)).0);
     stack.push(result);
 }
 
 fn exec_mul(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = word_from_u128(word_to_u128(&left).wrapping_mul(word_to_u128(&right)));
+    let result = word_from_u256(word_to_u256(&left).overflowing_mul(word_to_u256(&right)).0);
     stack.push(result);
 }
 
 fn exec_sub(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = word_from_u128(word_to_u128(&left).wrapping_sub(word_to_u128(&right)));
+    let result = word_from_u256(word_to_u256(&left).overflowing_sub(word_to_u256(&right)).0);
     stack.push(result);
 }
 
 fn exec_div(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let divisor = word_to_u128(&right);
-    let result = if divisor == 0 {
-        0u128
+    let divisor = word_to_u256(&right);
+    let result = if divisor.is_zero() {
+        U256::zero()
     } else {
-        word_to_u128(&left) / divisor
+        word_to_u256(&left) / divisor
     };
-    stack.push(word_from_u128(result));
+    stack.push(word_from_u256(result));
 }
 
 fn exec_lt(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = if word_to_u128(&left) < word_to_u128(&right) {
-        1u128
+    let result = if word_to_u256(&left) < word_to_u256(&right) {
+        U256::one()
     } else {
-        0u128
+        U256::zero()
     };
-    stack.push(word_from_u128(result));
+    stack.push(word_from_u256(result));
 }
 
 fn exec_gt(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = if word_to_u128(&left) > word_to_u128(&right) {
-        1u128
+    let result = if word_to_u256(&left) > word_to_u256(&right) {
+        U256::one()
     } else {
-        0u128
+        U256::zero()
     };
-    stack.push(word_from_u128(result));
+    stack.push(word_from_u256(result));
 }
 
 fn exec_eq(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = if left == right { 1u128 } else { 0u128 };
-    stack.push(word_from_u128(result));
+    let result = if left == right {
+        U256::one()
+    } else {
+        U256::zero()
+    };
+    stack.push(word_from_u256(result));
 }
 
 fn exec_iszero(stack: &mut Vec<Hash>) {
     let val = pop_word(stack);
-    let result = if word_to_u128(&val) == 0 {
-        1u128
+    let result = if word_to_u256(&val).is_zero() {
+        U256::one()
     } else {
-        0u128
+        U256::zero()
     };
-    stack.push(word_from_u128(result));
+    stack.push(word_from_u256(result));
 }
 
 fn exec_and(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = word_to_u128(&left) & word_to_u128(&right);
-    stack.push(word_from_u128(result));
+    let result = word_to_u256(&left) & word_to_u256(&right);
+    stack.push(word_from_u256(result));
 }
 
 fn exec_or(stack: &mut Vec<Hash>) {
     let left = pop_word(stack);
     let right = pop_word(stack);
-    let result = word_to_u128(&left) | word_to_u128(&right);
-    stack.push(word_from_u128(result));
+    let result = word_to_u256(&left) | word_to_u256(&right);
+    stack.push(word_from_u256(result));
 }
 
 fn exec_sha3(
@@ -327,13 +348,21 @@ fn exec_sha3(
     memory_words: &mut u64,
     gas: &mut Gas,
 ) -> bool {
-    let offset = word_to_u128(&pop_word(stack));
-    let size = word_to_u128(&pop_word(stack));
-    let end = offset.saturating_add(size);
-    if end > u64::MAX as u128 {
+    let offset = match word_to_u64(&pop_word(stack)) {
+        Some(value) => value,
+        None => return false,
+    };
+    let size = match word_to_u64(&pop_word(stack)) {
+        Some(value) => value,
+        None => return false,
+    };
+    let end_u64 = match offset.checked_add(size) {
+        Some(value) => value,
+        None => return false,
+    };
+    if end_u64 > usize::MAX as u64 || size > usize::MAX as u64 {
         return false;
     }
-    let end_u64 = end as u64;
     let required_words = end_u64.div_ceil(32);
     if required_words > *memory_words {
         let expansion = memory_expansion_cost(*memory_words, required_words);
@@ -347,7 +376,7 @@ fn exec_sha3(
             memory.resize(required_len, 0);
         }
     }
-    let words_for_sha = (size as u64).div_ceil(32);
+    let words_for_sha = size.div_ceil(32);
     let sha3_extra = GAS_SHA3_WORD * words_for_sha;
     if *gas < sha3_extra {
         return false;
@@ -389,7 +418,13 @@ fn exec_calldatasize(stack: &mut Vec<Hash>, calldata: &[u8]) {
 }
 
 fn exec_calldataload(stack: &mut Vec<Hash>, calldata: &[u8]) {
-    let offset = word_to_u128(&pop_word(stack)) as usize;
+    let offset = match word_to_u64(&pop_word(stack)) {
+        Some(value) if value <= usize::MAX as u64 => value as usize,
+        _ => {
+            stack.push([0u8; 32]);
+            return;
+        }
+    };
     let mut word = [0u8; 32];
     for (i, b) in word.iter_mut().enumerate() {
         let src = offset + i;
@@ -406,13 +441,18 @@ fn exec_mstore(
     memory_words: &mut u64,
     gas: &mut Gas,
 ) -> bool {
-    let offset = word_to_u128(&pop_word(stack));
+    let offset = match word_to_u64(&pop_word(stack)) {
+        Some(value) => value,
+        None => return false,
+    };
     let value = pop_word(stack);
-    let end = offset.saturating_add(32);
-    if end > u64::MAX as u128 {
+    let end_u64 = match offset.checked_add(32) {
+        Some(value) => value,
+        None => return false,
+    };
+    if end_u64 > usize::MAX as u64 {
         return false;
     }
-    let end_u64 = end as u64;
     let required_words = end_u64.div_ceil(32);
     if required_words > *memory_words {
         let expansion = memory_expansion_cost(*memory_words, required_words);
@@ -437,12 +477,17 @@ fn exec_mload(
     memory_words: &mut u64,
     gas: &mut Gas,
 ) -> bool {
-    let offset = word_to_u128(&pop_word(stack));
-    let end = offset.saturating_add(32);
-    if end > u64::MAX as u128 {
+    let offset = match word_to_u64(&pop_word(stack)) {
+        Some(value) => value,
+        None => return false,
+    };
+    let end_u64 = match offset.checked_add(32) {
+        Some(value) => value,
+        None => return false,
+    };
+    if end_u64 > usize::MAX as u64 {
         return false;
     }
-    let end_u64 = end as u64;
     let required_words = end_u64.div_ceil(32);
     if required_words > *memory_words {
         let expansion = memory_expansion_cost(*memory_words, required_words);
@@ -543,7 +588,7 @@ fn execute_bytecode(
         let opcode_byte = bytecode[pc];
         pc += 1;
         let Some(opcode) = decode_opcode(opcode_byte) else {
-            return (TransactionStatus::OutOfGas, 0, Vec::new());
+            return (TransactionStatus::InvalidOpcode, 0, Vec::new());
         };
         let base_cost = opcode_gas_cost(&opcode, &stack, &local_storage, contract_address);
         if gas < base_cost {
@@ -592,20 +637,26 @@ fn execute_bytecode(
                 contract_address,
             ),
             TinyEvmOpcode::Jump => {
-                let dest = word_to_u128(&pop_word(&mut stack)) as usize;
+                let dest = match word_to_u64(&pop_word(&mut stack)) {
+                    Some(value) if value <= usize::MAX as u64 => value as usize,
+                    _ => return (TransactionStatus::OutOfGas, 0, Vec::new()),
+                };
                 if !jumpdests.contains(&dest) {
                     return (TransactionStatus::OutOfGas, 0, Vec::new());
                 }
-                pc = dest + 1;
+                pc = dest;
             }
             TinyEvmOpcode::JumpI => {
-                let dest = word_to_u128(&pop_word(&mut stack)) as usize;
-                let cond = word_to_u128(&pop_word(&mut stack));
-                if cond != 0 {
+                let dest = match word_to_u64(&pop_word(&mut stack)) {
+                    Some(value) if value <= usize::MAX as u64 => value as usize,
+                    _ => return (TransactionStatus::OutOfGas, 0, Vec::new()),
+                };
+                let cond = word_to_u256(&pop_word(&mut stack));
+                if !cond.is_zero() {
                     if !jumpdests.contains(&dest) {
                         return (TransactionStatus::OutOfGas, 0, Vec::new());
                     }
-                    pc = dest + 1;
+                    pc = dest;
                 }
             }
             TinyEvmOpcode::JumpDest => {}
@@ -625,7 +676,7 @@ fn execute_bytecode(
                 }
             }
             TinyEvmOpcode::Return => break,
-            TinyEvmOpcode::Revert => return (TransactionStatus::OutOfGas, 0, Vec::new()),
+            TinyEvmOpcode::Revert => return (TransactionStatus::Reverted, gas, Vec::new()),
         }
     }
     (TransactionStatus::Success, gas, mutations)
@@ -641,8 +692,20 @@ fn word_from_u128(value: u128) -> Hash {
     word
 }
 
-fn word_to_u128(word: &Hash) -> u128 {
-    let mut bytes = [0u8; 16];
-    bytes.copy_from_slice(&word[16..32]);
-    u128::from_be_bytes(bytes)
+fn word_from_u256(value: U256) -> Hash {
+    let mut word = [0u8; 32];
+    value.to_big_endian(&mut word);
+    word
+}
+
+fn word_to_u256(word: &Hash) -> U256 {
+    U256::from_big_endian(word)
+}
+
+fn word_to_u64(word: &Hash) -> Option<u64> {
+    let value = word_to_u256(word);
+    if value > U256::from(u64::MAX) {
+        return None;
+    }
+    Some(value.as_u64())
 }

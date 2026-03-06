@@ -5,6 +5,7 @@
 use etheram_core::cache::Cache;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::implementations::in_memory_cache::InMemoryCache;
+use etheram_node::implementations::in_memory_cache::PENDING_TX_POOL_CAPACITY;
 use etheram_node::state::cache::cache_query::CacheQuery;
 use etheram_node::state::cache::cache_query_result::CacheQueryResult;
 use etheram_node::state::cache::cache_update::CacheUpdate;
@@ -178,4 +179,46 @@ fn get_pending_returns_descending_gas_price_order() {
     assert_eq!(txs[0], high);
     assert_eq!(txs[1], mid);
     assert_eq!(txs[2], low);
+}
+
+#[test]
+fn add_pending_when_pool_full_evicts_lowest_priority() {
+    // Arrange
+    let mut cache = InMemoryCache::new();
+    let from = [7u8; 20];
+    for nonce in 0..PENDING_TX_POOL_CAPACITY as u64 {
+        let tx = Transaction::transfer(from, [8u8; 20], 1, 21_000, 1, nonce);
+        cache.update(CacheUpdate::AddPending(tx));
+    }
+    let evicted = Transaction::transfer(from, [8u8; 20], 1, 21_000, 1, 4095);
+    let replacement = Transaction::transfer([9u8; 20], [8u8; 20], 1, 21_000, 2, 0);
+
+    // Act
+    cache.update(CacheUpdate::AddPending(replacement.clone()));
+    let CacheQueryResult::Pending(txs) = cache.query(CacheQuery::GetPending);
+
+    // Assert
+    assert_eq!(txs.len(), PENDING_TX_POOL_CAPACITY);
+    assert_eq!(txs[0], replacement);
+    assert!(!txs.contains(&evicted));
+}
+
+#[test]
+fn get_pending_same_gas_price_orders_by_nonce_and_sender_tiebreakers() {
+    // Arrange
+    let mut cache = InMemoryCache::new();
+    let high_nonce = Transaction::transfer([2u8; 20], [3u8; 20], 1, 21_000, 5, 7);
+    let low_nonce = Transaction::transfer([2u8; 20], [3u8; 20], 1, 21_000, 5, 1);
+    let lower_sender = Transaction::transfer([1u8; 20], [3u8; 20], 1, 21_000, 5, 1);
+
+    // Act
+    cache.update(CacheUpdate::AddPending(high_nonce.clone()));
+    cache.update(CacheUpdate::AddPending(low_nonce.clone()));
+    cache.update(CacheUpdate::AddPending(lower_sender.clone()));
+    let CacheQueryResult::Pending(txs) = cache.query(CacheQuery::GetPending);
+
+    // Assert
+    assert_eq!(txs[0], lower_sender);
+    assert_eq!(txs[1], low_nonce);
+    assert_eq!(txs[2], high_nonce);
 }

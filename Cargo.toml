@@ -38,6 +38,7 @@ spin = { version = "0.10.0", default-features = false, features = ["mutex", "spi
 ed25519-dalek = { version = "2", default-features = false }
 proptest = "1"
 tiny-keccak = { version = "2", features = ["keccak"] }
+primitive-types = { version = "0.12", default-features = false }
 
 etheram-core = { path = "core" }
 embassy-core = { path = "embassy-core" }

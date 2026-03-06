@@ -197,3 +197,38 @@ fn handle_message_pre_prepare_aggregate_tx_gas_exceeds_block_gas_limit_returns_e
     // Assert
     assert_eq!(actions.len(), 0);
 }
+
+#[test]
+fn handle_message_pre_prepare_equal_gas_wrong_sender_tiebreak_returns_empty() {
+    // Arrange
+    let mut protocol = setup_protocol().with_execution_engine(Box::new(ValueTransferEngine));
+    let mut ctx = setup_context(1, 0);
+    let lower_sender = [1u8; 20];
+    let higher_sender = [2u8; 20];
+    ctx.accounts.insert(lower_sender, Account::new(1_000));
+    ctx.accounts.insert(higher_sender, Account::new(1_000));
+    let tx_lower_sender = Transaction::transfer(lower_sender, [9u8; 20], 1, 21_000, 5, 0);
+    let tx_higher_sender = Transaction::transfer(higher_sender, [9u8; 20], 1, 21_000, 5, 0);
+    let contract_storage = BTreeMap::new();
+    let block = build_block_with_commitments(
+        0,
+        0,
+        vec![tx_higher_sender, tx_lower_sender],
+        [0u8; 32],
+        &ctx.accounts,
+        &contract_storage,
+        &ValueTransferEngine,
+    );
+    let msg = Message::Peer(IbftMessage::PrePrepare {
+        sequence: 0,
+        height: 0,
+        round: 0,
+        block,
+    });
+
+    // Act
+    let actions = protocol.handle_message(&MessageSource::Peer(0), &msg, &ctx);
+
+    // Assert
+    assert_eq!(actions.len(), 0);
+}

@@ -125,7 +125,7 @@ impl<M: Clone + 'static> EtheramNode<M> {
                         self.state.apply_single_mutation(mutation);
                     }
                 }
-                TransactionStatus::OutOfGas => {
+                _ => {
                     self.observer.mutation_applied(
                         self.peer_id,
                         &ActionKind::TransactionReverted {
@@ -140,7 +140,7 @@ impl<M: Clone + 'static> EtheramNode<M> {
                 .iter()
                 .fold((0usize, 0usize), |(s, o), r| match r.status {
                     TransactionStatus::Success => (s + 1, o),
-                    TransactionStatus::OutOfGas => (s, o + 1),
+                    _ => (s, o + 1),
                 });
         self.observer.mutation_applied(
             self.peer_id,
@@ -180,7 +180,7 @@ fn storage_mutation_kind(mutation: &StorageMutation) -> ActionKind {
                 .iter()
                 .fold((0usize, 0usize), |(s, o), r| match r.status {
                     TransactionStatus::Success => (s + 1, o),
-                    TransactionStatus::OutOfGas => (s, o + 1),
+                    _ => (s, o + 1),
                 });
             ActionKind::StoreReceipts {
                 height: *height,

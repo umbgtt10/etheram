@@ -11,6 +11,8 @@ use alloc::vec::Vec;
 pub enum TransactionStatus {
     Success,
     OutOfGas,
+    Reverted,
+    InvalidOpcode,
 }
 
 pub struct TransactionResult {

@@ -345,9 +345,47 @@ fn memory_expansion_gas_charged() {
 }
 
 #[test]
-fn revert_returns_out_of_gas_status() {
+fn revert_returns_reverted_status() {
     // Arrange
     let bytecode = vec![OPCODE_REVERT];
+
+    // Act
+    let result = run_bytecode([27u8; 20], [28u8; 20], bytecode, 100_000, 0);
+
+    // Assert
+    assert!(matches!(
+        result.transaction_results[0].status,
+        TransactionStatus::Reverted
+    ));
+}
+
+#[test]
+fn invalid_opcode_returns_invalid_opcode_status() {
+    // Arrange
+    let bytecode = vec![0xff];
+
+    // Act
+    let result = run_bytecode([27u8; 20], [28u8; 20], bytecode, 100_000, 0);
+
+    // Assert
+    assert!(matches!(
+        result.transaction_results[0].status,
+        TransactionStatus::InvalidOpcode
+    ));
+}
+
+#[test]
+fn jump_to_push_data_jumpdest_byte_returns_out_of_gas() {
+    // Arrange
+    let bytecode = vec![
+        OPCODE_PUSH1,
+        0x03,
+        OPCODE_JUMP,
+        OPCODE_PUSH2,
+        OPCODE_JUMPDEST,
+        0x00,
+        OPCODE_STOP,
+    ];
 
     // Act
     let result = run_bytecode([27u8; 20], [28u8; 20], bytecode, 100_000, 0);
