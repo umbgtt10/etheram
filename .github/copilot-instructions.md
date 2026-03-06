@@ -395,6 +395,8 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
   // http://www.apache.org/licenses/LICENSE-2.0
   ```
 - **No comments in production code** — code should be self-explanatory through naming and structure. The only permitted comments are `// TODO:` and `// FIXME:` (with a description). Doc comments (`///` and `//!`) are not allowed.
+- **No unit tests unless explicitly requested** — do not add or modify unit tests by default. In particular, do not add inline test modules (`#[cfg(test)] mod tests { ... }`) in `src/` files.
+- **Integration-test-first policy** — when tests are requested or clearly appropriate, add integration tests under `tests/` (not inline in `src/`), and within reason structure production code so integration tests can be added cleanly.
 - **Always use `use` imports** — never write inline path segments in function signatures, return types, or expressions (e.g. `etheram_node::incoming::timer::timer_event::TimerEvent`). Every type used in code must appear in a `use` declaration at the top of the file.
 - **`use` blocks are compacted and sorted** — all `use` statements must be grouped together with no blank lines between them, and sorted alphabetically. This must be verified before completing any task.
 - **1 empty line after file header** — there must be exactly one blank line between the 3-line Apache 2.0 copyright header and the first `use` statement.

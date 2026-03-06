@@ -7,6 +7,7 @@ use crate::common_types::{
     transaction::Transaction,
     types::{Address, Hash, Height},
 };
+use crate::execution::transaction_receipt::TransactionReceipt;
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 use etheram_core::types::PeerId;
@@ -19,6 +20,7 @@ pub struct Context {
     pub accounts: BTreeMap<Address, Account>,
     pub contract_storage: BTreeMap<(Address, Hash), Hash>,
     pub pending_txs: Vec<Transaction>,
+    pub receipts: Vec<TransactionReceipt>,
 }
 
 impl Context {
@@ -30,6 +32,7 @@ impl Context {
             accounts: BTreeMap::new(),
             contract_storage: BTreeMap::new(),
             pending_txs: Vec::new(),
+            receipts: Vec::new(),
         }
     }
 }

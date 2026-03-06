@@ -60,6 +60,7 @@ impl From<WireTransaction> for Transaction {
 enum WireClientRequest {
     GetHeight,
     GetBalance(Address),
+    GetReceipts(Height),
     SubmitTransaction(WireTransaction),
 }
 
@@ -68,6 +69,7 @@ impl From<ClientRequest> for WireClientRequest {
         match req {
             ClientRequest::GetHeight => Self::GetHeight,
             ClientRequest::GetBalance(addr) => Self::GetBalance(addr),
+            ClientRequest::GetReceipts(height) => Self::GetReceipts(height),
             ClientRequest::SubmitTransaction(tx) => {
                 Self::SubmitTransaction(WireTransaction::from(tx))
             }
@@ -80,6 +82,7 @@ impl From<WireClientRequest> for ClientRequest {
         match wire {
             WireClientRequest::GetHeight => Self::GetHeight,
             WireClientRequest::GetBalance(addr) => Self::GetBalance(addr),
+            WireClientRequest::GetReceipts(height) => Self::GetReceipts(height),
             WireClientRequest::SubmitTransaction(tx) => {
                 Self::SubmitTransaction(Transaction::from(tx))
             }
@@ -120,9 +123,21 @@ impl From<WireRejectionReason> for TransactionRejectionReason {
 #[derive(Serialize, Deserialize)]
 enum WireClientResponse {
     Height(Height),
-    Balance { balance: Balance, height: Height },
+    Balance {
+        balance: Balance,
+        height: Height,
+    },
+    ReceiptsSummary {
+        height: Height,
+        success_count: u64,
+        out_of_gas_count: u64,
+        reverted_count: u64,
+        invalid_opcode_count: u64,
+    },
     TransactionAccepted,
-    TransactionRejected { reason: WireRejectionReason },
+    TransactionRejected {
+        reason: WireRejectionReason,
+    },
 }
 
 impl From<ClientResponse> for WireClientResponse {
@@ -130,6 +145,19 @@ impl From<ClientResponse> for WireClientResponse {
         match resp {
             ClientResponse::Height(h) => Self::Height(h),
             ClientResponse::Balance { balance, height } => Self::Balance { balance, height },
+            ClientResponse::ReceiptsSummary {
+                height,
+                success_count,
+                out_of_gas_count,
+                reverted_count,
+                invalid_opcode_count,
+            } => Self::ReceiptsSummary {
+                height,
+                success_count,
+                out_of_gas_count,
+                reverted_count,
+                invalid_opcode_count,
+            },
             ClientResponse::TransactionAccepted => Self::TransactionAccepted,
             ClientResponse::TransactionRejected { reason } => Self::TransactionRejected {
                 reason: WireRejectionReason::from(reason),
@@ -143,6 +171,19 @@ impl From<WireClientResponse> for ClientResponse {
         match wire {
             WireClientResponse::Height(h) => Self::Height(h),
             WireClientResponse::Balance { balance, height } => Self::Balance { balance, height },
+            WireClientResponse::ReceiptsSummary {
+                height,
+                success_count,
+                out_of_gas_count,
+                reverted_count,
+                invalid_opcode_count,
+            } => Self::ReceiptsSummary {
+                height,
+                success_count,
+                out_of_gas_count,
+                reverted_count,
+                invalid_opcode_count,
+            },
             WireClientResponse::TransactionAccepted => Self::TransactionAccepted,
             WireClientResponse::TransactionRejected { reason } => Self::TransactionRejected {
                 reason: TransactionRejectionReason::from(reason),

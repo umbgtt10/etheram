@@ -3,9 +3,11 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::common_types::transaction::Transaction;
+use crate::common_types::types::{Address, Nonce};
 use crate::state::cache::cache_query::CacheQuery;
 use crate::state::cache::cache_query_result::CacheQueryResult;
 use crate::state::cache::cache_update::CacheUpdate;
+use alloc::collections::BTreeMap;
 use alloc::collections::BTreeSet;
 use alloc::vec::Vec;
 use etheram_core::cache::Cache;
@@ -14,12 +16,14 @@ pub const PENDING_TX_POOL_CAPACITY: usize = 4096;
 
 pub struct InMemoryCache {
     pending_txs: BTreeSet<Transaction>,
+    pending_index: BTreeMap<(Address, Nonce), Transaction>,
 }
 
 impl InMemoryCache {
     pub fn new() -> Self {
         Self {
             pending_txs: BTreeSet::new(),
+            pending_index: BTreeMap::new(),
         }
     }
 }
@@ -42,12 +46,8 @@ impl Cache for InMemoryCache {
     fn update(&mut self, update: Self::Update) {
         match update {
             CacheUpdate::AddPending(tx) => {
-                if let Some(existing) = self
-                    .pending_txs
-                    .iter()
-                    .find(|t| t.from == tx.from && t.nonce == tx.nonce)
-                    .cloned()
-                {
+                let key = (tx.from, tx.nonce);
+                if let Some(existing) = self.pending_index.get(&key).cloned() {
                     if tx.gas_price <= existing.gas_price {
                         return;
                     }
@@ -59,15 +59,20 @@ impl Cache for InMemoryCache {
                             return;
                         }
                         self.pending_txs.remove(&lowest);
+                        self.pending_index.remove(&(lowest.from, lowest.nonce));
                     }
                 }
-                self.pending_txs.insert(tx);
+                self.pending_txs.insert(tx.clone());
+                self.pending_index.insert(key, tx);
             }
             CacheUpdate::RemovePending(tx) => {
-                self.pending_txs.remove(&tx);
+                if let Some(existing) = self.pending_index.remove(&(tx.from, tx.nonce)) {
+                    self.pending_txs.remove(&existing);
+                }
             }
             CacheUpdate::ClearPending => {
                 self.pending_txs.clear();
+                self.pending_index.clear();
             }
         }
     }

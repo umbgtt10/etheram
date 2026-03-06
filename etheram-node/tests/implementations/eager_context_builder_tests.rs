@@ -9,6 +9,8 @@ use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::Address;
+use etheram_node::execution::transaction_receipt::TransactionReceipt;
+use etheram_node::execution::transaction_result::TransactionStatus;
 use etheram_node::implementations::eager_context_builder::EagerContextBuilder;
 use etheram_node::implementations::in_memory_cache::InMemoryCache;
 use etheram_node::implementations::in_memory_storage::InMemoryStorage;
@@ -16,6 +18,7 @@ use etheram_node::incoming::external_interface::client_request::ClientRequest;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_node::state::cache::cache_update::CacheUpdate;
 use etheram_node::state::etheram_state::EtheramState;
+use etheram_node::state::storage::storage_mutation::StorageMutation;
 
 fn state_with_storage(storage: InMemoryStorage) -> EtheramState {
     EtheramState::new(Box::new(storage), Box::new(InMemoryCache::new()))
@@ -243,4 +246,31 @@ fn build_submit_transaction_does_not_prefetch_receiver_address_into_context() {
     // Assert
     assert_eq!(ctx.accounts.len(), 1);
     assert!(!ctx.accounts.contains_key(&to));
+}
+
+#[test]
+fn build_get_receipts_loads_requested_height_receipts_into_context() {
+    // Arrange
+    let mut state = state_with_storage(InMemoryStorage::new());
+    state.apply_single_mutation(StorageMutation::StoreReceipts(
+        3,
+        vec![TransactionReceipt {
+            status: TransactionStatus::Reverted,
+            gas_used: 30_000,
+            cumulative_gas_used: 30_000,
+        }],
+    ));
+    let builder = EagerContextBuilder::new();
+
+    // Act
+    let ctx = builder.build(
+        &state,
+        peer_id(),
+        &source(),
+        &Message::<()>::Client(ClientRequest::GetReceipts(3)),
+    );
+
+    // Assert
+    assert_eq!(ctx.receipts.len(), 1);
+    assert_eq!(ctx.receipts[0].status, TransactionStatus::Reverted);
 }

@@ -50,6 +50,11 @@ impl EagerContextBuilder {
         }
         let state_root = state.query_state_root();
         let contract_storage = state.snapshot_contract_storage();
+        let receipts = if let Message::Client(ClientRequest::GetReceipts(height)) = message {
+            state.query_receipts(*height)
+        } else {
+            Vec::new()
+        };
         Context {
             peer_id,
             current_height,
@@ -57,6 +62,7 @@ impl EagerContextBuilder {
             accounts,
             contract_storage,
             pending_txs,
+            receipts,
         }
     }
 }

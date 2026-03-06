@@ -11,6 +11,8 @@ use etheram_node::brain::protocol::message::Message;
 use etheram_node::brain::protocol::message_source::MessageSource;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::transaction::Transaction;
+use etheram_node::execution::transaction_receipt::TransactionReceipt;
+use etheram_node::execution::transaction_result::TransactionStatus;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
 use etheram_node::executor::outgoing::external_interface::transaction_rejection_reason::TransactionRejectionReason;
 use etheram_node::incoming::external_interface::client_request::ClientRequest;
@@ -233,6 +235,58 @@ fn handle_message_submit_transaction_gas_limit_exceeded_returns_rejected() {
             client_id: 80,
             response: ClientResponse::TransactionRejected {
                 reason: TransactionRejectionReason::GasLimitExceeded,
+            },
+        })
+    ));
+}
+
+#[test]
+fn handle_message_get_receipts_returns_status_split_summary() {
+    // Arrange
+    let mut protocol = setup_protocol();
+    let mut ctx = setup_context(0, 5);
+    ctx.receipts = vec![
+        TransactionReceipt {
+            status: TransactionStatus::Success,
+            gas_used: 21_000,
+            cumulative_gas_used: 21_000,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::OutOfGas,
+            gas_used: 30_000,
+            cumulative_gas_used: 51_000,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::Reverted,
+            gas_used: 5_000,
+            cumulative_gas_used: 56_000,
+        },
+        TransactionReceipt {
+            status: TransactionStatus::InvalidOpcode,
+            gas_used: 2_000,
+            cumulative_gas_used: 58_000,
+        },
+    ];
+
+    // Act
+    let actions = protocol.handle_message(
+        &MessageSource::Client(90),
+        &Message::Client(ClientRequest::GetReceipts(3)),
+        &ctx,
+    );
+
+    // Assert
+    assert_eq!(actions.len(), 1);
+    assert!(matches!(
+        actions.get(0),
+        Some(Action::SendClientResponse {
+            client_id: 90,
+            response: ClientResponse::ReceiptsSummary {
+                height: 3,
+                success_count: 1,
+                out_of_gas_count: 1,
+                reverted_count: 1,
+                invalid_opcode_count: 1,
             },
         })
     ));

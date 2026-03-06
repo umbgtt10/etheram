@@ -2,11 +2,15 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::common_types::{transaction::Transaction, types::Address};
+use crate::common_types::{
+    transaction::Transaction,
+    types::{Address, Height},
+};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ClientRequest {
     GetBalance(Address),
+    GetReceipts(Height),
     SubmitTransaction(Transaction),
     GetHeight,
 }

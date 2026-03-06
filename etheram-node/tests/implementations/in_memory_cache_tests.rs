@@ -222,3 +222,21 @@ fn get_pending_same_gas_price_orders_by_nonce_and_sender_tiebreakers() {
     assert_eq!(txs[1], low_nonce);
     assert_eq!(txs[2], high_nonce);
 }
+
+#[test]
+fn remove_pending_same_sender_nonce_different_payload_removes_indexed_entry() {
+    // Arrange
+    let mut cache = InMemoryCache::new();
+    let from = [1u8; 20];
+    let inserted = Transaction::new(from, [2u8; 20], 10, 21_000, 9, 4, vec![1, 2, 3]);
+    let different_payload_same_key =
+        Transaction::new(from, [3u8; 20], 99, 30_000, 1, 4, vec![9, 9, 9]);
+    cache.update(CacheUpdate::AddPending(inserted));
+
+    // Act
+    cache.update(CacheUpdate::RemovePending(different_payload_same_key));
+    let CacheQueryResult::Pending(txs) = cache.query(CacheQuery::GetPending);
+
+    // Assert
+    assert!(txs.is_empty());
+}

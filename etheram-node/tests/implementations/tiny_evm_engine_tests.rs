@@ -26,14 +26,18 @@ use etheram_node::implementations::tiny_evm_engine::OPCODE_MSTORE;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_POP;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_PUSH1;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_PUSH2;
+use etheram_node::implementations::tiny_evm_engine::OPCODE_PUSH32;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_RETURN;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_REVERT;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_SHA3;
+use etheram_node::implementations::tiny_evm_engine::OPCODE_SSTORE;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_STOP;
 use etheram_node::implementations::tiny_evm_engine::OPCODE_SWAP1;
 use etheram_node::implementations::tiny_evm_gas::GAS_MLOAD_BASE;
 use etheram_node::implementations::tiny_evm_gas::GAS_MSTORE_BASE;
 use etheram_node::implementations::tiny_evm_gas::INTRINSIC_GAS;
+use etheram_node::implementations::tiny_evm_opcode::OPCODE_SUB;
+use etheram_node::state::storage::storage_mutation::StorageMutation;
 
 fn run_bytecode(
     sender: [u8; 20],
@@ -431,5 +435,115 @@ fn and_produces_bitwise_result() {
     assert!(matches!(
         result.transaction_results[0].status,
         TransactionStatus::Success
+    ));
+}
+
+#[test]
+fn add_overflow_wraps_to_zero() {
+    // Arrange
+    let mut max = vec![0xff; 32];
+    let mut bytecode = vec![OPCODE_PUSH32];
+    bytecode.append(&mut max);
+    bytecode.extend_from_slice(&[
+        OPCODE_PUSH1,
+        0x01,
+        OPCODE_ADD,
+        OPCODE_PUSH1,
+        0x00,
+        OPCODE_SSTORE,
+        OPCODE_RETURN,
+    ]);
+
+    // Act
+    let result = run_bytecode([31u8; 20], [32u8; 20], bytecode, 1_000_000, 0);
+
+    // Assert
+    assert!(matches!(
+        result.transaction_results[0].status,
+        TransactionStatus::Success
+    ));
+    assert!(result.transaction_results[0]
+        .mutations
+        .iter()
+        .any(|mutation| {
+            matches!(
+                mutation,
+                StorageMutation::UpdateContractStorage { slot, value, .. }
+                    if *slot == [0u8; 32] && *value == [0u8; 32]
+            )
+        }));
+}
+
+#[test]
+fn sub_underflow_wraps_to_max_word() {
+    // Arrange
+    let bytecode = vec![
+        OPCODE_PUSH1,
+        0x01,
+        OPCODE_PUSH1,
+        0x00,
+        OPCODE_SUB,
+        OPCODE_PUSH1,
+        0x00,
+        OPCODE_SSTORE,
+        OPCODE_RETURN,
+    ];
+
+    // Act
+    let result = run_bytecode([33u8; 20], [34u8; 20], bytecode, 1_000_000, 0);
+
+    // Assert
+    let expected = [0xff; 32];
+    assert!(matches!(
+        result.transaction_results[0].status,
+        TransactionStatus::Success
+    ));
+    assert!(result.transaction_results[0]
+        .mutations
+        .iter()
+        .any(|mutation| {
+            matches!(
+                mutation,
+                StorageMutation::UpdateContractStorage { slot, value, .. }
+                    if *slot == [0u8; 32] && *value == expected
+            )
+        }));
+}
+
+#[test]
+fn jumpdest_inside_push32_immediate_is_not_a_valid_destination() {
+    // Arrange
+    let mut immediate = vec![0x00; 32];
+    immediate[0] = OPCODE_JUMPDEST;
+    let mut bytecode = vec![OPCODE_PUSH1, 0x02, OPCODE_JUMP, OPCODE_PUSH32];
+    bytecode.extend_from_slice(&immediate);
+    bytecode.extend_from_slice(&[OPCODE_STOP, OPCODE_JUMPDEST, OPCODE_RETURN]);
+
+    // Act
+    let result = run_bytecode([35u8; 20], [36u8; 20], bytecode, 100_000, 0);
+
+    // Assert
+    assert!(matches!(
+        result.transaction_results[0].status,
+        TransactionStatus::OutOfGas
+    ));
+}
+
+#[test]
+fn jump_with_destination_outside_u64_range_returns_out_of_gas() {
+    // Arrange
+    let mut huge = [0u8; 32];
+    huge[0] = 0x01;
+    let mut bytecode = vec![OPCODE_PUSH32];
+    bytecode.extend_from_slice(&huge);
+    bytecode.extend_from_slice(&[OPCODE_JUMP, OPCODE_JUMPDEST, OPCODE_RETURN]);
+
+    // Act
+    let result = run_bytecode([37u8; 20], [38u8; 20], bytecode, 100_000, 0);
+
+    // Assert
+    assert!(matches!(
+        result.transaction_results[0].status,
+        TransactionStatus::OutOfGas
     ));
 }

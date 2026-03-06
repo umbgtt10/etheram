@@ -9,8 +9,20 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ClientResponse {
-    Balance { balance: Balance, height: Height },
+    Balance {
+        balance: Balance,
+        height: Height,
+    },
+    ReceiptsSummary {
+        height: Height,
+        success_count: u64,
+        out_of_gas_count: u64,
+        reverted_count: u64,
+        invalid_opcode_count: u64,
+    },
     TransactionAccepted,
-    TransactionRejected { reason: TransactionRejectionReason },
+    TransactionRejected {
+        reason: TransactionRejectionReason,
+    },
     Height(Height),
 }
