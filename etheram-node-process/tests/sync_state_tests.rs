@@ -3,6 +3,8 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 use crate::infra::sync::sync_state::SyncState;
+use std::thread;
+use std::time::Duration;
 
 #[test]
 fn highest_peer_height_without_observations_returns_none() {
@@ -210,4 +212,50 @@ fn next_request_after_successful_import_uses_updated_local_height() {
     // Assert
     assert!(completed);
     assert_eq!(second, Some((2, 15, 64)));
+}
+
+#[test]
+fn handle_request_timeout_before_deadline_returns_none() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    let _ = state.next_request(10, 64);
+
+    // Act
+    let planned = state.handle_request_timeout(10, Duration::from_millis(100), 2);
+
+    // Assert
+    assert!(planned.is_none());
+}
+
+#[test]
+fn handle_request_timeout_within_retry_budget_retries_same_peer() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    let first = state.next_request(10, 64).expect("expected first request");
+    thread::sleep(Duration::from_millis(2));
+
+    // Act
+    let retried = state.handle_request_timeout(10, Duration::from_millis(1), 2);
+
+    // Assert
+    assert_eq!(retried, Some(first));
+}
+
+#[test]
+fn handle_request_timeout_after_retry_budget_switches_to_next_peer() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    state.observe_status(3, 20);
+    let first = state.next_request(10, 64).expect("expected first request");
+    thread::sleep(Duration::from_millis(2));
+    let failover = state.handle_request_timeout(10, Duration::from_millis(1), 0);
+
+    // Act
+    let second = failover.expect("expected failover request");
+
+    // Assert
+    assert_ne!(second.0, first.0);
 }

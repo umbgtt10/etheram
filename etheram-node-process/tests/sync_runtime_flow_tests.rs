@@ -36,7 +36,7 @@ fn decoded_blocks_import_then_storage_height_and_blocks_advance() {
     let payload_1 = serialize_block(&block_1).expect("failed to serialize block 1");
 
     // Act
-    let decoded = decode_and_validate_blocks(0, 0, &[payload_0, payload_1]);
+    let decoded = decode_and_validate_blocks(0, 0, &[payload_0, payload_1], None);
     let blocks = decoded.expect("expected valid decoded blocks");
     storage.apply_synced_blocks(&blocks);
 
@@ -76,7 +76,8 @@ fn malformed_or_empty_lagging_response_then_failover_selects_next_peer() {
 
     // Act
     let malformed_payload = vec![1u8, 2u8, 3u8];
-    let malformed_decoded = decode_and_validate_blocks(local_height, first.1, &[malformed_payload]);
+    let malformed_decoded =
+        decode_and_validate_blocks(local_height, first.1, &[malformed_payload], None);
     let malformed_failed = if malformed_decoded.is_none() {
         state.fail_in_flight_request(first.0, first.1)
     } else {
@@ -86,7 +87,7 @@ fn malformed_or_empty_lagging_response_then_failover_selects_next_peer() {
         .next_request(local_height, 64)
         .expect("expected failover request");
     let empty_payloads: Vec<Vec<u8>> = Vec::new();
-    let empty_decoded = decode_and_validate_blocks(local_height, second.1, &empty_payloads);
+    let empty_decoded = decode_and_validate_blocks(local_height, second.1, &empty_payloads, None);
     let lag_distance = state.lag_distance(local_height);
     let empty_while_lagging = empty_payloads.is_empty() && lag_distance.is_some();
     let empty_failed = if empty_decoded.is_some() && empty_while_lagging {

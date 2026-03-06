@@ -25,6 +25,8 @@ fn main_run_forever_shutdown_command_exits_successfully() {
     let mut child = Command::new(env!("CARGO_BIN_EXE_etheram-node-process"))
         .arg(&config_path)
         .arg("1")
+        .env_remove("ETHERAM_PARTITION_BLOCKS")
+        .env_remove("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND")
         .stdin(Stdio::piped())
         .stdout(Stdio::null())
         .stderr(Stdio::piped())

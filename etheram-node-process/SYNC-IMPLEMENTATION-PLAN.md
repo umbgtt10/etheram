@@ -1,106 +1,69 @@
-# Etheram Node Process - Sync Implementation Plan
+# Etheram Node Process - Sync Implementation Status
 
 ## Goal
-Implement a clean block synchronization protocol in `etheram-node-process` so lagging nodes recover after partition/heal without transport replay workarounds.
+Deliver clean sync orchestration in `etheram-node-process` so lagging nodes recover after partition/heal without transport replay workarounds.
 
 ## Scope
-- Add sync control plane and messages in node-process transport/runtime layers.
-- Keep IBFT consensus logic in `etheram-node` unchanged and pure.
-- Use deterministic block import validation before applying synced blocks.
-
-## Non-goals
-- No packet replay buffering as a recovery strategy.
-- No protocol-specific catch-up logic inside IBFT message handlers.
-- No embassy changes in this phase.
+- Sync control plane and message routing in process transport/runtime layers.
+- Keep IBFT protocol logic in `etheram-node` unchanged and pure.
+- Deterministic import validation before applying synchronized blocks.
 
 ## Architecture Boundary
-- `etheram-node`: consensus and block validation primitives.
-- `etheram-node-process`: sync orchestration, peer status exchange, lag detection, range requests, retry policy.
+- `etheram-node`: consensus protocol and block semantics.
+- `etheram-node-process`: status gossip, lag detection, range planning, retry/failover, import orchestration.
 
-## Milestones
+## Implemented Milestones
 
 ### M1. Sync Message Types and Wire Mapping
-- Add sync messages to process transport payloads:
-  - `Status { height, last_hash }`
-  - `GetBlocks { from_height, max_blocks }`
-  - `Blocks { start_height, blocks }`
-- Add serialization/deserialization and dispatch routing.
-
-Acceptance criteria:
-- Nodes can send/receive sync messages over gRPC transport.
-- Existing IBFT peer traffic remains unaffected.
+- Implemented `SyncMessage::{Status, GetBlocks, Blocks}`.
+- Implemented wire serialization/deserialization and sync-vs-IBFT dispatch.
+- Covered with integration tests in:
+  - `tests/wire_node_message_tests.rs`
+  - `tests/grpc_transport_tests.rs`
+  - `tests/sync_sender_tests.rs`
 
 ### M2. Status Gossip and Lag Detection
-- Periodically emit local `Status` to peers.
-- Track highest observed peer height.
-- Enter `NeedSync` when local node is behind by threshold >= 1 block.
+- Periodic status gossip emitted from runtime loop.
+- `SyncState` tracks observed heights and lag distance.
+- No-op behavior at tip covered by tests.
 
-Acceptance criteria:
-- Lagging node reports sync-needed state in logs.
-- No false-positive sync loops when node is at tip.
-
-### M3. Block Range Request/Response
-- Request missing finalized blocks with bounded `max_blocks`.
-- Respond from local storage for requested range.
-- Support retry and peer failover when a request times out.
-
-Acceptance criteria:
-- Lagging node receives contiguous ranges until tip.
-- Requests are bounded and backpressure-safe.
+### M3. Block Range Request/Response + Failover
+- Bounded requests (`SYNC_MAX_BLOCKS_PER_REQUEST`) and range responses.
+- In-flight request tracking implemented.
+- Timeout/retry/backoff policy implemented with retry budget and peer failover.
+- Failover and timeout behavior covered in `tests/sync_state_tests.rs` and `tests/sync_plan_mandatory_tests.rs`.
 
 ### M4. Deterministic Import Pipeline
-- Validate parent linkage and block commitments.
-- Import in strict height order.
-- Abort and re-request on validation failure.
-
-Acceptance criteria:
-- Imported height increases monotonically.
-- Invalid ranges are rejected safely.
+- Strict start-height and contiguous height checks.
+- Parent linkage check for first imported block via expected parent `post_state_root`.
+- Commitment checks:
+  - block gas limit must be canonical and non-zero
+  - sum(tx gas_limit) must not exceed block gas limit
+- Invalid payload/range handling rejects safely and drives failover logic.
 
 ### M5. Rejoin Normal Consensus
-- Exit sync state at tip.
-- Resume normal IBFT participation automatically.
+- Sync apply path advances storage height monotonically and re-enters normal request planning at tip.
+- Runtime/state-level convergence and no-op-at-tip flows covered in sync runtime/mandatory tests.
 
-Acceptance criteria:
-- Post-sync node converges with peers in height/hash.
+## Mandatory Programmatic Scenario Tests
 
-## Mandatory Programmatic Partition Tests
-These tests are required during implementation, not deferred.
+Implemented in `tests/sync_plan_mandatory_tests.rs`:
+1. `partition_and_heal_lag_recovery_selects_new_request_and_imports_after_heal`
+2. `long_partition_multi_batch_sync_import_catches_up_fully`
+3. `invalid_range_response_is_rejected_and_failover_is_planned`
+4. `active_sync_peer_offline_mid_sync_switches_peer_and_completes`
+5. `no_op_sync_at_tip_plans_no_request`
 
-1. Partition-and-heal lag recovery test
-- 5 nodes.
-- Apply one-way partition `1 -> 4`.
-- Let node 4 fall behind.
-- Heal link.
-- Assert node 4 catches up to cluster tip without replay buffering.
-
-2. Long partition test
-- Keep partition long enough to create a large height gap.
-- Assert multi-batch sync catches up fully.
-
-3. Invalid range response test
-- Inject malformed block range.
-- Assert node rejects invalid data and retries/fails over.
-
-4. Peer failover test
-- Active sync peer goes offline mid-sync.
-- Assert node switches peer and finishes sync.
-
-5. No-op sync test
-- All nodes already at tip.
-- Assert no unnecessary block requests.
-
-## Operational Constraints
-- Keep queue sizes bounded.
-- Use retry backoff and timeout limits.
-- Log every sync state transition for observability.
+## Operational Constraints Implemented
+- Bounded request size.
+- Explicit request timeout + retry budget + failover behavior.
+- Sync state transitions logged via runtime sync log lines.
 
 ## Completion Gate
-For each productive change batch:
+For productive sync changes:
 - `powershell -File scripts/run_tests.ps1`
 - `cargo check -p etheram-core --no-default-features`
 - `cargo check -p embassy-core --no-default-features`
 - `cargo check -p etheram-node --no-default-features`
 - `cargo check -p raft-node --no-default-features`
-
-Direction H fast-path applies: `scripts/run_apps.ps1` is not required unless changes touch embassy crates.
+- `powershell -File scripts/run_apps.ps1` when full app verification is requested

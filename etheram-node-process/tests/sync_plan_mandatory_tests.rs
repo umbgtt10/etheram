@@ -31,8 +31,9 @@ fn partition_and_heal_lag_recovery_selects_new_request_and_imports_after_heal() 
     let payload_2 = serialize_block(&block_2).expect("failed to serialize block 2");
 
     // Act
-    let decoded = decode_and_validate_blocks(0, failover.1, &[payload_0, payload_1, payload_2])
-        .expect("expected decoded blocks after heal");
+    let decoded =
+        decode_and_validate_blocks(0, failover.1, &[payload_0, payload_1, payload_2], None)
+            .expect("expected decoded blocks after heal");
     storage.apply_synced_blocks(&decoded);
     let completed = state.complete_in_flight_request(failover.0, failover.1);
 
@@ -70,6 +71,7 @@ fn long_partition_multi_batch_sync_import_catches_up_fully() {
             serialize_block(&batch_1_block_1).expect("serialize 1"),
             serialize_block(&batch_1_block_2).expect("serialize 2"),
         ],
+        None,
     )
     .expect("expected first decoded batch");
     storage.apply_synced_blocks(&first_decoded);
@@ -84,6 +86,7 @@ fn long_partition_multi_batch_sync_import_catches_up_fully() {
             serialize_block(&batch_2_block_4).expect("serialize 4"),
             serialize_block(&batch_2_block_5).expect("serialize 5"),
         ],
+        None,
     )
     .expect("expected second decoded batch");
     storage.apply_synced_blocks(&second_decoded);
@@ -108,7 +111,7 @@ fn invalid_range_response_is_rejected_and_failover_is_planned() {
     let invalid_payload = vec![9u8, 8u8, 7u8];
 
     // Act
-    let decoded = decode_and_validate_blocks(0, first.1, &[invalid_payload]);
+    let decoded = decode_and_validate_blocks(0, first.1, &[invalid_payload], None);
     let failed = if decoded.is_none() {
         state.fail_in_flight_request(first.0, first.1)
     } else {
@@ -146,6 +149,7 @@ fn active_sync_peer_offline_mid_sync_switches_peer_and_completes() {
             serialize_block(&block_0).expect("serialize block 0"),
             serialize_block(&block_1).expect("serialize block 1"),
         ],
+        None,
     )
     .expect("expected decoded blocks");
     storage.apply_synced_blocks(&decoded);

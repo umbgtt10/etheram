@@ -48,6 +48,9 @@ const IDLE_SLEEP_MS: u64 = 10;
 const PROPOSE_TICK_MS: u64 = 250;
 const STATUS_INTERVAL_MS: u64 = 1000;
 const TIMEOUT_TICK_MS: u64 = 1500;
+const SYNC_REQUEST_TIMEOUT_MS: u64 = 1000;
+const SYNC_RETRY_TICK_MS: u64 = 250;
+const SYNC_MAX_RETRIES: u32 = 3;
 const SYNC_MAX_BLOCKS_PER_REQUEST: u64 = 64;
 
 pub struct NodeRuntime {
@@ -148,6 +151,7 @@ impl NodeRuntime {
         let mut progressed_steps: u64 = 0;
         let mut last_propose_tick_at = Instant::now();
         let mut last_status_at = Instant::now();
+        let mut last_sync_retry_tick_at = Instant::now();
         let mut last_timeout_tick_at = Instant::now();
 
         loop {
@@ -179,6 +183,11 @@ impl NodeRuntime {
             }
 
             self.process_sync_messages();
+
+            if last_sync_retry_tick_at.elapsed() >= Duration::from_millis(SYNC_RETRY_TICK_MS) {
+                self.process_sync_timeouts();
+                last_sync_retry_tick_at = Instant::now();
+            }
 
             if last_status_at.elapsed() >= Duration::from_millis(STATUS_INTERVAL_MS) {
                 self.sync_sender
@@ -268,7 +277,20 @@ impl NodeRuntime {
 
     fn handle_blocks(&mut self, peer_id: PeerId, start_height: u64, block_payloads: &[Vec<u8>]) {
         let local_height = self.current_height();
-        let decoded_blocks = decode_and_validate_blocks(local_height, start_height, block_payloads);
+        let expected_parent_post_state_root = if local_height == 0 {
+            None
+        } else {
+            self.node
+                .state()
+                .query_block(local_height - 1)
+                .map(|block| block.post_state_root)
+        };
+        let decoded_blocks = decode_and_validate_blocks(
+            local_height,
+            start_height,
+            block_payloads,
+            expected_parent_post_state_root,
+        );
         let decoded = decoded_blocks
             .as_ref()
             .map(|blocks| blocks.len() as u64)
@@ -324,6 +346,31 @@ impl NodeRuntime {
             completed,
             failed
         );
+    }
+
+    fn process_sync_timeouts(&mut self) {
+        if let Some((target_peer, from_height, max_blocks)) =
+            self.sync_state.handle_request_timeout(
+                self.current_height(),
+                Duration::from_millis(SYNC_REQUEST_TIMEOUT_MS),
+                SYNC_MAX_RETRIES,
+            )
+        {
+            self.sync_sender.send_to_peer(
+                target_peer,
+                &SyncMessage::GetBlocks {
+                    from_height,
+                    max_blocks,
+                },
+            );
+            println!(
+                "sync_timeout_retry peer_id={} target_peer={} from_height={} max_blocks={}",
+                self.node.peer_id(),
+                target_peer,
+                from_height,
+                max_blocks
+            );
+        }
     }
 
     fn last_block_hash(&self) -> [u8; 32] {

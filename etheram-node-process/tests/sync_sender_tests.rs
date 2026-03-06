@@ -12,8 +12,15 @@ use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::types::PeerId;
 use std::collections::BTreeMap;
 use std::net::TcpListener;
+use std::sync::Mutex;
+use std::sync::OnceLock;
 use std::thread;
 use std::time::Duration;
+
+fn sync_sender_test_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
 
 fn next_port() -> u16 {
     let listener = TcpListener::bind("127.0.0.1:0").expect("failed to allocate local port");
@@ -57,6 +64,9 @@ fn send_and_wait_for_sync_message(
 #[test]
 fn send_to_peer_unblocked_routes_sync_message_to_sync_queue() {
     // Arrange
+    let _guard = sync_sender_test_lock()
+        .lock()
+        .expect("sync sender test lock poisoned");
     global_partition_table().clear();
     let from_peer = 41;
     let to_peer = 42;
@@ -85,6 +95,9 @@ fn send_to_peer_unblocked_routes_sync_message_to_sync_queue() {
 #[test]
 fn send_to_peer_partitioned_then_healed_delivers_only_after_heal() {
     // Arrange
+    let _guard = sync_sender_test_lock()
+        .lock()
+        .expect("sync sender test lock poisoned");
     global_partition_table().clear();
     let from_peer = 43;
     let to_peer = 44;
@@ -118,6 +131,9 @@ fn send_to_peer_partitioned_then_healed_delivers_only_after_heal() {
 #[test]
 fn broadcast_status_two_peers_routes_status_to_each_peer_sync_queue() {
     // Arrange
+    let _guard = sync_sender_test_lock()
+        .lock()
+        .expect("sync sender test lock poisoned");
     global_partition_table().clear();
     let from_peer = 45;
     let to_peer_1 = 46;
@@ -167,6 +183,9 @@ fn broadcast_status_two_peers_routes_status_to_each_peer_sync_queue() {
 #[test]
 fn broadcast_status_with_self_in_peer_map_does_not_enqueue_to_self() {
     // Arrange
+    let _guard = sync_sender_test_lock()
+        .lock()
+        .expect("sync sender test lock poisoned");
     global_partition_table().clear();
     let from_peer = 48;
     let to_peer = 49;
@@ -195,6 +214,9 @@ fn broadcast_status_with_self_in_peer_map_does_not_enqueue_to_self() {
 #[test]
 fn send_to_unknown_peer_does_not_enqueue_sync_message() {
     // Arrange
+    let _guard = sync_sender_test_lock()
+        .lock()
+        .expect("sync sender test lock poisoned");
     global_partition_table().clear();
     let from_peer = 50;
     let existing_peer = 51;
@@ -222,6 +244,9 @@ fn send_to_unknown_peer_does_not_enqueue_sync_message() {
 #[test]
 fn send_to_peer_long_partition_then_heal_multiple_attempts_deliver_after_heal() {
     // Arrange
+    let _guard = sync_sender_test_lock()
+        .lock()
+        .expect("sync sender test lock poisoned");
     global_partition_table().clear();
     let from_peer = 53;
     let to_peer = 54;
