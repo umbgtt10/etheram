@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::sync::sync_state::SyncState;
+use etheram_node_process::infra::sync::sync_state::SyncState;
 use std::thread;
 use std::time::Duration;
 

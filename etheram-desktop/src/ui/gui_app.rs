@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::cluster_config::ClusterConfig;
 use crate::launcher::LaunchedNode;
 use crate::launcher::Launcher;
 use crate::launcher::NodeLogLine;
@@ -11,6 +10,7 @@ use eframe::run_native;
 use eframe::App;
 use eframe::Frame;
 use eframe::NativeOptions;
+use etheram_node_process::cluster_config::ClusterConfig;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::path::Path;

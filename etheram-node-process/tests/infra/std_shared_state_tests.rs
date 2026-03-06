@@ -2,15 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-mod std_shared_state_under_test {
-    include!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/infra/std_shared_state.rs"
-    ));
-}
-
 use etheram_core::node_common::shared_state::SharedState;
-use std_shared_state_under_test::StdSharedState;
+use etheram_node_process::infra::std_shared_state::StdSharedState;
 
 #[test]
 fn with_mut_then_with_updates_value_returns_updated_value() {

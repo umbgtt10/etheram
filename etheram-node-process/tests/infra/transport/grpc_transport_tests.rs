@@ -2,18 +2,18 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::sync::sync_message::SyncMessage;
-use crate::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
-use crate::infra::transport::grpc_transport::grpc_transport_incoming::GrpcTransportIncoming;
-use crate::infra::transport::grpc_transport::grpc_transport_outgoing::GrpcTransportOutgoing;
-use crate::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
-use crate::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
-use crate::infra::transport::grpc_transport::wire_node_message::serialize_sync;
-use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node_process::infra::sync::sync_message::SyncMessage;
+use etheram_node_process::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
+use etheram_node_process::infra::transport::grpc_transport::grpc_transport_incoming::GrpcTransportIncoming;
+use etheram_node_process::infra::transport::grpc_transport::grpc_transport_outgoing::GrpcTransportOutgoing;
+use etheram_node_process::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
+use etheram_node_process::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
+use etheram_node_process::infra::transport::grpc_transport::wire_node_message::serialize_sync;
+use etheram_node_process::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use std::collections::BTreeMap;
 use std::net::TcpListener;
 use std::thread;

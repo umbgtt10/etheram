@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use etheram_desktop::cluster_config::ClusterConfig;
-use etheram_desktop::cluster_config::NodeConfig;
 use etheram_desktop::launcher::Launcher;
+use etheram_node_process::cluster_config::ClusterConfig;
+use etheram_node_process::cluster_config::NodeConfig;
 use std::env;
 use std::fs;
 use std::path::PathBuf;

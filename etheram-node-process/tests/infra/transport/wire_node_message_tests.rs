@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::sync::sync_message::SyncMessage;
-use crate::infra::transport::grpc_transport::wire_node_message::deserialize;
-use crate::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
-use crate::infra::transport::grpc_transport::wire_node_message::serialize_sync;
-use crate::infra::transport::grpc_transport::wire_node_message::NodeIncomingMessage;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use etheram_node_process::infra::sync::sync_message::SyncMessage;
+use etheram_node_process::infra::transport::grpc_transport::wire_node_message::deserialize;
+use etheram_node_process::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
+use etheram_node_process::infra::transport::grpc_transport::wire_node_message::serialize_sync;
+use etheram_node_process::infra::transport::grpc_transport::wire_node_message::NodeIncomingMessage;
 
 #[test]
 fn serialize_ibft_then_deserialize_returns_ibft_message() {

@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::storage::storage_factory::build_storage;
 use etheram_core::storage::Storage;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
@@ -11,6 +10,7 @@ use etheram_node::common_types::types::Address;
 use etheram_node::state::storage::storage_mutation::StorageMutation;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
+use etheram_node_process::infra::storage::storage_factory::build_storage;
 
 #[test]
 fn build_storage_clone_and_box_share_state_in_both_directions() {

@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::sync::sync_import::decode_and_validate_blocks;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
+use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
+use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 
 #[test]
 fn decode_and_validate_blocks_matching_start_and_contiguous_heights_returns_blocks() {

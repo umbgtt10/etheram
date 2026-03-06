@@ -2,14 +2,14 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::storage::in_memory_storage::InMemoryStorage;
-use crate::infra::sync::sync_import::decode_and_validate_blocks;
-use crate::infra::sync::sync_state::SyncState;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 use etheram_core::storage::Storage;
 use etheram_node::common_types::block::Block;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
+use etheram_node_process::infra::storage::in_memory_storage::InMemoryStorage;
+use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
+use etheram_node_process::infra::sync::sync_state::SyncState;
+use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 
 #[test]
 fn status_observation_then_request_planning_returns_expected_peer_and_range() {

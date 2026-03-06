@@ -2,5 +2,5 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod launcher;
-pub mod ui;
+pub mod grpc_transport_tests;
+pub mod wire_node_message_tests;

@@ -447,7 +447,7 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
   tests/implementations/ibft/vote_tracker_tests.rs
   ```
 - **Direction H crate bootstrap rule** — `etheram-desktop/` and `etheram-node-process/` must be created with a `tests/` folder and `tests/all_tests.rs` from day one. Every new production module added under `src/` during Direction H work must either add a corresponding integration test in `tests/` in the same task or include an explicit justification for deferral.
-- **Direction H dependency boundary** — `etheram-desktop` and `etheram-node-process` may depend on `etheram-core` and `etheram-node` only (plus external ecosystem crates). They must not depend on `raft-*` crates.
+- **Direction H dependency boundary** — `etheram-desktop` may depend on `etheram-core`, `etheram-node`, and `etheram-node-process` (plus external ecosystem crates). `etheram-node-process` may depend on `etheram-core` and `etheram-node` only (plus external ecosystem crates). Neither may depend on `raft-*` crates.
 
 ---
 

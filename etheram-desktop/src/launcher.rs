@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::cluster_config::ClusterConfig;
-use crate::cluster_config::NodeConfig;
+use etheram_node_process::cluster_config::ClusterConfig;
+use etheram_node_process::cluster_config::NodeConfig;
 use std::io::stdin;
 use std::io::BufRead;
 use std::io::BufReader;
