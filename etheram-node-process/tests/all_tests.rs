@@ -11,6 +11,7 @@ pub mod shutdown_tests;
 pub mod std_shared_state_tests;
 pub mod storage_factory_tests;
 pub mod sync_import_tests;
+pub mod sync_runtime_flow_tests;
 pub mod sync_sender_tests;
 pub mod sync_state_tests;
 pub mod wire_node_message_tests;
