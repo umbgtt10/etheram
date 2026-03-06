@@ -62,3 +62,42 @@ fn decode_and_validate_blocks_invalid_payload_returns_none() {
     // Assert
     assert!(decoded.is_none());
 }
+
+#[test]
+fn decode_and_validate_blocks_empty_payloads_matching_start_returns_empty_blocks() {
+    // Arrange
+    let payloads: Vec<Vec<u8>> = Vec::new();
+
+    // Act
+    let decoded = decode_and_validate_blocks(5, 5, &payloads);
+
+    // Assert
+    assert!(decoded.is_some());
+    let blocks = decoded.expect("expected decoded empty block range");
+    assert!(blocks.is_empty());
+}
+
+#[test]
+fn decode_and_validate_blocks_empty_payloads_start_height_mismatch_returns_none() {
+    // Arrange
+    let payloads: Vec<Vec<u8>> = Vec::new();
+
+    // Act
+    let decoded = decode_and_validate_blocks(5, 6, &payloads);
+
+    // Assert
+    assert!(decoded.is_none());
+}
+
+#[test]
+fn decode_and_validate_blocks_first_block_not_matching_start_height_returns_none() {
+    // Arrange
+    let block_6 = Block::empty(6, 1, [6u8; 32]);
+    let payload_6 = serialize_block(&block_6).expect("failed to serialize block 6");
+
+    // Act
+    let decoded = decode_and_validate_blocks(5, 5, &[payload_6]);
+
+    // Assert
+    assert!(decoded.is_none());
+}

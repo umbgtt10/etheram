@@ -5,6 +5,18 @@
 use crate::infra::sync::sync_state::SyncState;
 
 #[test]
+fn highest_peer_height_without_observations_returns_none() {
+    // Arrange
+    let state = SyncState::new();
+
+    // Act
+    let highest = state.highest_peer_height();
+
+    // Assert
+    assert!(highest.is_none());
+}
+
+#[test]
 fn lag_distance_with_higher_peer_height_returns_distance() {
     // Arrange
     let mut state = SyncState::new();
@@ -63,6 +75,37 @@ fn complete_in_flight_request_matching_request_clears_in_flight() {
     assert_eq!(planned, Some((2, 10, 32)));
     assert!(completed);
     assert_eq!(planned_again, Some((2, 10, 32)));
+}
+
+#[test]
+fn complete_in_flight_request_non_matching_request_returns_false() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    let _ = state.next_request(10, 32);
+
+    // Act
+    let completed = state.complete_in_flight_request(3, 10);
+    let second = state.next_request(10, 32);
+
+    // Assert
+    assert!(!completed);
+    assert!(second.is_none());
+}
+
+#[test]
+fn next_request_with_different_heights_picks_highest_height_peer() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 18);
+    state.observe_status(3, 21);
+    state.observe_status(4, 19);
+
+    // Act
+    let planned = state.next_request(10, 32);
+
+    // Assert
+    assert_eq!(planned, Some((3, 10, 32)));
 }
 
 #[test]
