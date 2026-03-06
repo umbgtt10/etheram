@@ -110,4 +110,11 @@ pub mod storage {
             "/src/infra/storage/in_memory_storage.rs"
         ));
     }
+
+    pub mod storage_factory {
+        include!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/src/infra/storage/storage_factory.rs"
+        ));
+    }
 }

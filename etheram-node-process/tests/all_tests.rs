@@ -4,11 +4,12 @@
 
 pub mod common;
 pub mod grpc_transport_tests;
-pub mod infra;
 pub mod in_memory_storage_tests;
+pub mod infra;
 pub mod node_process_startup_tests;
 pub mod shutdown_tests;
 pub mod std_shared_state_tests;
+pub mod storage_factory_tests;
 pub mod sync_import_tests;
 pub mod sync_sender_tests;
 pub mod sync_state_tests;
