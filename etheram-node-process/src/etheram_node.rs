@@ -10,6 +10,7 @@ use crate::infra::protocol::protocol_factory::build_protocol;
 use crate::infra::scheduler::context_builder_factory::build_context_builder;
 use crate::infra::scheduler::partitioner_factory::build_partitioner;
 use crate::infra::std_shared_state::StdSharedState;
+use crate::infra::storage::injected_storage::InjectedStorageHandle;
 use crate::infra::storage::storage_factory::build_storage;
 use crate::infra::sync::sync_import::decode_and_validate_blocks;
 use crate::infra::sync::sync_message::SyncMessage;
@@ -52,6 +53,7 @@ const SYNC_MAX_BLOCKS_PER_REQUEST: u64 = 64;
 pub struct NodeRuntime {
     node: EtheramNode<IbftMessage>,
     sync_sender: Box<dyn SyncSender>,
+    sync_storage_handle: InjectedStorageHandle,
     sync_state: SyncState,
     timer_state: StdSharedState<InMemoryTimerState>,
 }
@@ -84,7 +86,7 @@ impl NodeRuntime {
         let sync_sender = build_sync_sender(&transport_backend, peer_id, peer_addresses);
         let external_interface_incoming = build_external_interface_incoming()?;
         let external_interface_outgoing = build_external_interface_outgoing()?;
-        let storage = build_storage()?;
+        let (storage_adapter, storage_handle) = build_storage()?;
         let cache = build_cache()?;
         let context_builder = build_context_builder()?;
         let protocol = build_protocol(validators)?;
@@ -96,7 +98,7 @@ impl NodeRuntime {
 
         let incoming =
             IncomingSources::new(timer_input, external_interface_incoming, transport_incoming);
-        let state = EtheramState::new(storage, cache);
+        let state = EtheramState::new(storage_adapter, cache);
         let outgoing = OutgoingSources::new(
             timer_output,
             external_interface_outgoing,
@@ -118,6 +120,7 @@ impl NodeRuntime {
         Ok(Self {
             node,
             sync_sender,
+            sync_storage_handle: storage_handle,
             sync_state: SyncState::new(),
             timer_state,
         })
@@ -273,6 +276,12 @@ impl NodeRuntime {
         let malformed = decoded_blocks.is_none();
         let empty_while_lagging =
             block_payloads.is_empty() && self.sync_state.lag_distance(local_height).is_some();
+
+        if let Some(blocks) = decoded_blocks.as_ref() {
+            if !empty_while_lagging {
+                self.sync_storage_handle.apply_synced_blocks(blocks);
+            }
+        }
 
         let completed = if malformed || empty_while_lagging {
             false
