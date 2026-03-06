@@ -5,6 +5,7 @@ edition = "2021"
 autotests = false
 
 [dependencies]
+eframe.workspace = true
 etheram-core.workspace = true
 etheram-node.workspace = true
 serde.workspace = true

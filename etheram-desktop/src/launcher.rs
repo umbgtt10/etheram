@@ -13,6 +13,8 @@ use std::process::ChildStdin;
 use std::process::ChildStdout;
 use std::process::Command;
 use std::process::Stdio;
+use std::sync::mpsc::channel;
+use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::Duration;
 
@@ -30,11 +32,16 @@ enum ControlCommand {
 
 pub struct Launcher;
 
+pub struct NodeLogLine {
+    pub node_id: u64,
+    pub line: String,
+}
+
 pub struct LaunchedNode {
     pub node_id: u64,
     child: Child,
     stdin: ChildStdin,
-    stdout: BufReader<ChildStdout>,
+    stdout: Option<BufReader<ChildStdout>>,
 }
 
 impl Launcher {
@@ -150,8 +157,44 @@ impl Launcher {
             node_id: node.id,
             child,
             stdin,
-            stdout: BufReader::new(stdout),
+            stdout: Some(BufReader::new(stdout)),
         })
+    }
+
+    pub fn start_log_pump(nodes: &mut [LaunchedNode]) -> Receiver<NodeLogLine> {
+        let (sender, receiver) = channel::<NodeLogLine>();
+        for node in nodes {
+            let Some(mut stdout) = node.stdout.take() else {
+                continue;
+            };
+            let node_id = node.node_id;
+            let sender_for_node = sender.clone();
+            let _ = thread::Builder::new()
+                .name(format!("desktop-log-pump-{}", node_id))
+                .spawn(move || loop {
+                    let mut line = String::new();
+                    match stdout.read_line(&mut line) {
+                        Ok(0) => break,
+                        Ok(_) => {
+                            let trimmed = line.trim_end_matches(['\r', '\n']).to_string();
+                            if trimmed.is_empty() {
+                                continue;
+                            }
+                            if sender_for_node
+                                .send(NodeLogLine {
+                                    node_id,
+                                    line: trimmed,
+                                })
+                                .is_err()
+                            {
+                                break;
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                });
+        }
+        receiver
     }
 
     pub fn send_partition_command(
@@ -222,9 +265,14 @@ impl Launcher {
     }
 
     pub fn read_stdout_line(node: &mut LaunchedNode) -> Result<Option<String>, String> {
+        let Some(stdout) = node.stdout.as_mut() else {
+            return Err(format!(
+                "stdout stream is not available for node {}",
+                node.node_id
+            ));
+        };
         let mut line = String::new();
-        let bytes = node
-            .stdout
+        let bytes = stdout
             .read_line(&mut line)
             .map_err(|error| format!("failed to read stdout for node {}: {error}", node.node_id))?;
         if bytes == 0 {
