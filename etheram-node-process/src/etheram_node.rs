@@ -18,6 +18,8 @@ use crate::infra::sync::sync_state::SyncState;
 use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
 use crate::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
+use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize_block;
+use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 use crate::infra::transport::partitionable_transport::partition_control::spawn_partition_control_thread;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use crate::infra::transport::partitionable_transport::shutdown_signal::is_shutdown_requested;
@@ -45,6 +47,7 @@ const IDLE_SLEEP_MS: u64 = 10;
 const PROPOSE_TICK_MS: u64 = 250;
 const STATUS_INTERVAL_MS: u64 = 1000;
 const TIMEOUT_TICK_MS: u64 = 1500;
+const SYNC_MAX_BLOCKS_PER_REQUEST: u64 = 64;
 
 pub struct NodeRuntime {
     node: EtheramNode<IbftMessage>,
@@ -195,11 +198,11 @@ impl NodeRuntime {
 
     fn process_sync_messages(&mut self) {
         while let Some((peer_id, message)) = dequeue_sync_for(self.node.peer_id()) {
-            if let SyncMessage::Status { height, .. } = message {
-                self.sync_state.observe_status(peer_id, height);
-                let local_height = self.current_height();
-                if let Some(lag_distance) = self.sync_state.lag_distance(local_height) {
-                    if lag_distance > 0 {
+            match message {
+                SyncMessage::Status { height, .. } => {
+                    self.sync_state.observe_status(peer_id, height);
+                    let local_height = self.current_height();
+                    if let Some(lag_distance) = self.sync_state.lag_distance(local_height) {
                         println!(
                             "sync_state peer_id={} lagging_by={} best_peer_height={}",
                             self.node.peer_id(),
@@ -207,9 +210,78 @@ impl NodeRuntime {
                             local_height + lag_distance
                         );
                     }
+
+                    if let Some((target_peer, from_height, max_blocks)) = self
+                        .sync_state
+                        .next_request(local_height, SYNC_MAX_BLOCKS_PER_REQUEST)
+                    {
+                        self.sync_sender.send_to_peer(
+                            target_peer,
+                            &SyncMessage::GetBlocks {
+                                from_height,
+                                max_blocks,
+                            },
+                        );
+                    }
+                }
+                SyncMessage::GetBlocks {
+                    from_height,
+                    max_blocks,
+                } => {
+                    self.handle_get_blocks(peer_id, from_height, max_blocks);
+                }
+                SyncMessage::Blocks {
+                    start_height,
+                    block_payloads,
+                } => {
+                    self.handle_blocks(peer_id, start_height, &block_payloads);
                 }
             }
         }
+    }
+
+    fn handle_get_blocks(&mut self, peer_id: PeerId, from_height: u64, max_blocks: u64) {
+        let mut block_payloads = Vec::new();
+        for offset in 0..max_blocks {
+            let height = from_height + offset;
+            let Some(block) = self.node.state().query_block(height) else {
+                break;
+            };
+            let Ok(payload) = serialize_block(&block) else {
+                break;
+            };
+            block_payloads.push(payload);
+        }
+
+        self.sync_sender.send_to_peer(
+            peer_id,
+            &SyncMessage::Blocks {
+                start_height: from_height,
+                block_payloads,
+            },
+        );
+    }
+
+    fn handle_blocks(&mut self, peer_id: PeerId, start_height: u64, block_payloads: &[Vec<u8>]) {
+        let mut decoded = 0u64;
+        for payload in block_payloads {
+            if deserialize_block(payload).is_ok() {
+                decoded += 1;
+            }
+        }
+
+        let completed = self
+            .sync_state
+            .complete_in_flight_request(peer_id, start_height);
+        println!(
+            "sync_blocks peer_id={} from_peer={} start_height={} payloads={} decoded={} completed_request={}",
+            self.node.peer_id(),
+            peer_id,
+            start_height,
+            block_payloads.len(),
+            decoded,
+            completed
+        );
     }
 
     fn last_block_hash(&self) -> [u8; 32] {

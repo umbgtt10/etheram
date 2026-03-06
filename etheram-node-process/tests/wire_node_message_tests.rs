@@ -48,3 +48,41 @@ fn serialize_sync_then_deserialize_returns_sync_message() {
         NodeIncomingMessage::Ibft(_) => panic!("expected sync message"),
     }
 }
+
+#[test]
+fn serialize_sync_get_blocks_then_deserialize_returns_get_blocks() {
+    // Arrange
+    let message = SyncMessage::GetBlocks {
+        from_height: 17,
+        max_blocks: 64,
+    };
+
+    // Act
+    let bytes = serialize_sync(&message).expect("failed to serialize sync");
+    let decoded = deserialize(&bytes).expect("failed to deserialize node message");
+
+    // Assert
+    match decoded {
+        NodeIncomingMessage::Sync(observed) => assert_eq!(observed, message),
+        NodeIncomingMessage::Ibft(_) => panic!("expected sync message"),
+    }
+}
+
+#[test]
+fn serialize_sync_blocks_then_deserialize_returns_blocks() {
+    // Arrange
+    let message = SyncMessage::Blocks {
+        start_height: 42,
+        block_payloads: vec![vec![1, 2, 3], vec![4, 5]],
+    };
+
+    // Act
+    let bytes = serialize_sync(&message).expect("failed to serialize sync");
+    let decoded = deserialize(&bytes).expect("failed to deserialize node message");
+
+    // Assert
+    match decoded {
+        NodeIncomingMessage::Sync(observed) => assert_eq!(observed, message),
+        NodeIncomingMessage::Ibft(_) => panic!("expected sync message"),
+    }
+}

@@ -16,6 +16,7 @@ use std::sync::OnceLock;
 
 pub trait SyncSender {
     fn broadcast_status(&self, height: Height, last_hash: Hash);
+    fn send_to_peer(&self, peer_id: PeerId, message: &SyncMessage);
 }
 
 pub struct GrpcSyncSender {
@@ -81,8 +82,12 @@ impl SyncSender for GrpcSyncSender {
             if peer_id == self.node_id {
                 continue;
             }
-            self.send_sync(peer_id, &message);
+            self.send_to_peer(peer_id, &message);
         }
+    }
+
+    fn send_to_peer(&self, peer_id: PeerId, message: &SyncMessage) {
+        self.send_sync(peer_id, message);
     }
 }
 
@@ -90,6 +95,8 @@ pub struct NoOpSyncSender;
 
 impl SyncSender for NoOpSyncSender {
     fn broadcast_status(&self, _height: Height, _last_hash: Hash) {}
+
+    fn send_to_peer(&self, _peer_id: PeerId, _message: &SyncMessage) {}
 }
 
 pub fn build_sync_sender(
