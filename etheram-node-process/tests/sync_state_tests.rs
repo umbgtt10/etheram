@@ -132,3 +132,39 @@ fn fail_in_flight_request_when_all_peers_failed_for_height_returns_none() {
     assert!(second_failed);
     assert!(planned_again.is_none());
 }
+
+#[test]
+fn complete_in_flight_request_after_failover_clears_failed_peer_filter() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    state.observe_status(3, 20);
+    let first = state.next_request(10, 32).expect("expected first request");
+    let first_failed = state.fail_in_flight_request(first.0, first.1);
+    let second = state.next_request(10, 32).expect("expected second request");
+
+    // Act
+    let completed = state.complete_in_flight_request(second.0, second.1);
+    let planned_again = state.next_request(10, 32);
+
+    // Assert
+    assert!(first_failed);
+    assert!(completed);
+    assert_eq!(planned_again, Some((3, 10, 32)));
+}
+
+#[test]
+fn next_request_after_successful_import_uses_updated_local_height() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    let first = state.next_request(10, 64).expect("expected first request");
+
+    // Act
+    let completed = state.complete_in_flight_request(first.0, first.1);
+    let second = state.next_request(15, 64);
+
+    // Assert
+    assert!(completed);
+    assert_eq!(second, Some((2, 15, 64)));
+}
