@@ -114,3 +114,52 @@ fn send_to_peer_partitioned_then_healed_delivers_only_after_heal() {
     assert_eq!(queued_from, from_peer);
     assert_eq!(queued_message, message);
 }
+
+#[test]
+fn broadcast_status_two_peers_routes_status_to_each_peer_sync_queue() {
+    // Arrange
+    global_partition_table().clear();
+    let from_peer = 45;
+    let to_peer_1 = 46;
+    let to_peer_2 = 47;
+    let listen_addr_1 = format!("127.0.0.1:{}", next_port());
+    let listen_addr_2 = format!("127.0.0.1:{}", next_port());
+    let incoming_1 = GrpcTransportIncoming::new(to_peer_1, listen_addr_1.clone())
+        .expect("failed to create incoming 1");
+    let incoming_2 = GrpcTransportIncoming::new(to_peer_2, listen_addr_2.clone())
+        .expect("failed to create incoming 2");
+    let mut peer_addresses = BTreeMap::new();
+    peer_addresses.insert(to_peer_1, listen_addr_1);
+    peer_addresses.insert(to_peer_2, listen_addr_2);
+    let sender = GrpcSyncSender::new(from_peer, peer_addresses);
+
+    // Act
+    thread::sleep(Duration::from_millis(40));
+    sender.broadcast_status(21, [4u8; 32]);
+    let queued_1 = wait_for_sync_message(&incoming_1, to_peer_1, 20);
+    let queued_2 = wait_for_sync_message(&incoming_2, to_peer_2, 20);
+
+    // Assert
+    assert!(queued_1.is_some());
+    assert!(queued_2.is_some());
+
+    let (queued_from_1, queued_message_1) = queued_1.expect("expected sync message for peer 1");
+    assert_eq!(queued_from_1, from_peer);
+    assert_eq!(
+        queued_message_1,
+        SyncMessage::Status {
+            height: 21,
+            last_hash: [4u8; 32],
+        }
+    );
+
+    let (queued_from_2, queued_message_2) = queued_2.expect("expected sync message for peer 2");
+    assert_eq!(queued_from_2, from_peer);
+    assert_eq!(
+        queued_message_2,
+        SyncMessage::Status {
+            height: 21,
+            last_hash: [4u8; 32],
+        }
+    );
+}
