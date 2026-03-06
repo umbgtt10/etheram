@@ -6,12 +6,13 @@ use crate::infra::sync::sync_message::SyncMessage;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::transport_service_client::TransportServiceClient;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::TransportEnvelope;
 use crate::infra::transport::grpc_transport::wire_node_message::serialize_sync;
-use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use crate::infra::transport::partitionable_transport::partition_table::PartitionTable;
 use crate::infra::transport::transport_backend::TransportBackend;
 use etheram_core::types::PeerId;
 use etheram_node::common_types::types::Hash;
 use etheram_node::common_types::types::Height;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::thread;
@@ -30,14 +31,20 @@ pub trait SyncSender {
 pub struct GrpcSyncSender {
     channel_cache: Mutex<BTreeMap<PeerId, Channel>>,
     node_id: PeerId,
+    partition_table: Arc<PartitionTable>,
     peer_addresses: BTreeMap<PeerId, String>,
 }
 
 impl GrpcSyncSender {
-    pub fn new(node_id: PeerId, peer_addresses: BTreeMap<PeerId, String>) -> Self {
+    pub fn new(
+        node_id: PeerId,
+        peer_addresses: BTreeMap<PeerId, String>,
+        partition_table: Arc<PartitionTable>,
+    ) -> Self {
         Self {
             channel_cache: Mutex::new(BTreeMap::new()),
             node_id,
+            partition_table,
             peer_addresses,
         }
     }
@@ -75,7 +82,7 @@ impl GrpcSyncSender {
     }
 
     fn send_sync(&self, peer_id: PeerId, message: &SyncMessage) {
-        if global_partition_table().is_blocked(self.node_id, peer_id) {
+        if self.partition_table.is_blocked(self.node_id, peer_id) {
             return;
         }
 
@@ -143,9 +150,14 @@ pub fn build_sync_sender(
     backend: &TransportBackend,
     node_id: PeerId,
     peer_addresses: &BTreeMap<PeerId, String>,
+    partition_table: Arc<PartitionTable>,
 ) -> Box<dyn SyncSender> {
     match backend {
         TransportBackend::LocalNoOp => Box::new(NoOpSyncSender),
-        TransportBackend::Grpc => Box::new(GrpcSyncSender::new(node_id, peer_addresses.clone())),
+        TransportBackend::Grpc => Box::new(GrpcSyncSender::new(
+            node_id,
+            peer_addresses.clone(),
+            partition_table,
+        )),
     }
 }

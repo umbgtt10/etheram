@@ -137,8 +137,20 @@ impl Launcher {
         args: &[String],
         node: &NodeConfig,
     ) -> Result<LaunchedNode, String> {
+        Self::spawn_node_with_command_and_env(program, args, node, &[])
+    }
+
+    pub fn spawn_node_with_command_and_env(
+        program: &str,
+        args: &[String],
+        node: &NodeConfig,
+        envs: &[(&str, &str)],
+    ) -> Result<LaunchedNode, String> {
         let mut command = Command::new(program);
         command.args(args);
+        for (key, value) in envs {
+            command.env(key, value);
+        }
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());
         command.stderr(Stdio::piped());

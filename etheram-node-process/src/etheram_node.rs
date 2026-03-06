@@ -10,25 +10,21 @@ use crate::infra::protocol::protocol_factory::build_protocol;
 use crate::infra::scheduler::context_builder_factory::build_context_builder;
 use crate::infra::scheduler::partitioner_factory::build_partitioner;
 use crate::infra::std_shared_state::StdSharedState;
-use crate::infra::storage::in_memory_storage::InMemoryStorage;
 use crate::infra::storage::storage_factory::build_storage;
-use crate::infra::sync::sync_import::decode_and_validate_blocks;
-use crate::infra::sync::sync_message::SyncMessage;
+use crate::infra::sync::sync_handler::SyncHandler;
 use crate::infra::sync::sync_sender::build_sync_sender;
-use crate::infra::sync::sync_sender::SyncSender;
-use crate::infra::sync::sync_state::SyncState;
 use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
-use crate::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
+use crate::infra::timer::timer_scheduler::TimerScheduler;
+use crate::infra::transport::grpc_transport::grpc_transport_bus::GrpcTransportBus;
+use crate::infra::transport::grpc_transport::sync_bus::SyncBus;
 use crate::infra::transport::partitionable_transport::partition_control::spawn_partition_control_thread;
-use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use crate::infra::transport::partitionable_transport::partition_table::PartitionTable;
 use crate::infra::transport::partitionable_transport::shutdown_signal::is_shutdown_requested;
 use crate::infra::transport::partitionable_transport::shutdown_signal::reset_shutdown;
 use crate::infra::transport::transport_backend::TransportBackend;
 use crate::infra::transport::transport_factory::build_transport_incoming;
 use crate::infra::transport::transport_factory::build_transport_outgoing;
-use etheram_core::node_common::shared_state::SharedState;
 use etheram_core::types::PeerId;
 use etheram_node::builders::execution_engine_builder::ExecutionEngineBuilder;
 use etheram_node::etheram_node::EtheramNode;
@@ -40,25 +36,20 @@ use etheram_node::incoming::incoming_sources::IncomingSources;
 use etheram_node::incoming::timer::timer_event::TimerEvent;
 use etheram_node::state::etheram_state::EtheramState;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
 
 const IDLE_SLEEP_MS: u64 = 10;
-const PROPOSE_TICK_MS: u64 = 250;
 const STATUS_INTERVAL_MS: u64 = 1000;
-const TIMEOUT_TICK_MS: u64 = 1500;
-const SYNC_REQUEST_TIMEOUT_MS: u64 = 1000;
 const SYNC_RETRY_TICK_MS: u64 = 250;
-const SYNC_MAX_RETRIES: u32 = 3;
-const SYNC_MAX_BLOCKS_PER_REQUEST: u64 = 64;
 
 pub struct NodeRuntime {
     node: EtheramNode<IbftMessage>,
-    sync_sender: Box<dyn SyncSender>,
-    sync_storage: InMemoryStorage,
-    sync_state: SyncState,
-    timer_state: StdSharedState<InMemoryTimerState>,
+    partition_table: Arc<PartitionTable>,
+    sync_handler: SyncHandler,
+    timer_scheduler: TimerScheduler,
 }
 
 impl NodeRuntime {
@@ -69,7 +60,8 @@ impl NodeRuntime {
         validators: &[u64],
     ) -> Result<Self, String> {
         let transport_backend = TransportBackend::from_env();
-        let blocked_count = global_partition_table().initialize_from_env()?;
+        let partition_table = Arc::new(PartitionTable::new());
+        let blocked_count = partition_table.initialize_from_env()?;
         if blocked_count > 0 {
             println!(
                 "partition_table initialized blocked_links={}",
@@ -77,16 +69,34 @@ impl NodeRuntime {
             );
         }
 
+        let bus = Arc::new(GrpcTransportBus::new());
+        let sync_bus = Arc::new(SyncBus::new());
+
         let timer_state = StdSharedState::new(InMemoryTimerState::new());
         let timer_input = build_timer_input(peer_id, timer_state.clone())?;
         let timer_output = build_timer_output(peer_id, timer_state.clone())?;
         timer_output.schedule(TimerEvent::ProposeBlock, 0);
 
-        let transport_incoming =
-            build_transport_incoming(&transport_backend, peer_id, listen_addr)?;
-        let transport_outgoing =
-            build_transport_outgoing(&transport_backend, peer_id, peer_addresses)?;
-        let sync_sender = build_sync_sender(&transport_backend, peer_id, peer_addresses);
+        let transport_incoming = build_transport_incoming(
+            &transport_backend,
+            peer_id,
+            listen_addr,
+            Arc::clone(&bus),
+            Arc::clone(&sync_bus),
+        )?;
+        let transport_outgoing = build_transport_outgoing(
+            &transport_backend,
+            peer_id,
+            peer_addresses,
+            Arc::clone(&partition_table),
+            Arc::clone(&bus),
+        )?;
+        let sync_sender = build_sync_sender(
+            &transport_backend,
+            peer_id,
+            peer_addresses,
+            Arc::clone(&partition_table),
+        );
         let external_interface_incoming = build_external_interface_incoming()?;
         let external_interface_outgoing = build_external_interface_outgoing()?;
         let storage = build_storage()?;
@@ -121,12 +131,15 @@ impl NodeRuntime {
             execution_engine,
             observer,
         );
+
+        let sync_handler = SyncHandler::new(sync_bus, sync_sender, sync_storage);
+        let timer_scheduler = TimerScheduler::new(timer_state);
+
         Ok(Self {
             node,
-            sync_sender,
-            sync_storage,
-            sync_state: SyncState::new(),
-            timer_state,
+            partition_table,
+            sync_handler,
+            timer_scheduler,
         })
     }
 
@@ -143,16 +156,14 @@ impl NodeRuntime {
 
     pub fn run_forever(&mut self) {
         reset_shutdown();
-        if let Err(error) = spawn_partition_control_thread() {
+        if let Err(error) = spawn_partition_control_thread(Arc::clone(&self.partition_table)) {
             println!("partition_control_error {}", error);
         }
 
         let mut attempted_steps: u64 = 0;
         let mut progressed_steps: u64 = 0;
-        let mut last_propose_tick_at = Instant::now();
         let mut last_status_at = Instant::now();
         let mut last_sync_retry_tick_at = Instant::now();
-        let mut last_timeout_tick_at = Instant::now();
 
         loop {
             if is_shutdown_requested() {
@@ -160,19 +171,7 @@ impl NodeRuntime {
                 break;
             }
 
-            if last_propose_tick_at.elapsed() >= Duration::from_millis(PROPOSE_TICK_MS) {
-                let node_id = self.node.peer_id();
-                self.timer_state
-                    .with_mut(|state| state.push_event(node_id, TimerEvent::ProposeBlock));
-                last_propose_tick_at = Instant::now();
-            }
-
-            if last_timeout_tick_at.elapsed() >= Duration::from_millis(TIMEOUT_TICK_MS) {
-                let node_id = self.node.peer_id();
-                self.timer_state
-                    .with_mut(|state| state.push_event(node_id, TimerEvent::TimeoutRound));
-                last_timeout_tick_at = Instant::now();
-            }
+            self.timer_scheduler.tick(self.node.peer_id());
 
             let progressed = self.node.step();
             attempted_steps += 1;
@@ -182,15 +181,17 @@ impl NodeRuntime {
                 thread::sleep(Duration::from_millis(IDLE_SLEEP_MS));
             }
 
-            self.process_sync_messages();
+            self.sync_handler
+                .process_sync_messages(self.node.peer_id(), self.node.state());
 
             if last_sync_retry_tick_at.elapsed() >= Duration::from_millis(SYNC_RETRY_TICK_MS) {
-                self.process_sync_timeouts();
+                self.sync_handler
+                    .process_sync_timeouts(self.node.peer_id(), self.current_height());
                 last_sync_retry_tick_at = Instant::now();
             }
 
             if last_status_at.elapsed() >= Duration::from_millis(STATUS_INTERVAL_MS) {
-                self.sync_sender
+                self.sync_handler
                     .broadcast_status(self.current_height(), self.last_block_hash());
                 println!(
                     "node_status peer_id={} height={} last_hash={} attempted_steps={} progressed_steps={}",
@@ -207,170 +208,6 @@ impl NodeRuntime {
 
     fn current_height(&self) -> u64 {
         self.node.state().query_height()
-    }
-
-    fn process_sync_messages(&mut self) {
-        while let Some((peer_id, message)) = dequeue_sync_for(self.node.peer_id()) {
-            match message {
-                SyncMessage::Status { height, .. } => {
-                    self.sync_state.observe_status(peer_id, height);
-                    let local_height = self.current_height();
-                    if let Some(lag_distance) = self.sync_state.lag_distance(local_height) {
-                        println!(
-                            "sync_state peer_id={} lagging_by={} best_peer_height={}",
-                            self.node.peer_id(),
-                            lag_distance,
-                            local_height + lag_distance
-                        );
-                    }
-
-                    if let Some((target_peer, from_height, max_blocks)) = self
-                        .sync_state
-                        .next_request(local_height, SYNC_MAX_BLOCKS_PER_REQUEST)
-                    {
-                        self.sync_sender.send_to_peer(
-                            target_peer,
-                            &SyncMessage::GetBlocks {
-                                from_height,
-                                max_blocks,
-                            },
-                        );
-                    }
-                }
-                SyncMessage::GetBlocks {
-                    from_height,
-                    max_blocks,
-                } => {
-                    self.handle_get_blocks(peer_id, from_height, max_blocks);
-                }
-                SyncMessage::Blocks {
-                    start_height,
-                    block_payloads,
-                } => {
-                    self.handle_blocks(peer_id, start_height, &block_payloads);
-                }
-            }
-        }
-    }
-
-    fn handle_get_blocks(&mut self, peer_id: PeerId, from_height: u64, max_blocks: u64) {
-        let mut block_payloads = Vec::new();
-        for offset in 0..max_blocks {
-            let height = from_height + offset;
-            let Some(block) = self.node.state().query_block(height) else {
-                break;
-            };
-            let Ok(payload) = serialize_block(&block) else {
-                break;
-            };
-            block_payloads.push(payload);
-        }
-
-        self.sync_sender.send_to_peer(
-            peer_id,
-            &SyncMessage::Blocks {
-                start_height: from_height,
-                block_payloads,
-            },
-        );
-    }
-
-    fn handle_blocks(&mut self, peer_id: PeerId, start_height: u64, block_payloads: &[Vec<u8>]) {
-        let local_height = self.current_height();
-        let expected_parent_post_state_root = if local_height == 0 {
-            None
-        } else {
-            self.node
-                .state()
-                .query_block(local_height - 1)
-                .map(|block| block.post_state_root)
-        };
-        let decoded_blocks = decode_and_validate_blocks(
-            local_height,
-            start_height,
-            block_payloads,
-            expected_parent_post_state_root,
-        );
-        let decoded = decoded_blocks
-            .as_ref()
-            .map(|blocks| blocks.len() as u64)
-            .unwrap_or(0);
-
-        let malformed = decoded_blocks.is_none();
-        let empty_while_lagging =
-            block_payloads.is_empty() && self.sync_state.lag_distance(local_height).is_some();
-
-        if let Some(blocks) = decoded_blocks.as_ref() {
-            if !empty_while_lagging {
-                self.sync_storage.apply_synced_blocks(blocks);
-            }
-        }
-
-        let completed = if malformed || empty_while_lagging {
-            false
-        } else {
-            self.sync_state
-                .complete_in_flight_request(peer_id, start_height)
-        };
-
-        let failed = if malformed || empty_while_lagging {
-            self.sync_state
-                .fail_in_flight_request(peer_id, start_height)
-        } else {
-            false
-        };
-
-        if completed || failed {
-            if let Some((target_peer, from_height, max_blocks)) = self
-                .sync_state
-                .next_request(self.current_height(), SYNC_MAX_BLOCKS_PER_REQUEST)
-            {
-                self.sync_sender.send_to_peer(
-                    target_peer,
-                    &SyncMessage::GetBlocks {
-                        from_height,
-                        max_blocks,
-                    },
-                );
-            }
-        }
-        println!(
-            "sync_blocks peer_id={} from_peer={} start_height={} payloads={} decoded={} malformed={} empty_while_lagging={} completed_request={} failed_request={}",
-            self.node.peer_id(),
-            peer_id,
-            start_height,
-            block_payloads.len(),
-            decoded,
-            malformed,
-            empty_while_lagging,
-            completed,
-            failed
-        );
-    }
-
-    fn process_sync_timeouts(&mut self) {
-        if let Some((target_peer, from_height, max_blocks)) =
-            self.sync_state.handle_request_timeout(
-                self.current_height(),
-                Duration::from_millis(SYNC_REQUEST_TIMEOUT_MS),
-                SYNC_MAX_RETRIES,
-            )
-        {
-            self.sync_sender.send_to_peer(
-                target_peer,
-                &SyncMessage::GetBlocks {
-                    from_height,
-                    max_blocks,
-                },
-            );
-            println!(
-                "sync_timeout_retry peer_id={} target_peer={} from_height={} max_blocks={}",
-                self.node.peer_id(),
-                target_peer,
-                from_height,
-                max_blocks
-            );
-        }
     }
 
     fn last_block_hash(&self) -> [u8; 32] {

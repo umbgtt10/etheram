@@ -282,15 +282,23 @@ fn broadcast_isolate_and_heal_isolated_node_three_processes_all_receive_bidirect
 fn broadcast_partition_and_heal_real_node_processes_emit_partition_logs() {
     // Arrange
     let binary_path = node_process_binary_path();
+    let binary_str = binary_path.to_string_lossy().to_string();
     let config_path = create_three_node_cluster_config();
-    env::set_var("ETHERAM_NODE_PROCESS_BIN", &binary_path);
-    env::set_var("ETHERAM_DESKTOP_NODE_STEP_LIMIT", "0");
-    env::set_var("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND", "grpc");
-
     let config = ClusterConfig::load_from_path(&config_path).expect("failed to load config");
     let config_path_text = config_path.to_string_lossy().to_string();
-    let mut launched = Launcher::spawn_node_processes(&config, &config_path_text)
-        .expect("failed to spawn node-process children");
+    let child_envs: Vec<(&str, &str)> = vec![("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND", "grpc")];
+    let mut launched: Vec<etheram_desktop::launcher::LaunchedNode> = Vec::new();
+    for node in &config.node {
+        let args = vec![
+            config_path_text.clone(),
+            node.id.to_string(),
+            "0".to_string(),
+        ];
+        let process =
+            Launcher::spawn_node_with_command_and_env(&binary_str, &args, node, &child_envs)
+                .expect("failed to spawn node-process child");
+        launched.push(process);
+    }
 
     thread::sleep(Duration::from_millis(300));
 
@@ -310,11 +318,7 @@ fn broadcast_partition_and_heal_real_node_processes_emit_partition_logs() {
     })();
 
     let stop_result = Launcher::stop_all(launched);
-
     let _ = fs::remove_file(config_path);
-    env::remove_var("ETHERAM_NODE_PROCESS_BIN");
-    env::remove_var("ETHERAM_DESKTOP_NODE_STEP_LIMIT");
-    env::remove_var("ETHERAM_NODE_PROCESS_TRANSPORT_BACKEND");
 
     // Assert
     assert!(

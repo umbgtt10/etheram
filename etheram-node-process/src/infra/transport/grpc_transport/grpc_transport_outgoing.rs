@@ -2,16 +2,17 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
+use crate::infra::transport::grpc_transport::grpc_transport_bus::GrpcTransportBus;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::transport_service_client::TransportServiceClient;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::TransportEnvelope;
 use crate::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
-use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use crate::infra::transport::partitionable_transport::partition_table::PartitionTable;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::thread;
@@ -36,16 +37,25 @@ fn partition_drop_log_state() -> &'static Mutex<BTreeMap<(PeerId, PeerId), Parti
 }
 
 pub struct GrpcTransportOutgoing {
+    bus: Arc<GrpcTransportBus>,
     channel_cache: Mutex<BTreeMap<PeerId, Channel>>,
     node_id: PeerId,
+    partition_table: Arc<PartitionTable>,
     peer_addresses: BTreeMap<PeerId, String>,
 }
 
 impl GrpcTransportOutgoing {
-    pub fn new(node_id: PeerId, peer_addresses: BTreeMap<PeerId, String>) -> Self {
+    pub fn new(
+        node_id: PeerId,
+        peer_addresses: BTreeMap<PeerId, String>,
+        partition_table: Arc<PartitionTable>,
+        bus: Arc<GrpcTransportBus>,
+    ) -> Self {
         Self {
+            bus,
             channel_cache: Mutex::new(BTreeMap::new()),
             node_id,
+            partition_table,
             peer_addresses,
         }
     }
@@ -151,11 +161,12 @@ impl TransportOutgoing for GrpcTransportOutgoing {
         };
 
         if peer_id == self.node_id {
-            enqueue_to_local(self.node_id, self.node_id, payload);
+            self.bus
+                .enqueue_to_local(self.node_id, self.node_id, payload);
             return;
         }
 
-        if global_partition_table().is_blocked(self.node_id, peer_id) {
+        if self.partition_table.is_blocked(self.node_id, peer_id) {
             let now = Instant::now();
             let mut state = partition_drop_log_state()
                 .lock()

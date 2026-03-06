@@ -4,3 +4,4 @@
 
 pub mod timer_input_factory;
 pub mod timer_output_factory;
+pub mod timer_scheduler;

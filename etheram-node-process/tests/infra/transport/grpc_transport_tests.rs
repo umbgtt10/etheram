@@ -7,15 +7,16 @@ use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use etheram_node_process::infra::sync::sync_message::SyncMessage;
-use etheram_node_process::infra::transport::grpc_transport::grpc_transport_bus::enqueue_to_local;
+use etheram_node_process::infra::transport::grpc_transport::grpc_transport_bus::GrpcTransportBus;
 use etheram_node_process::infra::transport::grpc_transport::grpc_transport_incoming::GrpcTransportIncoming;
 use etheram_node_process::infra::transport::grpc_transport::grpc_transport_outgoing::GrpcTransportOutgoing;
-use etheram_node_process::infra::transport::grpc_transport::sync_bus::dequeue_sync_for;
+use etheram_node_process::infra::transport::grpc_transport::sync_bus::SyncBus;
 use etheram_node_process::infra::transport::grpc_transport::wire_node_message::serialize_ibft;
 use etheram_node_process::infra::transport::grpc_transport::wire_node_message::serialize_sync;
-use etheram_node_process::infra::transport::partitionable_transport::partition_table::global_partition_table;
+use etheram_node_process::infra::transport::partitionable_transport::partition_table::PartitionTable;
 use std::collections::BTreeMap;
 use std::net::TcpListener;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
@@ -59,8 +60,10 @@ fn poll_empty_queue_returns_none() {
     // Arrange
     let node_id = 11;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus, sync_bus)
+        .expect("failed to create incoming");
 
     // Act
     let result = incoming.poll();
@@ -72,12 +75,14 @@ fn poll_empty_queue_returns_none() {
 #[test]
 fn send_self_message_poll_returns_same_message() {
     // Arrange
-    global_partition_table().clear();
     let node_id = 12;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
-    let outgoing = GrpcTransportOutgoing::new(node_id, BTreeMap::new());
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let partition_table = Arc::new(PartitionTable::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus.clone(), sync_bus)
+        .expect("failed to create incoming");
+    let outgoing = GrpcTransportOutgoing::new(node_id, BTreeMap::new(), partition_table, bus);
     let expected = sample_message();
 
     // Act
@@ -94,12 +99,14 @@ fn send_self_message_poll_returns_same_message() {
 #[test]
 fn send_unknown_peer_poll_returns_none() {
     // Arrange
-    global_partition_table().clear();
     let node_id = 13;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
-    let outgoing = GrpcTransportOutgoing::new(node_id, BTreeMap::new());
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let partition_table = Arc::new(PartitionTable::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus.clone(), sync_bus)
+        .expect("failed to create incoming");
+    let outgoing = GrpcTransportOutgoing::new(node_id, BTreeMap::new(), partition_table, bus);
 
     // Act
     outgoing.send(99, sample_message());
@@ -112,16 +119,19 @@ fn send_unknown_peer_poll_returns_none() {
 #[test]
 fn send_blocked_link_poll_returns_none() {
     // Arrange
-    global_partition_table().clear();
     let from_peer = 14;
     let to_peer = 15;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(to_peer, listen_addr).expect("failed to create incoming");
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let partition_table = Arc::new(PartitionTable::new());
+    let incoming = GrpcTransportIncoming::new(to_peer, listen_addr, bus.clone(), sync_bus)
+        .expect("failed to create incoming");
     let mut peer_addresses = BTreeMap::new();
     peer_addresses.insert(to_peer, "127.0.0.1:9".to_string());
-    let outgoing = GrpcTransportOutgoing::new(from_peer, peer_addresses);
-    global_partition_table().block(from_peer, to_peer);
+    let outgoing =
+        GrpcTransportOutgoing::new(from_peer, peer_addresses, partition_table.clone(), bus);
+    partition_table.block(from_peer, to_peer);
 
     // Act
     outgoing.send(to_peer, sample_message());
@@ -129,21 +139,23 @@ fn send_blocked_link_poll_returns_none() {
 
     // Assert
     assert!(observed.is_none());
-    global_partition_table().heal(from_peer, to_peer);
 }
 
 #[test]
 fn send_remote_message_poll_on_receiver_returns_message() {
     // Arrange
-    global_partition_table().clear();
     let from_peer = 16;
     let to_peer = 17;
     let receiver_addr = format!("127.0.0.1:{}", next_port());
-    let incoming = GrpcTransportIncoming::new(to_peer, receiver_addr.clone())
-        .expect("failed to create receiver incoming");
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let partition_table = Arc::new(PartitionTable::new());
+    let incoming =
+        GrpcTransportIncoming::new(to_peer, receiver_addr.clone(), bus.clone(), sync_bus)
+            .expect("failed to create receiver incoming");
     let mut peer_addresses = BTreeMap::new();
     peer_addresses.insert(to_peer, receiver_addr);
-    let outgoing = GrpcTransportOutgoing::new(from_peer, peer_addresses);
+    let outgoing = GrpcTransportOutgoing::new(from_peer, peer_addresses, partition_table, bus);
     let expected = sample_message();
 
     // Act
@@ -164,12 +176,14 @@ fn poll_invalid_payload_then_valid_payload_returns_valid_message() {
     let node_id = 18;
     let from_peer = 19;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
-    enqueue_to_local(node_id, from_peer, vec![1, 2, 3, 4]);
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus.clone(), sync_bus)
+        .expect("failed to create incoming");
+    bus.enqueue_to_local(node_id, from_peer, vec![1, 2, 3, 4]);
     let valid = sample_message();
     let payload = serialize_ibft(&valid).expect("failed to serialize valid message");
-    enqueue_to_local(node_id, from_peer, payload);
+    bus.enqueue_to_local(node_id, from_peer, payload);
 
     // Act
     let first = incoming.poll();
@@ -189,18 +203,20 @@ fn poll_sync_payload_routes_to_sync_queue_returns_none() {
     let node_id = 26;
     let from_peer = 27;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus.clone(), sync_bus.clone())
+        .expect("failed to create incoming");
     let sync_message = SyncMessage::Status {
         height: 7,
         last_hash: [3u8; 32],
     };
     let payload = serialize_sync(&sync_message).expect("failed to serialize sync message");
-    enqueue_to_local(node_id, from_peer, payload);
+    bus.enqueue_to_local(node_id, from_peer, payload);
 
     // Act
     let observed = incoming.poll();
-    let queued_sync = dequeue_sync_for(node_id);
+    let queued_sync = sync_bus.dequeue_sync_for(node_id);
 
     // Assert
     assert!(observed.is_none());
@@ -216,18 +232,20 @@ fn poll_sync_get_blocks_payload_routes_to_sync_queue_returns_none() {
     let node_id = 28;
     let from_peer = 29;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus.clone(), sync_bus.clone())
+        .expect("failed to create incoming");
     let sync_message = SyncMessage::GetBlocks {
         from_height: 11,
         max_blocks: 32,
     };
     let payload = serialize_sync(&sync_message).expect("failed to serialize sync message");
-    enqueue_to_local(node_id, from_peer, payload);
+    bus.enqueue_to_local(node_id, from_peer, payload);
 
     // Act
     let observed = incoming.poll();
-    let queued_sync = dequeue_sync_for(node_id);
+    let queued_sync = sync_bus.dequeue_sync_for(node_id);
 
     // Assert
     assert!(observed.is_none());
@@ -243,18 +261,20 @@ fn poll_sync_blocks_payload_routes_to_sync_queue_returns_none() {
     let node_id = 30;
     let from_peer = 31;
     let listen_addr = format!("127.0.0.1:{}", next_port());
-    let incoming =
-        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let bus = Arc::new(GrpcTransportBus::new());
+    let sync_bus = Arc::new(SyncBus::new());
+    let incoming = GrpcTransportIncoming::new(node_id, listen_addr, bus.clone(), sync_bus.clone())
+        .expect("failed to create incoming");
     let sync_message = SyncMessage::Blocks {
         start_height: 13,
         block_payloads: vec![vec![1u8, 2u8], vec![3u8]],
     };
     let payload = serialize_sync(&sync_message).expect("failed to serialize sync message");
-    enqueue_to_local(node_id, from_peer, payload);
+    bus.enqueue_to_local(node_id, from_peer, payload);
 
     // Act
     let observed = incoming.poll();
-    let queued_sync = dequeue_sync_for(node_id);
+    let queued_sync = sync_bus.dequeue_sync_for(node_id);
 
     // Assert
     assert!(observed.is_none());

@@ -7,24 +7,36 @@ use etheram_core::types::PeerId;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::sync::Mutex;
-use std::sync::OnceLock;
 
 type SyncQueue = VecDeque<(PeerId, SyncMessage)>;
-type SyncState = BTreeMap<PeerId, SyncQueue>;
+type SyncQueueState = BTreeMap<PeerId, SyncQueue>;
 
-fn sync_inbound() -> &'static Mutex<SyncState> {
-    static SYNC_INBOUND: OnceLock<Mutex<SyncState>> = OnceLock::new();
-    SYNC_INBOUND.get_or_init(|| Mutex::new(BTreeMap::new()))
+pub struct SyncBus {
+    inbound: Mutex<SyncQueueState>,
 }
 
-pub fn enqueue_sync_for(node_id: PeerId, from_peer: PeerId, message: SyncMessage) {
-    let mut guard = sync_inbound().lock().expect("sync inbound lock poisoned");
-    let queue = guard.entry(node_id).or_default();
-    queue.push_back((from_peer, message));
+impl SyncBus {
+    pub fn new() -> Self {
+        Self {
+            inbound: Mutex::new(BTreeMap::new()),
+        }
+    }
+
+    pub fn enqueue_sync_for(&self, node_id: PeerId, from_peer: PeerId, message: SyncMessage) {
+        let mut guard = self.inbound.lock().expect("sync inbound lock poisoned");
+        let queue = guard.entry(node_id).or_default();
+        queue.push_back((from_peer, message));
+    }
+
+    pub fn dequeue_sync_for(&self, node_id: PeerId) -> Option<(PeerId, SyncMessage)> {
+        let mut guard = self.inbound.lock().expect("sync inbound lock poisoned");
+        let queue = guard.entry(node_id).or_default();
+        queue.pop_front()
+    }
 }
 
-pub fn dequeue_sync_for(node_id: PeerId) -> Option<(PeerId, SyncMessage)> {
-    let mut guard = sync_inbound().lock().expect("sync inbound lock poisoned");
-    let queue = guard.entry(node_id).or_default();
-    queue.pop_front()
+impl Default for SyncBus {
+    fn default() -> Self {
+        Self::new()
+    }
 }
