@@ -131,7 +131,7 @@ fn query_pending_fresh_state_returns_empty() {
 fn query_pending_after_add_pending_mutation_returns_transaction() {
     // Arrange
     let mut state = fresh_state();
-    let tx = Transaction::transfer([1u8; 20], [2u8; 20], 50, 21_000, 0);
+    let tx = Transaction::transfer([1u8; 20], [2u8; 20], 50, 21_000, 1, 0);
 
     // Act
     apply::<()>(

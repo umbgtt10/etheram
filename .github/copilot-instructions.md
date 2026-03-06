@@ -338,11 +338,21 @@ All three stages are **mandatory** for every new feature at the `etheram-node/` 
 - `TinyEvmEngine` unknown opcode returns `OutOfGas` (was `Success`)
 - `StoreReceipts` storage mutation kind computes real success/out_of_gas counts from receipt statuses
 
-### 🔄 Next: Raft Consensus — Sprint 6 (raft-embassy)
-- Sprints 0–5 (`raft-node/` skeleton, `RaftNode<P>` step loop, `RaftProtocol<P>`, infra implementations, protocol-level tests, cluster tests) are **complete**
-- Sprint 6: implement `raft-embassy/` with two configurations (all-in-memory + real) and a 5-act QEMU scenario
-- See [RAFT-ROADMAP.md](etheram-node/RAFT-ROADMAP.md) for the full implementation plan
-- All `raft-*` crates depend only on `core/` — zero changes to existing `etheram*` crates
+### ✅ E1 — TLA+ Formal Specifications
+- IBFT: `IBFTConsensus.tla` — Agreement, LockConsistency, CommitImpliesPrepareQuorum, Termination; Byzantine fault model (`ByzValidators`). Quick ~5s (exit 0), CI ~21s (exit 0)
+- Raft: `RaftConsensus.tla` — ElectionSafety, VoteOnce, LeaderTermOK, LogSafety, LeaderCompleteness; log replication + stale-leader scenarios. Quick 1.6s / 1175 states (exit 0), CI 10.7s / 282K states (exit 0)
+- Liveness (`Termination`) defined via `FairSpec` for manual verification; swap `SPECIFICATION Spec` → `FairSpec` and add `PROPERTIES Termination` in the cfg to activate
+- Scripts: `scripts/ibft_run_tla_quick.ps1`, `scripts/raft_run_tla_quick.ps1` — **never invoked automatically by an AI agent**
+
+### 🔄 Next: Ethereum Functionalities — C3 → C6 → C1
+- Detailed implementation plan: [C-Functionalities.md](etheram-node/C-Functionalities.md)
+- **C3** — Transaction pool priority ordering: add `gas_price: u64` to `Transaction`; replace `Vec<Transaction>` in `InMemoryCache` with a `BTreeSet` ordered by `(gas_price DESC, nonce ASC, from ASC)`; pool capacity 4096 with lowest-priority eviction; per-sender nonce deduplication; `ZeroGasPrice` rejection reason; ordering validated in `valid_pre_prepare`
+- **C6** — Block gas limit: add `gas_limit: Gas` to `Block`; `BLOCK_GAS_LIMIT = 10_000_000`; proposer greedy-fills from sorted pool up to the limit; `valid_block_gas()` rejects over-limit or non-canonical-limit blocks
+- **C1** — Expand TinyEVM: 22 new opcodes (MSTORE/MLOAD, CALLDATALOAD/CALLDATASIZE, SHA3, JUMP/JUMPI, PUSH2–32, DUP1–16, SWAP1–16, POP, arithmetic, CALLER, CALLVALUE, REVERT); memory model with quadratic expansion gas; JUMPDEST pre-scan; `tiny-keccak` dependency
+- **Three implementation traps to review before coding:**
+  1. **JUMPDEST pre-scan** — PUSH2 consumes 2 immediate bytes that must be skipped during the scan, not treated as opcodes. Off-by-one here corrupts all JUMP targets.
+  2. **Memory expansion gas** — charge the *delta* (`cost(new_high_water) − cost(old_high_water)`), not the absolute cost per access. Charging absolute cost per MLOAD is ruinously expensive and wrong.
+  3. **C3 pool eviction tie-breaking** — when gas prices are equal the eviction invariant must be explicit: lowest priority = lowest gas price, then highest nonce, then highest `from` (reverse lexicographic). Ambiguity here causes non-deterministic block ordering across nodes.
 
 ### ✅ Raft Sprints 0–5 Implemented
 - `raft-node/` crate created with `#![no_std]` from day one

@@ -88,6 +88,80 @@ The `Observer` trait already instruments every step. Building on it would showca
 
 ---
 
+## Direction H: Desktop Application — Multi-Node gRPC Cluster
+
+Run a real multi-node EtheRAM cluster as a native desktop application: each node in
+its own OS process, transport over gRPC, state persisted in an embedded database.
+This direction proves the decomposition holds under real system pressures without
+requiring dedicated server hardware or container orchestration.
+
+| # | Feature | Effort | Value |
+|---|---|---|---|
+| H1 | **gRPC transport** — implement `TransportIncoming` + `TransportOutgoing` over [tonic](https://github.com/hyperium/tonic) (gRPC over HTTP/2). Point-to-point `SendMessage` maps to unary RPC; `BroadcastMessage` fans out concurrently. A protobuf codec replaces `WireIbftMessage` | Medium | Validates transport swappability against a real, widely-used RPC protocol; natural fit for cross-language clients later |
+| H2 | **Embedded database storage** — implement `StorageAdapter` over [sled](https://github.com/spacejam/sled) (pure-Rust embedded B-tree, no external process). Each storage mutation becomes a transactional sled batch | Medium | Tests whether the storage abstraction accommodates crash-safe, concurrent write semantics without leaking sled concepts into the protocol |
+| H3 | **Per-node process harness** — an `etheram-node-process` binary crate that runs a single `EtheramNode` step loop, wired with gRPC transport + sled storage, driven by a `cluster.toml` entry passed as a CLI argument. A separate `etheram-desktop` launcher process reads the fleet config and spawns one `etheram-node-process` child per node, monitoring their stdout/stderr for the dashboard UI | Medium | End-to-end proof that the decomposition composes under real OS process boundaries — full fault isolation, independent address spaces, genuine crash recovery |
+| H4 | **Desktop UI — terminal dashboard** — a [ratatui](https://github.com/ratatui-org/ratatui) terminal UI showing live per-node height, round, role, pending tx count, and last committed block hash, updated via the `Observer` trait | Medium | Makes the cluster visually observable; demonstrates that the Observer dimension serves non-logging purposes |
+| H5 | **gRPC `ExternalInterface`** — a tonic-backed `ExternalInterfaceIncoming` + `ExternalInterfaceOutgoing` pair exposing `SubmitTransaction`, `GetBalance`, `GetHeight`, and `GetBlock` as unary RPCs. Separate from the peer transport (H1); client-facing and peer-facing gRPC services run on different ports | Medium | Completes the gRPC story — without this there is no way for a user or external tool to talk to a running desktop node |
+| H6 | **WAL-backed crash recovery** — wire `ConsensusWal` + a real `WalWriter` implementation (writing to sled or a flat append-only file) so that a restarted node recovers its `prepared_certificate`, current round, and locked block before rejoining the cluster. `NoOpWalWriter` stays available for tests | Medium | Activates code that already exists in the architecture but has never been exercised end-to-end; prevents the locked-block invariant from being violated on restart |
+| H7 | **Fleet TOML configuration** — a single `cluster.toml` file that declares the entire fleet: node count, each node's peer ID, listen address (transport + external interface), sled DB path, log level, and the validator set. `etheram-desktop` reads this file at startup and wires all nodes from it — no recompilation needed to change topology. Individual node sections can override fleet-level defaults | Low-Medium | Makes the cluster genuinely operable without recompiling; validates that `EtheramNodeBuilder` can be driven entirely from external config |
+| H8 | **Network partition simulation** — a `PartitionableTransport` decorator wraps any `TransportIncoming`/`TransportOutgoing` implementation and intercepts messages based on a runtime-configurable partition table (`BTreeSet<(PeerId, PeerId)>` of blocked links). The partition table is updated via a control gRPC endpoint on each node process. `etheram-desktop` sends partition/heal commands to the affected processes and reflects the state in the dashboard (`partition <nodeA> <nodeB>` CLI command + hotkey) | Medium | Makes network partitioning a first-class, scriptable test stimulus — enables live demonstration of BFT tolerance under split-brain conditions and liveness recovery after healing |
+
+### Crate layout
+
+```
+etheram-node-process/   # binary crate — runs exactly one node, driven by cluster.toml + node id arg
+  src/
+    main.rs             # parses args, reads cluster.toml, wires and runs EtheramNode step loop
+    cluster_config.rs   # TOML deserialization (serde) for fleet + per-node config
+    grpc_transport/     # tonic-based TransportIncoming + TransportOutgoing (H1)
+    grpc_external/      # tonic-based ExternalInterfaceIncoming + Outgoing (H5)
+    sled_storage/       # sled-based StorageAdapter (H2)
+    wal_writer/         # sled/file-backed WalWriter (H6)
+    partitionable_transport/  # partition-table transport decorator (H8)
+    process_observer/   # structured-log Observer writing to stdout for launcher consumption
+
+etheram-desktop/        # binary crate — launcher + dashboard, spawns child node processes
+  src/
+    main.rs             # reads cluster.toml, spawns N etheram-node-process children + UI
+    launcher.rs         # child process lifecycle (spawn, kill, restart, health-check)
+    ui/                 # ratatui dashboard, fed by child stdout and gRPC health queries
+```
+
+`etheram-desktop` depends on `etheram-node` and `core` only — same dependency
+rule as `etheram-embassy`. It is `std`-only and explicitly not `no_std`.
+
+### `cluster.toml` structure (H7)
+
+```toml
+[fleet]
+validator_set = [1, 2, 3, 4, 5]
+log_level = "info"
+
+[[node]]
+id = 1
+transport_addr = "127.0.0.1:7001"
+client_addr    = "127.0.0.1:8001"
+db_path        = "./data/node1"
+
+[[node]]
+id = 2
+transport_addr = "127.0.0.1:7002"
+client_addr    = "127.0.0.1:8002"
+db_path        = "./data/node2"
+# ... one [[node]] section per node
+```
+
+### Suggested scenario
+
+1. Author a `cluster.toml` for 5 nodes and start the desktop app — all nodes elect a leader and begin committing empty blocks.
+2. Submit several transactions via gRPC (H5); watch them appear as pending and then committed in the dashboard.
+3. Use the partition command (`partition 1 2`) to split the cluster; observe the dashboard detect the degraded state.
+4. Heal the partition (`heal 1 2`); verify the cluster resumes committing.
+5. Kill one node process (SIGTERM or dashboard `kill` command); verify the remaining 4 continue committing (BFT tolerance: `f=1` for `n=5`).
+6. Restart the killed node process with the same `cluster.toml` entry; verify it recovers from WAL and catches up.
+
+---
+
 ## Recommended Sequencing
 
 ### Maximise architectural validation (moderate effort)

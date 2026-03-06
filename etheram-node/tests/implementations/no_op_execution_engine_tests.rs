@@ -34,7 +34,7 @@ fn execute_block_with_transaction_returns_no_mutations() {
     // Arrange
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -57,7 +57,7 @@ fn execute_any_block_returns_empty_transaction_results() {
     // Arrange
     let sender = [3u8; 20];
     let receiver = [4u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();

@@ -134,7 +134,7 @@ fn build_submit_transaction_from_address_with_balance_loaded_into_context() {
     // Arrange
     let from: Address = [3u8; 20];
     let to: Address = [4u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let state = state_with_storage(InMemoryStorage::new().with_genesis_account(from, 1000));
     let builder = EagerContextBuilder::new();
 
@@ -156,7 +156,7 @@ fn build_submit_transaction_unknown_from_address_returns_empty_accounts() {
     // Arrange
     let from: Address = [5u8; 20];
     let to: Address = [6u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let state = state_with_storage(InMemoryStorage::new());
     let builder = EagerContextBuilder::new();
 
@@ -177,7 +177,7 @@ fn build_pending_txs_from_and_to_addresses_loaded_into_context() {
     // Arrange
     let from: Address = [7u8; 20];
     let to: Address = [8u8; 20];
-    let tx = Transaction::transfer(from, to, 50, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 50, 21_000, 1, 0);
     let mut state = state_with_storage(
         InMemoryStorage::new()
             .with_genesis_account(from, 500)
@@ -224,7 +224,7 @@ fn build_submit_transaction_does_not_prefetch_receiver_address_into_context() {
     // Arrange
     let from: Address = [3u8; 20];
     let to: Address = [4u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let state = state_with_storage(
         InMemoryStorage::new()
             .with_genesis_account(from, 1_000)

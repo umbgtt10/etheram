@@ -7,6 +7,7 @@ use crate::common_types::transaction::Transaction;
 use crate::common_types::types::Address;
 use crate::common_types::types::Balance;
 use crate::common_types::types::Gas;
+use crate::common_types::types::GasPrice;
 use crate::common_types::types::Hash;
 use crate::common_types::types::Height;
 use crate::common_types::types::Nonce;
@@ -238,6 +239,7 @@ fn enc_transaction(buf: &mut Vec<u8>, tx: &Transaction) {
     enc_address(buf, &tx.to);
     buf.extend_from_slice(&tx.value.to_le_bytes());
     enc_u64(buf, tx.gas_limit);
+    enc_u64(buf, tx.gas_price);
     enc_u64(buf, tx.nonce);
 }
 
@@ -370,12 +372,14 @@ impl<'a> Cursor<'a> {
         let to: Address = self.address()?;
         let value: Balance = self.u128()?;
         let gas_limit: Gas = self.u64()?;
+        let gas_price: GasPrice = self.u64()?;
         let nonce: Nonce = self.u64()?;
         Some(Transaction {
             from,
             to,
             value,
             gas_limit,
+            gas_price,
             nonce,
             data: Vec::new(),
         })

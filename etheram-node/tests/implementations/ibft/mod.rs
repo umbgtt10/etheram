@@ -19,6 +19,7 @@ pub mod ibft_protocol_propose_tests;
 pub mod ibft_protocol_reexecution_tests;
 pub mod ibft_protocol_replay_tests;
 pub mod ibft_protocol_signature_tests;
+pub mod ibft_protocol_validation_tests;
 pub mod ibft_protocol_validator_set_update_tests;
 pub mod ibft_protocol_view_change_tests;
 pub mod ibft_protocol_wal_writer_tests;

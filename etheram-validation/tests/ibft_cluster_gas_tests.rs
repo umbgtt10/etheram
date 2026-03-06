@@ -55,7 +55,7 @@ fn cluster_out_of_gas_transaction_reverts_account_state() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, INTRINSIC_GAS - 1, 0);
+    let tx = Transaction::transfer(from, to, 100, INTRINSIC_GAS - 1, 1, 0);
     let genesis_accounts = BTreeMap::from([(from, Account::new(1_000))]);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
@@ -87,8 +87,8 @@ fn cluster_mixed_block_partial_gas_failure() {
     let from1 = [3u8; 20];
     let from2 = [5u8; 20];
     let to = [4u8; 20];
-    let tx1 = Transaction::transfer(from1, to, 300, INTRINSIC_GAS, 0);
-    let tx2 = Transaction::transfer(from2, to, 50, INTRINSIC_GAS - 1, 0);
+    let tx1 = Transaction::transfer(from1, to, 300, INTRINSIC_GAS, 1, 0);
+    let tx2 = Transaction::transfer(from2, to, 50, INTRINSIC_GAS - 1, 1, 0);
     let genesis_accounts =
         BTreeMap::from([(from1, Account::new(1_000)), (from2, Account::new(500))]);
     let mut cluster = IbftCluster::new_with_execution_engine_factory(
@@ -126,6 +126,7 @@ fn cluster_gas_exactly_sufficient_succeeds() {
         contract,
         0,
         exact_gas,
+        1,
         0,
         vec![
             OPCODE_PUSH1,
@@ -165,8 +166,8 @@ fn cluster_receipts_on_commit_match_tx_execution_results() {
     let from1: [u8; 20] = [3u8; 20];
     let from2: [u8; 20] = [5u8; 20];
     let to: [u8; 20] = [9u8; 20];
-    let tx1 = Transaction::transfer(from1, to, 300, INTRINSIC_GAS, 0);
-    let tx2 = Transaction::transfer(from2, to, 50, INTRINSIC_GAS - 1, 0);
+    let tx1 = Transaction::transfer(from1, to, 300, INTRINSIC_GAS, 1, 0);
+    let tx2 = Transaction::transfer(from2, to, 50, INTRINSIC_GAS - 1, 1, 0);
     let genesis_accounts =
         BTreeMap::from([(from1, Account::new(1_000)), (from2, Account::new(500))]);
     let mut cluster = IbftCluster::new_with_execution_engine_factory(
@@ -208,9 +209,9 @@ fn cluster_three_tx_receipt_cumulative_gas_monotonically_increases() {
     let from2 = [21u8; 20];
     let from3 = [22u8; 20];
     let to = [23u8; 20];
-    let tx1 = Transaction::transfer(from1, to, 10, INTRINSIC_GAS, 0);
-    let tx2 = Transaction::transfer(from2, to, 20, INTRINSIC_GAS, 0);
-    let tx3 = Transaction::transfer(from3, to, 30, INTRINSIC_GAS, 0);
+    let tx1 = Transaction::transfer(from1, to, 10, INTRINSIC_GAS, 1, 0);
+    let tx2 = Transaction::transfer(from2, to, 20, INTRINSIC_GAS, 1, 0);
+    let tx3 = Transaction::transfer(from3, to, 30, INTRINSIC_GAS, 1, 0);
     let genesis_accounts = BTreeMap::from([
         (from1, Account::new(1_000)),
         (from2, Account::new(1_000)),

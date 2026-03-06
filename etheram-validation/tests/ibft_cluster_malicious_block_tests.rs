@@ -72,13 +72,13 @@ fn valid_conflicting_blocks(height: u64, proposer: u64) -> (Block, Block) {
     let first = Block::new(
         height,
         proposer,
-        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 1, 0)],
         [0u8; 32],
     );
     let second = Block::new(
         height,
         proposer,
-        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 1, 0)],
         [0u8; 32],
     );
     (first, second)
@@ -554,7 +554,7 @@ fn malicious_sender_view_change_does_not_unlock_round_one_pre_prepare() {
 fn follower_rejects_oversized_gas_block() {
     // Arrange
     let tx_sender: Address = [1u8; 20];
-    let oversized_tx = Transaction::transfer(tx_sender, [2u8; 20], 1, 2_000_000, 0);
+    let oversized_tx = Transaction::transfer(tx_sender, [2u8; 20], 1, 2_000_000, 1, 0);
     let oversized_block = Block::new(0, 0, vec![oversized_tx], [0u8; 32]);
     let oversized_hash = block_hash(&oversized_block);
     let mut cluster = IbftCluster::new(validators(), funded_genesis());
@@ -562,7 +562,7 @@ fn follower_rejects_oversized_gas_block() {
         1,
         1,
         etheram_node::incoming::external_interface::client_request::ClientRequest::SubmitTransaction(
-            Transaction::transfer(tx_sender, [2u8; 20], 1, 21_000, 0),
+            Transaction::transfer(tx_sender, [2u8; 20], 1, 21_000, 1, 0),
         ),
     );
     cluster.drain(1);

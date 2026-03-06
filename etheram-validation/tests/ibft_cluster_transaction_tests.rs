@@ -18,7 +18,7 @@ fn replicas_commit_block_containing_transaction() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1000)]);
     cluster.submit_request(0, 1, ClientRequest::SubmitTransaction(tx.clone()));
     cluster.drain(0);
@@ -52,7 +52,7 @@ fn committed_transaction_transfers_balance_between_accounts() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1000)]);
     cluster.submit_request(0, 1, ClientRequest::SubmitTransaction(tx.clone()));
     cluster.drain(0);
@@ -82,8 +82,8 @@ fn two_consecutive_heights_each_with_transaction_final_balances_are_correct() {
     // Arrange
     let from: [u8; 20] = [1u8; 20];
     let to: [u8; 20] = [2u8; 20];
-    let tx_zero = Transaction::transfer(from, to, 100, 21_000, 0);
-    let tx_one = Transaction::transfer(to, from, 50, 21_000, 0);
+    let tx_zero = Transaction::transfer(from, to, 100, 21_000, 1, 0);
+    let tx_one = Transaction::transfer(to, from, 50, 21_000, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1_000)]);
     for node in 0..4usize {
         cluster.submit_request(node, 1, ClientRequest::SubmitTransaction(tx_zero.clone()));
@@ -140,7 +140,7 @@ fn submit_transaction_after_propose_fires_tx_included_in_next_block() {
     // Arrange
     let from = [10u8; 20];
     let to = [11u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1000)]);
     let genesis_accounts = BTreeMap::from([(from, Account::new(1000))]);
     let contract_storage = BTreeMap::new();

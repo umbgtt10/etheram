@@ -76,6 +76,8 @@ impl IbftProtocol {
                 let from = ctx.accounts.get(&tx.from).unwrap_or(&empty);
                 let rejection = if tx.gas_limit > super::MAX_GAS_LIMIT {
                     Some(TransactionRejectionReason::GasLimitExceeded)
+                } else if tx.gas_price == 0 {
+                    Some(TransactionRejectionReason::ZeroGasPrice)
                 } else if from.nonce != tx.nonce {
                     Some(TransactionRejectionReason::InvalidNonce)
                 } else if from.balance < tx.value {

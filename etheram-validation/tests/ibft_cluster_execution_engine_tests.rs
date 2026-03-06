@@ -57,7 +57,7 @@ fn cluster_value_transfer_engine_commit_updates_balances_without_contract_storag
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
@@ -91,6 +91,7 @@ fn cluster_engine_swap_changes_contract_storage_effects_for_same_transaction() {
         contract,
         0,
         41_006,
+        1,
         0,
         vec![
             OPCODE_PUSH1,
@@ -146,6 +147,7 @@ fn cluster_tiny_evm_engine_sstore_transaction_persists_contract_storage() {
         contract,
         0,
         41_006,
+        1,
         0,
         vec![
             OPCODE_PUSH1,
@@ -179,7 +181,7 @@ fn cluster_engine_swap_does_not_affect_value_transfer_balances() {
     // Arrange
     let from = [7u8; 20];
     let to = [8u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut vt_cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
@@ -218,7 +220,7 @@ fn cluster_noop_engine_commit_does_not_update_accounts_or_storage() {
     // Arrange
     let from = [9u8; 20];
     let to = [10u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(NoOpExecutionEngine)
@@ -269,7 +271,7 @@ fn cluster_out_of_gas_engine_does_not_apply_account_mutations() {
     // Arrange
     let from = [11u8; 20];
     let to = [12u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(OutOfGasEngine)

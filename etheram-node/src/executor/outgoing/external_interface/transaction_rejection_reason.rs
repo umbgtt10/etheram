@@ -7,4 +7,5 @@ pub enum TransactionRejectionReason {
     InsufficientBalance,
     InvalidNonce,
     GasLimitExceeded,
+    ZeroGasPrice,
 }

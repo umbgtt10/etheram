@@ -31,7 +31,7 @@ fn execute_push_add_return_produces_no_contract_storage_mutation() {
         OPCODE_ADD,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 21_009, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 21_009, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -65,7 +65,7 @@ fn execute_sstore_emits_contract_storage_mutation() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 41_006, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -109,7 +109,7 @@ fn execute_sload_with_seeded_slot_stores_loaded_value_in_new_slot() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 41_806, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_806, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::from([((contract, slot_zero), seeded_value)]);
@@ -146,7 +146,7 @@ fn execute_value_transfer_with_bytecode_updates_balances_and_contract_storage() 
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 25, 41_006, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 25, 41_006, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(10))]);
     let contract_storage = BTreeMap::new();
@@ -193,7 +193,7 @@ fn execute_same_block_with_different_engines_returns_different_mutations() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 41_006, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -231,7 +231,7 @@ fn execute_unknown_opcode_after_stop_does_not_change_behavior() {
     let sender = [11u8; 20];
     let contract = [12u8; 20];
     let bytecode = vec![OPCODE_STOP, 0xff, OPCODE_PUSH1, 0x2a, OPCODE_RETURN];
-    let transaction = Transaction::new(sender, contract, 0, 21_000, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 21_000, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -286,7 +286,7 @@ fn execute_unknown_opcode_mid_stream_halts_execution() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 21_003, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 21_003, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -310,7 +310,7 @@ fn execute_push1_at_end_of_bytecode_halts_gracefully() {
     let sender = [15u8; 20];
     let contract = [16u8; 20];
     let bytecode = vec![OPCODE_PUSH1];
-    let transaction = Transaction::new(sender, contract, 0, 21_003, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 21_003, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -337,7 +337,7 @@ fn execute_add_on_empty_stack_uses_zero() {
     let sender = [17u8; 20];
     let contract = [18u8; 20];
     let bytecode = vec![OPCODE_ADD, OPCODE_PUSH1, 0x00, OPCODE_SSTORE, OPCODE_RETURN];
-    let transaction = Transaction::new(sender, contract, 0, 41_006, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -367,7 +367,7 @@ fn execute_sstore_on_empty_stack_uses_zero_slot_and_value() {
     let sender = [19u8; 20];
     let contract = [20u8; 20];
     let bytecode = vec![OPCODE_SSTORE, OPCODE_RETURN];
-    let transaction = Transaction::new(sender, contract, 0, 41_000, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_000, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -405,7 +405,7 @@ fn execute_sload_on_empty_storage_pushes_zero() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 41_806, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_806, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -451,8 +451,8 @@ fn execute_multiple_transactions_isolates_contract_storage() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let tx_a = Transaction::new(sender, contract_a, 0, 41_006, 0, bytecode_a);
-    let tx_b = Transaction::new(sender, contract_b, 0, 41_006, 1, bytecode_b);
+    let tx_a = Transaction::new(sender, contract_a, 0, 41_006, 1, 0, bytecode_a);
+    let tx_b = Transaction::new(sender, contract_b, 0, 41_006, 1, 1, bytecode_b);
     let block = Block::new(0, 0, vec![tx_a, tx_b], [0u8; 32]);
     let accounts = BTreeMap::from([
         (sender, Account::new(100)),
@@ -504,7 +504,7 @@ fn execute_single_transaction_returns_success_status() {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let transaction = Transaction::new(sender, contract, 0, 41_006, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 41_006, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -527,7 +527,7 @@ fn execute_single_transaction_returns_intrinsic_gas_used() {
     let sender = [28u8; 20];
     let contract = [29u8; 20];
     let bytecode = vec![OPCODE_RETURN];
-    let transaction = Transaction::new(sender, contract, 0, 21_000, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, 21_000, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -557,7 +557,7 @@ fn execute_sstore_existing_slot_uses_reset_gas() {
     let mut existing_value = [0u8; 32];
     existing_value[31] = 0x01;
     let reset_gas = 21_000 + 3 + 3 + 5_000;
-    let transaction = Transaction::new(sender, contract, 0, reset_gas, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, reset_gas, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::from([((contract, slot_zero), existing_value)]);
@@ -592,7 +592,7 @@ fn execute_sstore_existing_slot_with_set_gas_runs_out_of_gas() {
     let mut existing_value = [0u8; 32];
     existing_value[31] = 0x01;
     let only_set_gas = 21_000 + 3 + 3 + 5_000 - 1;
-    let transaction = Transaction::new(sender, contract, 0, only_set_gas, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, only_set_gas, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::from([((contract, slot_zero), existing_value)]);
@@ -623,7 +623,7 @@ fn execute_value_transfer_with_bytecode_oog_reverts_entire_transaction() {
         OPCODE_RETURN,
     ];
     let too_little_gas = 21_003;
-    let transaction = Transaction::new(sender, contract, 50, too_little_gas, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 50, too_little_gas, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(10))]);
     let contract_storage = BTreeMap::new();
@@ -664,8 +664,8 @@ fn execute_oog_second_tx_does_not_undo_first_tx_contract_storage() {
     ];
     let sufficient_gas = 21_000 + 3 + 3 + 20_000;
     let insufficient_gas = 21_003;
-    let tx1 = Transaction::new(sender, contract, 0, sufficient_gas, 0, bytecode_ok);
-    let tx2 = Transaction::new(sender, contract, 0, insufficient_gas, 1, bytecode_oog);
+    let tx1 = Transaction::new(sender, contract, 0, sufficient_gas, 1, 0, bytecode_ok);
+    let tx2 = Transaction::new(sender, contract, 0, insufficient_gas, 1, 1, bytecode_oog);
     let block = Block::new(0, 0, vec![tx1, tx2], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();

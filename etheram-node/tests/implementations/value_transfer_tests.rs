@@ -14,7 +14,7 @@ fn transfer_deducts_sender_balance_and_increments_nonce() {
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
     let accounts = BTreeMap::from([(sender, Account::new(500))]);
-    let transaction = Transaction::transfer(sender, receiver, 200, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 200, 21_000, 1, 0);
 
     // Act
     let (updated, _) = apply_value_transfers(&[transaction], &accounts);
@@ -30,7 +30,7 @@ fn transfer_adds_to_receiver_balance() {
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
     let accounts = BTreeMap::from([(sender, Account::new(500)), (receiver, Account::new(100))]);
-    let transaction = Transaction::transfer(sender, receiver, 200, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 200, 21_000, 1, 0);
 
     // Act
     let (updated, _) = apply_value_transfers(&[transaction], &accounts);
@@ -45,7 +45,7 @@ fn transfer_with_unknown_receiver_creates_account() {
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
     let accounts = BTreeMap::from([(sender, Account::new(100))]);
-    let transaction = Transaction::transfer(sender, receiver, 50, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 50, 21_000, 1, 0);
 
     // Act
     let (updated, _) = apply_value_transfers(&[transaction], &accounts);
@@ -60,7 +60,7 @@ fn insufficient_balance_saturates_sender_to_zero() {
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
     let accounts = BTreeMap::from([(sender, Account::new(10))]);
-    let transaction = Transaction::transfer(sender, receiver, 9_999, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 9_999, 21_000, 1, 0);
 
     // Act
     let (updated, _) = apply_value_transfers(&[transaction], &accounts);
@@ -75,7 +75,7 @@ fn single_transfer_produces_two_mutations() {
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
     let accounts = BTreeMap::from([(sender, Account::new(500))]);
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
 
     // Act
     let (_, mutations) = apply_value_transfers(&[transaction], &accounts);
@@ -96,8 +96,8 @@ fn two_transfers_produce_four_mutations() {
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
     let accounts = BTreeMap::from([(sender, Account::new(1_000))]);
-    let tx1 = Transaction::transfer(sender, receiver, 100, 21_000, 0);
-    let tx2 = Transaction::transfer(sender, receiver, 200, 21_000, 1);
+    let tx1 = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
+    let tx2 = Transaction::transfer(sender, receiver, 200, 21_000, 1, 1);
 
     // Act
     let (_, mutations) = apply_value_transfers(&[tx1, tx2], &accounts);

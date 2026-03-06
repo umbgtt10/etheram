@@ -17,7 +17,7 @@ fn round_trip(wal: ConsensusWal) -> ConsensusWal {
 }
 
 fn tx(value: u128) -> Transaction {
-    Transaction::transfer([1u8; 20], [2u8; 20], value, 21_000, 0)
+    Transaction::transfer([1u8; 20], [2u8; 20], value, 21_000, 1, 0)
 }
 
 fn block_with_tx() -> Block {

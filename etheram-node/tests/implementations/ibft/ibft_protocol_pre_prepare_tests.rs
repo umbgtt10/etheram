@@ -219,7 +219,7 @@ fn handle_message_pre_prepare_unknown_transaction_sender_returns_empty() {
     // Arrange
     let mut protocol = setup_protocol();
     let ctx = setup_context(1, 0);
-    let tx = Transaction::transfer([7u8; 20], [8u8; 20], 1, 21_000, 0);
+    let tx = Transaction::transfer([7u8; 20], [8u8; 20], 1, 21_000, 1, 0);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -241,7 +241,7 @@ fn handle_message_pre_prepare_insufficient_balance_returns_empty() {
     let mut ctx = setup_context(1, 0);
     let from = [1u8; 20];
     ctx.accounts.insert(from, Account::new(1));
-    let tx = Transaction::transfer(from, [8u8; 20], 2, 21_000, 0);
+    let tx = Transaction::transfer(from, [8u8; 20], 2, 21_000, 1, 0);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -265,7 +265,7 @@ fn handle_message_pre_prepare_nonce_mismatch_returns_empty() {
     let mut account = Account::new(10);
     account.nonce = 1;
     ctx.accounts.insert(from, account);
-    let tx = Transaction::transfer(from, [8u8; 20], 1, 21_000, 0);
+    let tx = Transaction::transfer(from, [8u8; 20], 1, 21_000, 1, 0);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -287,7 +287,7 @@ fn handle_message_pre_prepare_zero_gas_limit_returns_empty() {
     let mut ctx = setup_context(1, 0);
     let from = [1u8; 20];
     ctx.accounts.insert(from, Account::new(10));
-    let tx = Transaction::transfer(from, [8u8; 20], 1, 0, 0);
+    let tx = Transaction::transfer(from, [8u8; 20], 1, 0, 1, 0);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -309,7 +309,7 @@ fn handle_message_pre_prepare_gas_limit_exceeds_max_returns_empty() {
     let mut ctx = setup_context(1, 0);
     let from = [1u8; 20];
     ctx.accounts.insert(from, Account::new(10));
-    let tx = Transaction::transfer(from, [8u8; 20], 1, 1_000_001, 0);
+    let tx = Transaction::transfer(from, [8u8; 20], 1, 1_000_001, 1, 0);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 0,
         height: 0,
@@ -337,6 +337,7 @@ fn handle_message_pre_prepare_contract_out_of_gas_candidate_still_broadcasts_pre
         to,
         0,
         21_001,
+        1,
         0,
         vec![0x60, 0x2a, 0x60, 0x00, 0x55, 0xf3],
     );
@@ -376,8 +377,8 @@ fn handle_message_pre_prepare_block_with_duplicate_nonce_same_sender_returns_emp
     let mut protocol = setup_protocol();
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx1 = Transaction::transfer(from, to, 100, 21_000, 0);
-    let tx2 = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx1 = Transaction::transfer(from, to, 100, 21_000, 1, 0);
+    let tx2 = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert(
         from,

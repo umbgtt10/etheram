@@ -113,7 +113,7 @@ pub fn setup_after_propose() -> (IbftProtocol, Context, Hash) {
 pub fn setup_after_propose_with_tx() -> (IbftProtocol, Context, Hash, Transaction) {
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = Context::new(0, 0, [0u8; 32]);
     ctx.accounts.insert(
         from,

@@ -8,6 +8,7 @@ use etheram_node::common_types::transaction::Transaction;
 use etheram_node::common_types::types::Address;
 use etheram_node::common_types::types::Balance;
 use etheram_node::common_types::types::Gas;
+use etheram_node::common_types::types::GasPrice;
 use etheram_node::common_types::types::Height;
 use etheram_node::common_types::types::Nonce;
 use etheram_node::executor::outgoing::external_interface::client_response::ClientResponse;
@@ -22,6 +23,7 @@ struct WireTransaction {
     to: Address,
     value: Balance,
     gas_limit: Gas,
+    gas_price: GasPrice,
     nonce: Nonce,
     data: Vec<u8>,
 }
@@ -33,6 +35,7 @@ impl From<Transaction> for WireTransaction {
             to: tx.to,
             value: tx.value,
             gas_limit: tx.gas_limit,
+            gas_price: tx.gas_price,
             nonce: tx.nonce,
             data: tx.data,
         }
@@ -46,6 +49,7 @@ impl From<WireTransaction> for Transaction {
             wire.to,
             wire.value,
             wire.gas_limit,
+            wire.gas_price,
             wire.nonce,
             wire.data,
         )
@@ -88,6 +92,7 @@ enum WireRejectionReason {
     InsufficientBalance,
     InvalidNonce,
     GasLimitExceeded,
+    ZeroGasPrice,
 }
 
 impl From<TransactionRejectionReason> for WireRejectionReason {
@@ -96,6 +101,7 @@ impl From<TransactionRejectionReason> for WireRejectionReason {
             TransactionRejectionReason::InsufficientBalance => Self::InsufficientBalance,
             TransactionRejectionReason::InvalidNonce => Self::InvalidNonce,
             TransactionRejectionReason::GasLimitExceeded => Self::GasLimitExceeded,
+            TransactionRejectionReason::ZeroGasPrice => Self::ZeroGasPrice,
         }
     }
 }
@@ -106,6 +112,7 @@ impl From<WireRejectionReason> for TransactionRejectionReason {
             WireRejectionReason::InsufficientBalance => Self::InsufficientBalance,
             WireRejectionReason::InvalidNonce => Self::InvalidNonce,
             WireRejectionReason::GasLimitExceeded => Self::GasLimitExceeded,
+            WireRejectionReason::ZeroGasPrice => Self::ZeroGasPrice,
         }
     }
 }

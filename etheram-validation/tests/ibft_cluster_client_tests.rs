@@ -93,7 +93,7 @@ fn submit_transaction_valid_tx_returns_accepted() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1000)]);
     cluster.submit_request(0, 12, ClientRequest::SubmitTransaction(tx));
 
@@ -111,7 +111,7 @@ fn submit_transaction_insufficient_balance_returns_rejected() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 500, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 500, 21_000, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 100)]);
     cluster.submit_request(0, 13, ClientRequest::SubmitTransaction(tx));
 
@@ -134,7 +134,7 @@ fn submit_transaction_invalid_nonce_returns_rejected() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 5);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 5);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1000)]);
     cluster.submit_request(0, 14, ClientRequest::SubmitTransaction(tx));
 
@@ -157,7 +157,7 @@ fn submit_transaction_gas_limit_exceeded_returns_rejected() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 1_000_001, 0);
+    let tx = Transaction::transfer(from, to, 100, 1_000_001, 1, 0);
     let mut cluster = IbftCluster::new(validators(), vec![(from, 1000)]);
     cluster.submit_request(0, 15, ClientRequest::SubmitTransaction(tx));
 

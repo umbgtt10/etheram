@@ -11,7 +11,9 @@ fn compute_hash_same_block_twice_returns_same_hash() {
     let block = Block::new(
         3,
         2,
-        vec![Transaction::transfer([1u8; 20], [2u8; 20], 10, 21_000, 0)],
+        vec![Transaction::transfer(
+            [1u8; 20], [2u8; 20], 10, 21_000, 1, 0,
+        )],
         [9u8; 32],
     );
 
@@ -40,8 +42,8 @@ fn compute_hash_different_height_returns_different_hash() {
 #[test]
 fn compute_hash_different_transactions_returns_different_hash() {
     // Arrange
-    let tx_a = Transaction::transfer([1u8; 20], [2u8; 20], 7, 21_000, 0);
-    let tx_b = Transaction::transfer([3u8; 20], [4u8; 20], 11, 21_000, 1);
+    let tx_a = Transaction::transfer([1u8; 20], [2u8; 20], 7, 21_000, 1, 0);
+    let tx_b = Transaction::transfer([3u8; 20], [4u8; 20], 11, 21_000, 1, 1);
     let left_block = Block::new(5, 4, vec![tx_a.clone(), tx_b.clone()], [6u8; 32]);
     let right_block = Block::new(5, 4, vec![tx_b, tx_a], [6u8; 32]);
 

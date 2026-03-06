@@ -67,11 +67,20 @@ impl IbftProtocol {
         if block.state_root != ctx.state_root {
             return false;
         }
+        if !Self::valid_transaction_ordering(&block.transactions) {
+            return false;
+        }
         if !Self::valid_transactions(&block.transactions, &ctx.accounts) {
             return false;
         }
         let (post_state_root, receipts_root) = self.execute_and_compute_commitments(block, ctx);
         block.post_state_root == post_state_root && block.receipts_root == receipts_root
+    }
+
+    fn valid_transaction_ordering(transactions: &[Transaction]) -> bool {
+        transactions
+            .windows(2)
+            .all(|w| w[0].gas_price >= w[1].gas_price)
     }
 
     fn valid_transactions(
@@ -85,7 +94,8 @@ impl IbftProtocol {
                     if account.balance >= tx.value
                         && account.nonce == tx.nonce
                         && tx.gas_limit > 0
-                        && tx.gas_limit <= super::MAX_GAS_LIMIT =>
+                        && tx.gas_limit <= super::MAX_GAS_LIMIT
+                        && tx.gas_price > 0 =>
                 {
                     account.clone()
                 }

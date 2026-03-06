@@ -120,7 +120,7 @@ fn handle_message_submit_transaction_valid_tx_returns_accepted() {
     let mut protocol = setup_protocol();
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(0, 0);
     ctx.accounts.insert(from, Account::new(500));
 
@@ -154,7 +154,7 @@ fn handle_message_submit_transaction_insufficient_balance_returns_rejected() {
     let mut protocol = setup_protocol();
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 200, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 200, 21_000, 1, 0);
     let mut ctx = setup_context(0, 0);
     ctx.accounts.insert(from, Account::new(50));
 
@@ -184,7 +184,7 @@ fn handle_message_submit_transaction_invalid_nonce_returns_rejected() {
     let mut protocol = setup_protocol();
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 5);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 5);
     let mut ctx = setup_context(0, 0);
     ctx.accounts.insert(from, Account::new(1000));
 
@@ -214,7 +214,7 @@ fn handle_message_submit_transaction_gas_limit_exceeded_returns_rejected() {
     let mut protocol = setup_protocol();
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 1_000_001, 0);
+    let tx = Transaction::transfer(from, to, 100, 1_000_001, 1, 0);
     let mut ctx = setup_context(0, 0);
     ctx.accounts.insert(from, Account::new(1000));
 

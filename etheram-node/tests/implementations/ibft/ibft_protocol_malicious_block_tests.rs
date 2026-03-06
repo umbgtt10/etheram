@@ -81,14 +81,14 @@ fn handle_message_prepare_for_rejected_conflict_hash_does_not_emit_commit() {
     let accepted_block = Block::new(
         0,
         0,
-        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 1, 0)],
         [0u8; 32],
     );
     let accepted_hash = accepted_block.compute_hash();
     let conflicting_block = Block::new(
         0,
         0,
-        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 1, 0)],
         [0u8; 32],
     );
     protocol.handle_message(
@@ -347,7 +347,7 @@ fn handle_message_malicious_sender_prepare_does_not_help_reach_quorum() {
     let first = build_block_with_commitments(
         0,
         0,
-        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 1, 0)],
         [0u8; 32],
         &ctx.accounts,
         &contract_storage,
@@ -356,7 +356,7 @@ fn handle_message_malicious_sender_prepare_does_not_help_reach_quorum() {
     let second = build_block_with_commitments(
         0,
         0,
-        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 1, 0)],
         [0u8; 32],
         &ctx.accounts,
         &contract_storage,
@@ -466,7 +466,7 @@ fn handle_message_malicious_sender_view_change_does_not_help_reach_new_view_quor
     let first = build_block_with_commitments(
         0,
         0,
-        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [2u8; 20], 1, 21_000, 1, 0)],
         [0u8; 32],
         &ctx.accounts,
         &contract_storage,
@@ -475,7 +475,7 @@ fn handle_message_malicious_sender_view_change_does_not_help_reach_new_view_quor
     let second = build_block_with_commitments(
         0,
         0,
-        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 0)],
+        vec![Transaction::transfer([1u8; 20], [3u8; 20], 2, 21_000, 1, 0)],
         [0u8; 32],
         &ctx.accounts,
         &contract_storage,
@@ -584,7 +584,7 @@ fn handle_pre_prepare_with_oversized_gas_limit_is_rejected() {
             nonce: 0,
         },
     );
-    let oversized_tx = Transaction::transfer(from, [2u8; 20], 100, 2_000_000, 0);
+    let oversized_tx = Transaction::transfer(from, [2u8; 20], 100, 2_000_000, 1, 0);
     let block = Block::new(0, 0, vec![oversized_tx], [0u8; 32]);
     let pre_prepare = Message::Peer(IbftMessage::PrePrepare {
         sequence: 1,

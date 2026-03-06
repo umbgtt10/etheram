@@ -25,7 +25,7 @@ fn cluster_honest_block_commits_with_reexecution() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
@@ -62,7 +62,7 @@ fn cluster_proposer_with_wrong_post_state_root_rejected() {
     // Arrange
     let from = [3u8; 20];
     let to = [4u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
@@ -103,7 +103,7 @@ fn cluster_validator_rejects_injected_block_with_wrong_receipts_root() {
     // Arrange
     let from = [5u8; 20];
     let to = [6u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
@@ -145,8 +145,8 @@ fn cluster_mixed_block_with_gas_failure_commits() {
     let from1 = [7u8; 20];
     let from2 = [8u8; 20];
     let to = [9u8; 20];
-    let tx1 = Transaction::transfer(from1, to, 300, INTRINSIC_GAS, 0);
-    let tx2 = Transaction::transfer(from2, to, 50, INTRINSIC_GAS - 1, 0);
+    let tx1 = Transaction::transfer(from1, to, 300, INTRINSIC_GAS, 1, 0);
+    let tx2 = Transaction::transfer(from2, to, 50, INTRINSIC_GAS - 1, 1, 0);
     let mut cluster = IbftCluster::new_with_execution_engine_factory(
         validators(),
         vec![(from1, 1_000), (from2, 500)],
@@ -188,6 +188,7 @@ fn cluster_contract_execution_block_commits() {
         contract,
         0,
         41_006,
+        1,
         0,
         vec![
             OPCODE_PUSH1,
@@ -236,7 +237,7 @@ fn cluster_view_change_after_invalid_block() {
     // Arrange
     let from = [12u8; 20];
     let to = [13u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)
@@ -276,8 +277,8 @@ fn cluster_reexecution_valid_across_two_consecutive_heights() {
     // Arrange
     let from = [14u8; 20];
     let to = [15u8; 20];
-    let tx0 = Transaction::transfer(from, to, 300, 21_000, 0);
-    let tx1 = Transaction::transfer(from, to, 100, 21_000, 1);
+    let tx0 = Transaction::transfer(from, to, 300, 21_000, 1, 0);
+    let tx1 = Transaction::transfer(from, to, 100, 21_000, 1, 1);
     let mut cluster =
         IbftCluster::new_with_execution_engine_factory(validators(), vec![(from, 1_000)], || {
             Box::new(ValueTransferEngine)

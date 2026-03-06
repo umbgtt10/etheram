@@ -16,7 +16,7 @@ fn execute_single_transfer_returns_sender_and_receiver_account_updates() {
     // Arrange
     let sender = [1u8; 20];
     let receiver = [2u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(10))]);
     let contract_storage = BTreeMap::new();
@@ -49,7 +49,7 @@ fn execute_receiver_near_max_balance_saturates_addition() {
     // Arrange
     let sender = [3u8; 20];
     let receiver = [4u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([
         (sender, Account::new(1_000)),
@@ -86,8 +86,8 @@ fn execute_two_transfers_same_receiver_accumulates_over_working_state() {
     let sender_a = [5u8; 20];
     let sender_b = [6u8; 20];
     let receiver = [7u8; 20];
-    let tx_a = Transaction::transfer(sender_a, receiver, 300, 21_000, 0);
-    let tx_b = Transaction::transfer(sender_b, receiver, 200, 21_000, 0);
+    let tx_a = Transaction::transfer(sender_a, receiver, 300, 21_000, 1, 0);
+    let tx_b = Transaction::transfer(sender_b, receiver, 200, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![tx_a, tx_b], [0u8; 32]);
     let accounts = BTreeMap::from([
         (sender_a, Account::new(1_000)),
@@ -139,7 +139,7 @@ fn execute_single_transfer_returns_success_status() {
     // Arrange
     let sender = [8u8; 20];
     let receiver = [9u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -161,7 +161,7 @@ fn execute_single_transfer_returns_intrinsic_gas_used() {
     // Arrange
     let sender = [10u8; 20];
     let receiver = [11u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -180,8 +180,8 @@ fn execute_two_transactions_in_block_returns_two_results() {
     let sender_a = [12u8; 20];
     let sender_b = [13u8; 20];
     let receiver = [14u8; 20];
-    let tx_a = Transaction::transfer(sender_a, receiver, 100, 21_000, 0);
-    let tx_b = Transaction::transfer(sender_b, receiver, 50, 21_000, 0);
+    let tx_a = Transaction::transfer(sender_a, receiver, 100, 21_000, 1, 0);
+    let tx_b = Transaction::transfer(sender_b, receiver, 50, 21_000, 1, 0);
     let block = Block::new(0, 0, vec![tx_a, tx_b], [0u8; 32]);
     let accounts = BTreeMap::from([
         (sender_a, Account::new(500)),
@@ -211,7 +211,7 @@ fn execute_gas_limit_zero_returns_out_of_gas() {
     // Arrange
     let sender = [15u8; 20];
     let receiver = [16u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 0, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 0, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -235,7 +235,7 @@ fn execute_gas_limit_below_intrinsic_returns_out_of_gas_preserving_balance() {
     // Arrange
     let sender = [17u8; 20];
     let receiver = [18u8; 20];
-    let transaction = Transaction::transfer(sender, receiver, 100, 20_999, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 20_999, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(1_000)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();

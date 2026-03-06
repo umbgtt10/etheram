@@ -34,7 +34,7 @@ fn execute_exact_gas_succeeds() {
     ];
     let opcode_cost = GAS_PUSH1 + GAS_PUSH1 + GAS_ADD;
     let gas_limit = INTRINSIC_GAS + opcode_cost;
-    let transaction = Transaction::new(sender, contract, 0, gas_limit, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, gas_limit, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -67,7 +67,7 @@ fn execute_one_gas_short_reverts() {
     ];
     let exact_cost = INTRINSIC_GAS + GAS_PUSH1 + GAS_PUSH1 + GAS_ADD;
     let gas_limit = exact_cost - 1;
-    let transaction = Transaction::new(sender, contract, 0, gas_limit, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, gas_limit, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -99,7 +99,7 @@ fn execute_sstore_out_of_gas_reverts_all_mutations() {
         OPCODE_RETURN,
     ];
     let gas_limit = INTRINSIC_GAS + GAS_PUSH1 + GAS_PUSH1;
-    let transaction = Transaction::new(sender, contract, 100, gas_limit, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 100, gas_limit, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(200)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -123,7 +123,7 @@ fn execute_value_transfer_insufficient_intrinsic_gas_reverts() {
     let sender = [7u8; 20];
     let receiver = [8u8; 20];
     let gas_limit = INTRINSIC_GAS - 1;
-    let transaction = Transaction::transfer(sender, receiver, 50, gas_limit, 0);
+    let transaction = Transaction::transfer(sender, receiver, 50, gas_limit, 1, 0);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(200)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -147,8 +147,8 @@ fn execute_multiple_transactions_partial_revert() {
     // Arrange
     let sender = [9u8; 20];
     let receiver = [10u8; 20];
-    let tx_success = Transaction::transfer(sender, receiver, 50, INTRINSIC_GAS, 0);
-    let tx_out_of_gas = Transaction::transfer(sender, receiver, 50, INTRINSIC_GAS - 1, 1);
+    let tx_success = Transaction::transfer(sender, receiver, 50, INTRINSIC_GAS, 1, 0);
+    let tx_out_of_gas = Transaction::transfer(sender, receiver, 50, INTRINSIC_GAS - 1, 1, 1);
     let block = Block::new(0, 0, vec![tx_success, tx_out_of_gas], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(500)), (receiver, Account::new(0))]);
     let contract_storage = BTreeMap::new();
@@ -186,7 +186,7 @@ fn gas_used_reflects_actual_consumption() {
     ];
     let exact_cost = INTRINSIC_GAS + GAS_PUSH1 + GAS_PUSH1 + GAS_SSTORE_SET;
     let gas_limit = exact_cost + 10_000;
-    let transaction = Transaction::new(sender, contract, 0, gas_limit, 0, bytecode);
+    let transaction = Transaction::new(sender, contract, 0, gas_limit, 1, 0, bytecode);
     let block = Block::new(0, 0, vec![transaction], [0u8; 32]);
     let accounts = BTreeMap::from([(sender, Account::new(100)), (contract, Account::new(0))]);
     let contract_storage = BTreeMap::new();

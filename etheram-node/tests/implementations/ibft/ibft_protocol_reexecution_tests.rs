@@ -27,7 +27,7 @@ fn valid_block_with_correct_commitments_accepted() {
     let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert(from, Account::new(1_000));
     ctx.accounts.insert(to, Account::new(0));
@@ -68,7 +68,7 @@ fn valid_block_with_wrong_post_state_root_rejected() {
     let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert(from, Account::new(1_000));
     ctx.accounts.insert(to, Account::new(0));
@@ -104,7 +104,7 @@ fn valid_block_with_wrong_receipts_root_rejected() {
     let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert(from, Account::new(1_000));
     ctx.accounts.insert(to, Account::new(0));
@@ -140,7 +140,7 @@ fn valid_block_with_out_of_gas_transaction_correct_roots_accepted() {
     let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 20_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 20_000, 1, 0);
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert(from, Account::new(1_000));
     ctx.accounts.insert(to, Account::new(0));
@@ -175,7 +175,7 @@ fn valid_block_with_out_of_gas_transaction_wrong_roots_rejected() {
     let mut protocol = setup_protocol().with_execution_engine(Box::new(TinyEvmEngine));
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 20_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 20_000, 1, 0);
     let mut ctx = setup_context(1, 0);
     ctx.accounts.insert(from, Account::new(1_000));
     ctx.accounts.insert(to, Account::new(0));
@@ -216,6 +216,7 @@ fn valid_block_with_contract_storage_mutations_accepted() {
         contract,
         0,
         41_006,
+        1,
         0,
         vec![0x60, 0x2a, 0x60, 0x00, 0x55, 0xf3],
     );
@@ -282,7 +283,7 @@ fn reexecution_with_locked_block_accepted() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(2, 0);
     ctx.accounts.insert(from, Account::new(1_000));
     ctx.accounts.insert(to, Account::new(0));

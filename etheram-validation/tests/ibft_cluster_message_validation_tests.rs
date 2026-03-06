@@ -247,7 +247,7 @@ fn pre_prepare_state_root_mismatch_is_ignored() {
 fn pre_prepare_unknown_transaction_sender_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![]);
-    let tx = Transaction::transfer([9u8; 20], [8u8; 20], 1, 21_000, 0);
+    let tx = Transaction::transfer([9u8; 20], [8u8; 20], 1, 21_000, 1, 0);
     let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
@@ -388,7 +388,7 @@ fn invalid_then_valid_signature_window_recovers_and_commits() {
 fn pre_prepare_insufficient_balance_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 1)]);
-    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 2, 21_000, 0);
+    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 2, 21_000, 1, 0);
     let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
@@ -403,7 +403,7 @@ fn pre_prepare_insufficient_balance_is_ignored() {
 fn pre_prepare_nonce_mismatch_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 100)]);
-    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 21_000, 1);
+    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 21_000, 1, 1);
     let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
@@ -418,7 +418,7 @@ fn pre_prepare_nonce_mismatch_is_ignored() {
 fn pre_prepare_zero_gas_limit_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 100)]);
-    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 0, 0);
+    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 0, 1, 0);
     let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 
@@ -433,7 +433,7 @@ fn pre_prepare_zero_gas_limit_is_ignored() {
 fn pre_prepare_gas_limit_exceeds_max_is_ignored() {
     // Arrange
     let mut cluster = IbftCluster::new(validators(), vec![([1u8; 20], 100)]);
-    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 1_000_001, 0);
+    let tx = Transaction::transfer([1u8; 20], [8u8; 20], 1, 1_000_001, 1, 0);
     let invalid_block = Block::new(0, 0, vec![tx], [0u8; 32]);
     cluster.inject_message(1, 0, pre_prepare(0, 0, &invalid_block));
 

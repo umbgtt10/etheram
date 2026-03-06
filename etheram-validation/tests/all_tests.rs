@@ -9,6 +9,7 @@ pub mod ibft_cluster_byzantine_tests;
 pub mod ibft_cluster_client_tests;
 pub mod ibft_cluster_dedup_tests;
 pub mod ibft_cluster_execution_engine_tests;
+pub mod ibft_cluster_gas_price_tests;
 pub mod ibft_cluster_gas_tests;
 pub mod ibft_cluster_malicious_block_tests;
 pub mod ibft_cluster_message_validation_tests;

@@ -123,7 +123,7 @@ proptest! {
         nonce in arb_nonce(),
     ) {
         // Arrange
-        let tx = Transaction::transfer(from, to, value, MAX_GAS_LIMIT + 1, nonce);
+        let tx = Transaction::transfer(from, to, value, MAX_GAS_LIMIT + 1, 1, nonce);
 
         // Act
         let actions = send_client_request(ClientRequest::SubmitTransaction(tx), &ctx);
@@ -150,7 +150,7 @@ proptest! {
         nonce in arb_nonce(),
     ) {
         // Arrange
-        let tx = Transaction::transfer(from, to, value, MAX_GAS_LIMIT + 1, nonce);
+        let tx = Transaction::transfer(from, to, value, MAX_GAS_LIMIT + 1, 1, nonce);
 
         // Act
         let actions = send_client_request(ClientRequest::SubmitTransaction(tx), &ctx);
@@ -171,7 +171,7 @@ proptest! {
         nonce in arb_nonce(),
     ) {
         // Arrange
-        let tx = Transaction::transfer(from, to, 0u128, MAX_GAS_LIMIT, nonce);
+        let tx = Transaction::transfer(from, to, 0u128, MAX_GAS_LIMIT, 1, nonce);
         ctx.accounts.insert(from, Account { balance: 0, nonce });
 
         // Act

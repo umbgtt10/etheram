@@ -40,7 +40,9 @@ fn step_transaction_submitted_and_committed_updates_sender_balance() {
     let mut node = IbftTestNode::new(vec![(sender, 1_000), (receiver, 0)]);
     node.submit_request(
         1,
-        ClientRequest::SubmitTransaction(Transaction::transfer(sender, receiver, 300, 21_000, 0)),
+        ClientRequest::SubmitTransaction(Transaction::transfer(
+            sender, receiver, 300, 21_000, 1, 0,
+        )),
     );
     node.step_until_idle();
     let responses = node.drain_responses(1);
@@ -67,7 +69,7 @@ fn step_two_heights_each_with_transaction_final_balances_accumulate_correctly() 
     let mut node = IbftTestNode::new(vec![(alice, 1_000), (bob, 0)]);
     node.submit_request(
         1,
-        ClientRequest::SubmitTransaction(Transaction::transfer(alice, bob, 100, 21_000, 0)),
+        ClientRequest::SubmitTransaction(Transaction::transfer(alice, bob, 100, 21_000, 1, 0)),
     );
     node.step_until_idle();
     node.drain_responses(1);
@@ -76,7 +78,7 @@ fn step_two_heights_each_with_transaction_final_balances_accumulate_correctly() 
     assert_eq!(node.node_height(), 1);
     node.submit_request(
         2,
-        ClientRequest::SubmitTransaction(Transaction::transfer(bob, alice, 40, 21_000, 0)),
+        ClientRequest::SubmitTransaction(Transaction::transfer(bob, alice, 40, 21_000, 1, 0)),
     );
     node.step_until_idle();
     node.drain_responses(2);
@@ -113,7 +115,7 @@ fn step_after_committed_transaction_same_nonce_submission_returns_invalid_nonce(
     let sender: Address = [1u8; 20];
     let receiver: Address = [2u8; 20];
     let mut node = IbftTestNode::new(vec![(sender, 1_000), (receiver, 0)]);
-    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let transaction = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     node.submit_request(1, ClientRequest::SubmitTransaction(transaction.clone()));
     node.step_until_idle();
     node.drain_responses(1);

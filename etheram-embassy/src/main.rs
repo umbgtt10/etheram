@@ -77,7 +77,7 @@ async fn main(spawner: Spawner) {
     info!("warmup height: {}", warmup_height);
 
     info!("=== Act 1: Submit transfer, commit block, verify balances ===");
-    let tx1 = Transaction::transfer(sender, receiver, 300, 21_000, 0);
+    let tx1 = Transaction::transfer(sender, receiver, 300, 21_000, 1, 0);
     client.submit_to_all_nodes(0, ClientRequest::SubmitTransaction(tx1));
     match with_timeout(Duration::from_secs(1), client.await_response(0)).await {
         Ok((_, response)) => info!("act1 submit tx: {:?}", response),
@@ -104,7 +104,7 @@ async fn main(spawner: Spawner) {
     }
 
     info!("=== Act 2: Reverse transfer, verify cumulative balances ===");
-    let tx2 = Transaction::transfer(receiver, sender, 200, 21_000, 0);
+    let tx2 = Transaction::transfer(receiver, sender, 200, 21_000, 1, 0);
     client.submit_to_all_nodes(0, ClientRequest::SubmitTransaction(tx2));
     match with_timeout(Duration::from_secs(1), client.await_response(0)).await {
         Ok((_, response)) => info!("act2 submit tx: {:?}", response),
@@ -127,7 +127,7 @@ async fn main(spawner: Spawner) {
     }
 
     info!("=== Act 3: Overdraft rejection ===");
-    let tx3 = Transaction::transfer(receiver, sender, 400, 21_000, 1);
+    let tx3 = Transaction::transfer(receiver, sender, 400, 21_000, 1, 1);
     client.submit_request(0, 6, ClientRequest::SubmitTransaction(tx3));
     match with_timeout(Duration::from_secs(1), client.await_response(0)).await {
         Ok((_, response)) => info!(
@@ -151,7 +151,7 @@ async fn main(spawner: Spawner) {
     );
 
     info!("=== Act 5: Stale nonce rejection ===");
-    let tx5 = Transaction::transfer(sender, receiver, 100, 21_000, 0);
+    let tx5 = Transaction::transfer(sender, receiver, 100, 21_000, 1, 0);
     client.submit_request(0, 7, ClientRequest::SubmitTransaction(tx5));
     match with_timeout(Duration::from_secs(1), client.await_response(0)).await {
         Ok((_, response)) => info!("act5 stale nonce (expect InvalidNonce): {:?}", response),
@@ -159,7 +159,7 @@ async fn main(spawner: Spawner) {
     }
 
     info!("=== Act 6: Gas limit exceeded ===");
-    let tx6 = Transaction::transfer(sender, receiver, 100, 1_000_001, 1);
+    let tx6 = Transaction::transfer(sender, receiver, 100, 1_000_001, 1, 1);
     client.submit_request(0, 8, ClientRequest::SubmitTransaction(tx6));
     match with_timeout(Duration::from_secs(1), client.await_response(0)).await {
         Ok((_, response)) => info!("act6 gas limit (expect GasLimitExceeded): {:?}", response),
@@ -219,6 +219,7 @@ async fn main(spawner: Spawner) {
         receiver,
         0,
         INTRINSIC_GAS + 2 * GAS_PUSH1 + GAS_SSTORE_SET,
+        1,
         0,
         bytecode,
     );
@@ -258,7 +259,7 @@ async fn main(spawner: Spawner) {
         OPCODE_SSTORE,
         OPCODE_RETURN,
     ];
-    let tx11 = Transaction::new(act11_sender, receiver, 0, 100, 0, bytecode11);
+    let tx11 = Transaction::new(act11_sender, receiver, 0, 100, 1, 0, bytecode11);
     client.submit_to_all_nodes(0, ClientRequest::SubmitTransaction(tx11));
     match with_timeout(Duration::from_secs(1), client.await_response(0)).await {
         Ok((_, response)) => info!(

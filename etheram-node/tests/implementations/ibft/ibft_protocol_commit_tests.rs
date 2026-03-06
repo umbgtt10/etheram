@@ -357,7 +357,7 @@ fn handle_commit_transaction_with_receiver_near_max_balance_saturates() {
     // Arrange
     let from = [1u8; 20];
     let to = [2u8; 20];
-    let tx = Transaction::transfer(from, to, 100, 21_000, 0);
+    let tx = Transaction::transfer(from, to, 100, 21_000, 1, 0);
     let mut ctx = setup_context(0, 0);
     ctx.accounts.insert(
         from,
@@ -426,8 +426,8 @@ fn handle_message_commit_multi_tx_same_receiver_emits_correct_accumulated_balanc
     let sender_a = [1u8; 20];
     let sender_b = [3u8; 20];
     let receiver = [2u8; 20];
-    let tx1 = Transaction::transfer(sender_a, receiver, 300, 21_000, 0);
-    let tx2 = Transaction::transfer(sender_b, receiver, 200, 21_000, 0);
+    let tx1 = Transaction::transfer(sender_a, receiver, 300, 21_000, 1, 0);
+    let tx2 = Transaction::transfer(sender_b, receiver, 200, 21_000, 1, 0);
     let mut ctx = setup_context(0, 0);
     ctx.accounts.insert(
         sender_a,
