@@ -12,6 +12,7 @@ use crate::infra::scheduler::partitioner_factory::build_partitioner;
 use crate::infra::storage::storage_factory::build_storage;
 use crate::infra::timer::timer_input_factory::build_timer_input;
 use crate::infra::timer::timer_output_factory::build_timer_output;
+use crate::infra::transport::partitionable_transport::partition_control::spawn_partition_control_thread;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use crate::infra::transport::transport_backend::TransportBackend;
 use crate::infra::transport::transport_factory::build_transport_incoming;
@@ -79,6 +80,10 @@ impl NodeRuntime {
     }
 
     pub fn run_forever(&mut self) {
+        if let Err(error) = spawn_partition_control_thread() {
+            println!("partition_control_error {}", error);
+        }
+
         let mut attempted_steps: u64 = 0;
         let mut progressed_steps: u64 = 0;
         let mut last_status_at = Instant::now();

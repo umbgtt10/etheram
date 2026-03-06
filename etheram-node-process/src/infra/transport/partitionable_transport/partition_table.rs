@@ -36,6 +36,14 @@ impl PartitionTable {
         guard.insert((from, to));
     }
 
+    pub fn heal(&self, from: PeerId, to: PeerId) {
+        let mut guard = self
+            .blocked_links
+            .lock()
+            .expect("partition table lock poisoned");
+        guard.remove(&(from, to));
+    }
+
     pub fn clear(&self) {
         let mut guard = self
             .blocked_links
