@@ -4,8 +4,10 @@
 
 use crate::infra::transport::grpc_transport::grpc_transport_bus::dequeue_for;
 use crate::infra::transport::grpc_transport::grpc_transport_bus::ensure_server_started;
+use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize;
 use etheram_core::transport_incoming::TransportIncoming;
 use etheram_core::types::PeerId;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 
 pub struct GrpcTransportIncoming {
     node_id: PeerId,
@@ -19,9 +21,19 @@ impl GrpcTransportIncoming {
 }
 
 impl TransportIncoming for GrpcTransportIncoming {
-    type Message = ();
+    type Message = IbftMessage;
 
     fn poll(&self) -> Option<(PeerId, Self::Message)> {
-        dequeue_for(self.node_id)
+        let (peer_id, payload) = dequeue_for(self.node_id)?;
+        match deserialize(&payload) {
+            Ok(message) => Some((peer_id, message)),
+            Err(error) => {
+                println!(
+                    "grpc_receive_decode_error node_id={} from_peer={} error={}",
+                    self.node_id, peer_id, error
+                );
+                None
+            }
+        }
     }
 }

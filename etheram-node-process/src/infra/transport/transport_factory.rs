@@ -10,13 +10,14 @@ use crate::infra::transport::transport_outgoing_factory::build_transport_outgoin
 use etheram_core::node_common::transport_incoming_adapter::TransportIncomingAdapter;
 use etheram_core::node_common::transport_outgoing_adapter::TransportOutgoingAdapter;
 use etheram_core::types::PeerId;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use std::collections::BTreeMap;
 
 pub fn build_transport_incoming(
     backend: &TransportBackend,
     node_id: PeerId,
     listen_addr: &str,
-) -> Result<Box<dyn TransportIncomingAdapter<()>>, String> {
+) -> Result<Box<dyn TransportIncomingAdapter<IbftMessage>>, String> {
     match backend {
         TransportBackend::LocalNoOp => build_local_transport_incoming(),
         TransportBackend::Grpc => Ok(Box::new(GrpcTransportIncoming::new(
@@ -30,7 +31,7 @@ pub fn build_transport_outgoing(
     backend: &TransportBackend,
     node_id: PeerId,
     peer_addresses: &BTreeMap<PeerId, String>,
-) -> Result<Box<dyn TransportOutgoingAdapter<()>>, String> {
+) -> Result<Box<dyn TransportOutgoingAdapter<IbftMessage>>, String> {
     match backend {
         TransportBackend::LocalNoOp => build_local_transport_outgoing(),
         TransportBackend::Grpc => Ok(Box::new(GrpcTransportOutgoing::new(

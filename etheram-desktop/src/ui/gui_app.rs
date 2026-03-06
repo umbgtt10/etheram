@@ -11,6 +11,8 @@ use eframe::run_native;
 use eframe::App;
 use eframe::Frame;
 use eframe::NativeOptions;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::TryRecvError;
@@ -35,12 +37,20 @@ struct DesktopGuiApp {
     log_filter_node: String,
     log_filter_text: String,
     log_receiver: Option<Receiver<NodeLogLine>>,
+    blocked_links: BTreeSet<(u64, u64)>,
+    latest_node_status: BTreeMap<u64, NodeStatusSnapshot>,
     status_line: String,
 }
 
 struct UiLogLine {
     node_id: u64,
     line: String,
+}
+
+#[derive(Clone)]
+struct NodeStatusSnapshot {
+    height: u64,
+    last_hash: String,
 }
 
 impl DesktopGuiApp {
@@ -54,6 +64,8 @@ impl DesktopGuiApp {
             log_filter_node: String::new(),
             log_filter_text: String::new(),
             log_receiver: None,
+            blocked_links: BTreeSet::new(),
+            latest_node_status: BTreeMap::new(),
             status_line: String::new(),
         }
     }
@@ -125,17 +137,13 @@ impl DesktopGuiApp {
         let Some(receiver) = self.log_receiver.as_ref() else {
             return;
         };
+
+        let mut drained_entries = Vec::new();
+
         loop {
             match receiver.try_recv() {
                 Ok(entry) => {
-                    self.log_lines.push(UiLogLine {
-                        node_id: entry.node_id,
-                        line: entry.line,
-                    });
-                    if self.log_lines.len() > 500 {
-                        let overflow = self.log_lines.len() - 500;
-                        self.log_lines.drain(0..overflow);
-                    }
+                    drained_entries.push(entry);
                 }
                 Err(TryRecvError::Empty) => break,
                 Err(TryRecvError::Disconnected) => {
@@ -143,6 +151,135 @@ impl DesktopGuiApp {
                     break;
                 }
             }
+        }
+
+        for entry in drained_entries {
+            self.apply_partition_update_from_line(&entry.line);
+            self.apply_node_status_from_line(&entry.line);
+            self.log_lines.push(UiLogLine {
+                node_id: entry.node_id,
+                line: entry.line,
+            });
+            if self.log_lines.len() > 500 {
+                let overflow = self.log_lines.len() - 500;
+                self.log_lines.drain(0..overflow);
+            }
+        }
+    }
+
+    fn apply_node_status_from_line(&mut self, line: &str) {
+        if !line.contains("node_status") {
+            return;
+        }
+
+        let mut peer_id: Option<u64> = None;
+        let mut height: Option<u64> = None;
+        let mut last_hash: Option<String> = None;
+
+        for token in line.split_whitespace() {
+            if let Some(value) = token.strip_prefix("peer_id=") {
+                peer_id = value.parse::<u64>().ok();
+            }
+            if let Some(value) = token.strip_prefix("height=") {
+                height = value.parse::<u64>().ok();
+            }
+            if let Some(value) = token.strip_prefix("last_hash=") {
+                last_hash = Some(value.to_string());
+            }
+        }
+
+        let (Some(peer_id), Some(height), Some(last_hash)) = (peer_id, height, last_hash) else {
+            return;
+        };
+
+        self.latest_node_status
+            .insert(peer_id, NodeStatusSnapshot { height, last_hash });
+    }
+
+    fn convergence_status(&self, running_nodes: usize) -> (String, egui::Color32) {
+        if running_nodes == 0 {
+            return (
+                "Cluster Convergence: n/a (cluster stopped)".to_string(),
+                egui::Color32::from_rgb(180, 180, 180),
+            );
+        }
+
+        if self.latest_node_status.len() < running_nodes {
+            return (
+                format!(
+                    "Cluster Convergence: waiting for node_status ({}/{})",
+                    self.latest_node_status.len(),
+                    running_nodes
+                ),
+                egui::Color32::from_rgb(220, 180, 90),
+            );
+        }
+
+        let mut snapshots = self.latest_node_status.values();
+        let Some(first) = snapshots.next() else {
+            return (
+                "Cluster Convergence: waiting for node_status".to_string(),
+                egui::Color32::from_rgb(220, 180, 90),
+            );
+        };
+
+        let converged =
+            snapshots.all(|item| item.height == first.height && item.last_hash == first.last_hash);
+        if converged {
+            return (
+                format!(
+                    "Cluster Convergence: converged (height={} hash={})",
+                    first.height, first.last_hash
+                ),
+                egui::Color32::from_rgb(120, 200, 140),
+            );
+        }
+
+        let summary = self
+            .latest_node_status
+            .iter()
+            .map(|(node_id, item)| format!("{}:{}", node_id, item.height))
+            .collect::<Vec<String>>()
+            .join(", ");
+        (
+            format!("Cluster Convergence: diverged ({summary})"),
+            egui::Color32::from_rgb(220, 80, 80),
+        )
+    }
+
+    fn apply_partition_update_from_line(&mut self, line: &str) {
+        if !line.contains("partition_update") {
+            return;
+        }
+
+        if line.contains("cleared") {
+            self.blocked_links.clear();
+            return;
+        }
+
+        let mut from_peer: Option<u64> = None;
+        let mut to_peer: Option<u64> = None;
+
+        for token in line.split_whitespace() {
+            if let Some(value) = token.strip_prefix("from_peer=") {
+                from_peer = value.parse::<u64>().ok();
+            }
+            if let Some(value) = token.strip_prefix("to_peer=") {
+                to_peer = value.parse::<u64>().ok();
+            }
+        }
+
+        let (Some(from), Some(to)) = (from_peer, to_peer) else {
+            return;
+        };
+
+        if line.contains("blocked") {
+            self.blocked_links.insert((from, to));
+            return;
+        }
+
+        if line.contains("healed") {
+            self.blocked_links.remove(&(from, to));
         }
     }
 
@@ -192,6 +329,8 @@ impl DesktopGuiApp {
         match Launcher::spawn_node_processes(&config, &self.cluster_path) {
             Ok(mut nodes) => {
                 self.log_lines.clear();
+                self.blocked_links.clear();
+                self.latest_node_status.clear();
                 self.log_receiver = Some(Launcher::start_log_pump(&mut nodes));
                 self.launched_nodes = Some(nodes);
                 self.status_line = "cluster started".to_string();
@@ -205,6 +344,8 @@ impl DesktopGuiApp {
     fn stop_cluster(&mut self) {
         if let Some(nodes) = self.launched_nodes.take() {
             self.log_receiver = None;
+            self.blocked_links.clear();
+            self.latest_node_status.clear();
             match Launcher::stop_all(nodes) {
                 Ok(()) => {
                     self.status_line = "cluster stopped".to_string();
@@ -234,6 +375,7 @@ impl DesktopGuiApp {
             }
         };
         if self.with_nodes_mut(|nodes| Launcher::broadcast_partition_command(nodes, from, to)) {
+            self.blocked_links.insert((from, to));
             self.push_ui_log(format!(
                 "desktop_control partition from_peer={} to_peer={}",
                 from, to
@@ -257,6 +399,7 @@ impl DesktopGuiApp {
             }
         };
         if self.with_nodes_mut(|nodes| Launcher::broadcast_heal_command(nodes, from, to)) {
+            self.blocked_links.remove(&(from, to));
             self.push_ui_log(format!(
                 "desktop_control heal from_peer={} to_peer={}",
                 from, to
@@ -266,6 +409,7 @@ impl DesktopGuiApp {
 
     fn send_clear(&mut self) {
         if self.with_nodes_mut(Launcher::broadcast_clear_command) {
+            self.blocked_links.clear();
             self.push_ui_log("desktop_control clear".to_string());
         }
     }
@@ -275,6 +419,17 @@ impl DesktopGuiApp {
             self.push_ui_log("desktop_control shutdown".to_string());
         }
         self.stop_cluster();
+    }
+
+    fn copy_all_logs(&mut self, ctx: &egui::Context) {
+        let text = self
+            .log_lines
+            .iter()
+            .map(|entry| format!("node={} {}", entry.node_id, entry.line))
+            .collect::<Vec<String>>()
+            .join("\n");
+        ctx.copy_text(text);
+        self.status_line = "all logs copied".to_string();
     }
 }
 
@@ -330,12 +485,42 @@ impl App for DesktopGuiApp {
                 if ui.button("Shutdown").clicked() {
                     self.send_shutdown();
                 }
+                if ui.button("Copy All Logs").clicked() {
+                    self.copy_all_logs(ctx);
+                }
             });
 
             ui.separator();
             ui.label(format!("Status: {}", self.status_line));
             let running_nodes = self.launched_nodes.as_ref().map_or(0, |nodes| nodes.len());
             ui.label(format!("Running Nodes: {}", running_nodes));
+            let (convergence_text, convergence_color) = self.convergence_status(running_nodes);
+            ui.label(egui::RichText::new(convergence_text).color(convergence_color));
+            let partition_active = !self.blocked_links.is_empty();
+            let partition_text = if partition_active {
+                format!(
+                    "Partition Active: yes ({} link{})",
+                    self.blocked_links.len(),
+                    if self.blocked_links.len() == 1 { "" } else { "s" }
+                )
+            } else {
+                "Partition Active: no".to_string()
+            };
+            let partition_color = if partition_active {
+                egui::Color32::from_rgb(220, 80, 80)
+            } else {
+                egui::Color32::from_rgb(120, 200, 140)
+            };
+            ui.label(egui::RichText::new(partition_text).color(partition_color));
+            if partition_active {
+                let links = self
+                    .blocked_links
+                    .iter()
+                    .map(|(from, to)| format!("{}->{}", from, to))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                ui.label(format!("Blocked Links: {}", links));
+            }
 
             ui.separator();
             ui.label("Node Logs:");

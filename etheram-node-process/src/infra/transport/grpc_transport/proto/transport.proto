@@ -8,6 +8,7 @@ service TransportService {
 
 message TransportEnvelope {
   uint64 from_peer_id = 1;
+  bytes ibft_message = 2;
 }
 
 message TransportAck {

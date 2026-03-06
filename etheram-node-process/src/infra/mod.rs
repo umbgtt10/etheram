@@ -7,6 +7,7 @@ pub mod external_interface;
 pub mod observer;
 pub mod protocol;
 pub mod scheduler;
+pub mod std_shared_state;
 pub mod storage;
 pub mod timer;
 pub mod transport;

@@ -13,12 +13,13 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::thread;
+use std::vec::Vec;
 use tonic::transport::Server;
 use tonic::Request;
 use tonic::Response;
 use tonic::Status;
 
-type TransportQueue = VecDeque<(PeerId, ())>;
+type TransportQueue = VecDeque<(PeerId, Vec<u8>)>;
 type InboundState = BTreeMap<PeerId, TransportQueue>;
 
 fn inbound() -> &'static Mutex<InboundState> {
@@ -31,16 +32,16 @@ fn started_servers() -> &'static Mutex<BTreeSet<PeerId>> {
     STARTED.get_or_init(|| Mutex::new(BTreeSet::new()))
 }
 
-pub fn dequeue_for(node_id: PeerId) -> Option<(PeerId, ())> {
+pub fn dequeue_for(node_id: PeerId) -> Option<(PeerId, Vec<u8>)> {
     let mut guard = inbound().lock().expect("transport inbound lock poisoned");
     let queue = guard.entry(node_id).or_default();
     queue.pop_front()
 }
 
-fn enqueue_to_local(to_peer: PeerId, from_peer: PeerId) {
+fn enqueue_to_local(to_peer: PeerId, from_peer: PeerId, payload: Vec<u8>) {
     let mut guard = inbound().lock().expect("transport inbound lock poisoned");
     let queue = guard.entry(to_peer).or_default();
-    queue.push_back((from_peer, ()));
+    queue.push_back((from_peer, payload));
 }
 
 struct GrpcTransportService {
@@ -54,7 +55,7 @@ impl TransportService for GrpcTransportService {
         request: Request<TransportEnvelope>,
     ) -> Result<Response<TransportAck>, Status> {
         let envelope = request.into_inner();
-        enqueue_to_local(self.node_id, envelope.from_peer_id);
+        enqueue_to_local(self.node_id, envelope.from_peer_id, envelope.ibft_message);
         Ok(Response::new(TransportAck { accepted: true }))
     }
 }

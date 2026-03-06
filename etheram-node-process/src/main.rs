@@ -58,7 +58,12 @@ fn run() -> Result<(), String> {
         config.fleet.log_level
     );
 
-    let mut runtime = NodeRuntime::new(node.id, &node.transport_addr, &peer_addresses)?;
+    let mut runtime = NodeRuntime::new(
+        node.id,
+        &node.transport_addr,
+        &peer_addresses,
+        &config.fleet.validator_set,
+    )?;
     if step_limit == 0 {
         println!("etheram-node-process loop mode=forever");
         runtime.run_forever();

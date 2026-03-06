@@ -4,9 +4,11 @@
 
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::transport_service_client::TransportServiceClient;
 use crate::infra::transport::grpc_transport::grpc_transport_proto::wire::TransportEnvelope;
+use crate::infra::transport::grpc_transport::wire_ibft_message::serialize;
 use crate::infra::transport::partitionable_transport::partition_table::global_partition_table;
 use etheram_core::transport_outgoing::TransportOutgoing;
 use etheram_core::types::PeerId;
+use etheram_node::implementations::ibft::ibft_message::IbftMessage;
 use std::collections::BTreeMap;
 use std::thread;
 use std::time::Duration;
@@ -27,9 +29,9 @@ impl GrpcTransportOutgoing {
         }
     }
 
-    fn send_with_retry(&self, peer_id: PeerId, address: &str) {
+    fn send_with_retry(&self, peer_id: PeerId, address: &str, payload: &[u8]) {
         for attempt in 1..=SEND_RETRY_COUNT {
-            if Self::send_once(address, self.node_id).is_ok() {
+            if Self::send_once(address, self.node_id, payload).is_ok() {
                 return;
             }
             if attempt < SEND_RETRY_COUNT {
@@ -42,8 +44,9 @@ impl GrpcTransportOutgoing {
         );
     }
 
-    fn send_once(address: &str, from_peer: PeerId) -> Result<(), String> {
+    fn send_once(address: &str, from_peer: PeerId, payload: &[u8]) -> Result<(), String> {
         let endpoint = format!("http://{}", address);
+        let payload_bytes = payload.to_vec();
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -56,6 +59,7 @@ impl GrpcTransportOutgoing {
             client
                 .send_envelope(TransportEnvelope {
                     from_peer_id: from_peer,
+                    ibft_message: payload_bytes,
                 })
                 .await
                 .map_err(|error| format!("failed sending grpc envelope: {error}"))?;
@@ -65,9 +69,9 @@ impl GrpcTransportOutgoing {
 }
 
 impl TransportOutgoing for GrpcTransportOutgoing {
-    type Message = ();
+    type Message = IbftMessage;
 
-    fn send(&self, peer_id: PeerId, _message: Self::Message) {
+    fn send(&self, peer_id: PeerId, message: Self::Message) {
         if global_partition_table().is_blocked(self.node_id, peer_id) {
             println!(
                 "partition_drop from_peer={} to_peer={}",
@@ -75,6 +79,16 @@ impl TransportOutgoing for GrpcTransportOutgoing {
             );
             return;
         }
+        let payload = match serialize(&message) {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                println!(
+                    "grpc_send_error from_peer={} to_peer={} reason=encode_failed error={}",
+                    self.node_id, peer_id, error
+                );
+                return;
+            }
+        };
         let Some(address) = self.peer_addresses.get(&peer_id) else {
             println!(
                 "grpc_send_error from_peer={} to_peer={} reason=unknown_peer",
@@ -82,6 +96,6 @@ impl TransportOutgoing for GrpcTransportOutgoing {
             );
             return;
         };
-        self.send_with_retry(peer_id, address);
+        self.send_with_retry(peer_id, address, &payload);
     }
 }

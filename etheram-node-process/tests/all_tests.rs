@@ -5,3 +5,4 @@
 pub mod common;
 pub mod node_process_startup_tests;
 pub mod shutdown_tests;
+pub mod std_shared_state_tests;

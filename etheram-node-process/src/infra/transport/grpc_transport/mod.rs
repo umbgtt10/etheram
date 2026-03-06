@@ -6,3 +6,4 @@ pub mod grpc_transport_bus;
 pub mod grpc_transport_incoming;
 pub mod grpc_transport_outgoing;
 pub mod grpc_transport_proto;
+pub mod wire_ibft_message;
