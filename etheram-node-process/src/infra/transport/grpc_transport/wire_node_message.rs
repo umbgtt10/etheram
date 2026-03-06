@@ -6,6 +6,7 @@ use crate::infra::sync::sync_message::SyncMessage;
 use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize as deserialize_ibft;
 use crate::infra::transport::grpc_transport::wire_ibft_message::serialize as serialize_ibft_wire;
 use etheram_node::implementations::ibft::ibft_message::IbftMessage;
+use postcard::Error;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -20,16 +21,16 @@ pub enum NodeIncomingMessage {
     Sync(SyncMessage),
 }
 
-pub fn serialize_ibft(message: &IbftMessage) -> Result<Vec<u8>, postcard::Error> {
+pub fn serialize_ibft(message: &IbftMessage) -> Result<Vec<u8>, Error> {
     let ibft_payload = serialize_ibft_wire(message)?;
     postcard::to_allocvec(&WireNodeMessage::Ibft(ibft_payload))
 }
 
-pub fn serialize_sync(message: &SyncMessage) -> Result<Vec<u8>, postcard::Error> {
+pub fn serialize_sync(message: &SyncMessage) -> Result<Vec<u8>, Error> {
     postcard::to_allocvec(&WireNodeMessage::Sync(message.clone()))
 }
 
-pub fn deserialize(bytes: &[u8]) -> Result<NodeIncomingMessage, postcard::Error> {
+pub fn deserialize(bytes: &[u8]) -> Result<NodeIncomingMessage, Error> {
     let wire: WireNodeMessage = postcard::from_bytes(bytes)?;
     match wire {
         WireNodeMessage::Ibft(payload) => {

@@ -86,3 +86,28 @@ fn serialize_sync_blocks_then_deserialize_returns_blocks() {
         NodeIncomingMessage::Ibft(_) => panic!("expected sync message"),
     }
 }
+
+#[test]
+fn deserialize_invalid_wire_bytes_returns_error() {
+    // Arrange
+    let invalid_wire = vec![1u8, 2u8, 3u8, 4u8];
+
+    // Act
+    let decoded = deserialize(&invalid_wire);
+
+    // Assert
+    assert!(decoded.is_err());
+}
+
+#[test]
+fn deserialize_ibft_wire_with_invalid_nested_payload_returns_error() {
+    // Arrange
+    let invalid_nested = postcard::to_allocvec(&(0u32, vec![7u8, 8u8, 9u8]))
+        .expect("failed to build invalid nested payload");
+
+    // Act
+    let decoded = deserialize(&invalid_nested);
+
+    // Assert
+    assert!(decoded.is_err());
+}

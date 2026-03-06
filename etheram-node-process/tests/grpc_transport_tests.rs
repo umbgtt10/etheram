@@ -209,3 +209,57 @@ fn poll_sync_payload_routes_to_sync_queue_returns_none() {
     assert_eq!(queued_peer, from_peer);
     assert_eq!(queued_message, sync_message);
 }
+
+#[test]
+fn poll_sync_get_blocks_payload_routes_to_sync_queue_returns_none() {
+    // Arrange
+    let node_id = 28;
+    let from_peer = 29;
+    let listen_addr = format!("127.0.0.1:{}", next_port());
+    let incoming =
+        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let sync_message = SyncMessage::GetBlocks {
+        from_height: 11,
+        max_blocks: 32,
+    };
+    let payload = serialize_sync(&sync_message).expect("failed to serialize sync message");
+    enqueue_to_local(node_id, from_peer, payload);
+
+    // Act
+    let observed = incoming.poll();
+    let queued_sync = dequeue_sync_for(node_id);
+
+    // Assert
+    assert!(observed.is_none());
+    assert!(queued_sync.is_some());
+    let (queued_peer, queued_message) = queued_sync.expect("expected queued sync message");
+    assert_eq!(queued_peer, from_peer);
+    assert_eq!(queued_message, sync_message);
+}
+
+#[test]
+fn poll_sync_blocks_payload_routes_to_sync_queue_returns_none() {
+    // Arrange
+    let node_id = 30;
+    let from_peer = 31;
+    let listen_addr = format!("127.0.0.1:{}", next_port());
+    let incoming =
+        GrpcTransportIncoming::new(node_id, listen_addr).expect("failed to create incoming");
+    let sync_message = SyncMessage::Blocks {
+        start_height: 13,
+        block_payloads: vec![vec![1u8, 2u8], vec![3u8]],
+    };
+    let payload = serialize_sync(&sync_message).expect("failed to serialize sync message");
+    enqueue_to_local(node_id, from_peer, payload);
+
+    // Act
+    let observed = incoming.poll();
+    let queued_sync = dequeue_sync_for(node_id);
+
+    // Assert
+    assert!(observed.is_none());
+    assert!(queued_sync.is_some());
+    let (queued_peer, queued_message) = queued_sync.expect("expected queued sync message");
+    assert_eq!(queued_peer, from_peer);
+    assert_eq!(queued_message, sync_message);
+}

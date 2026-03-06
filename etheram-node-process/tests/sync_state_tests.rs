@@ -98,3 +98,37 @@ fn fail_in_flight_request_non_matching_request_returns_false() {
     assert!(!failed);
     assert!(second.is_none());
 }
+
+#[test]
+fn next_request_when_local_at_tip_returns_none() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 10);
+    state.observe_status(3, 10);
+
+    // Act
+    let planned = state.next_request(10, 32);
+
+    // Assert
+    assert!(planned.is_none());
+}
+
+#[test]
+fn fail_in_flight_request_when_all_peers_failed_for_height_returns_none() {
+    // Arrange
+    let mut state = SyncState::new();
+    state.observe_status(2, 20);
+    state.observe_status(3, 20);
+    let first = state.next_request(10, 32).expect("expected first request");
+    let first_failed = state.fail_in_flight_request(first.0, first.1);
+    let second = state.next_request(10, 32).expect("expected second request");
+
+    // Act
+    let second_failed = state.fail_in_flight_request(second.0, second.1);
+    let planned_again = state.next_request(10, 32);
+
+    // Assert
+    assert!(first_failed);
+    assert!(second_failed);
+    assert!(planned_again.is_none());
+}
