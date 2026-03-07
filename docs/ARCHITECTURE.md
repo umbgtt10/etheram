@@ -197,8 +197,8 @@ EtheramNode (current):
   protocol: BoxedProtocol<IbftMessage>           (dynamic - swap signature scheme)
   storage: Box<dyn StorageAdapter>               (dynamic - InMemory vs Semihosting)
   cache: Box<dyn CacheAdapter>                   (dynamic)
-  transport: Box<dyn TransportIncomingAdapter>      (dynamic - InMemory vs UDP vs channel)
-  external_interface: Box<dyn ExternalInterface>  (dynamic - InMemory vs channel vs UDP)
+  transport: Box<dyn TransportIncomingAdapter>   (dynamic - InMemory vs UDP vs channel)
+  external_interface: Box<dyn ExternalInterface> (dynamic - InMemory vs channel vs UDP)
   timer: Box<dyn TimerInputAdapter>              (dynamic)
   execution_engine: BoxedExecutionEngine         (dynamic - ValueTransfer vs TinyEvm)
 ```
@@ -524,7 +524,7 @@ The 3-6 model is now validated across a second independent protocol family — *
 
 Despite these protocol-level differences, the same six-dimensional decomposition and the same `step()` primitive emerge unchanged, with `core/` as the shared abstraction layer and no cross-dependencies between protocol families. This is the architectural validation target of EtheRAM.
 
-See [RAFT-ROADMAP.md](../etheram-node/RAFT-ROADMAP.md) for implementation details and milestone history.
+See [IMPLEMENTED-CAPABILITIES.md](IMPLEMENTED-CAPABILITIES.md) for the canonical inventory of implemented feature families, and [ROADMAP.md](ROADMAP.md) for the remaining work.
 
 ---
 

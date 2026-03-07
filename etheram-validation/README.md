@@ -9,7 +9,23 @@
 
 ---
 
-## Contents
+## Canonical Project Docs
+
+| Document | Scope |
+|---|---|
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stable 3-6 model and execution semantics |
+| [../docs/IMPLEMENTED-CAPABILITIES.md](../docs/IMPLEMENTED-CAPABILITIES.md) | Workspace-level implemented capability matrix |
+| [../docs/ROADMAP.md](../docs/ROADMAP.md) | Remaining feature families and added project value |
+
+---
+
+## Purpose
+
+This crate is the Stage 2 validation layer for the Etheram / IBFT side of the workspace. It proves that the single-node implementation continues to behave correctly once multiple nodes interact through the full step loop in a deterministic shared-memory cluster.
+
+---
+
+## Implemented Validation Surface
 
 ### IbftCluster (`ibft_cluster.rs`)
 
@@ -106,3 +122,9 @@ for i in 0..4 {
     assert_eq!(cluster.query_height(i), 1);
 }
 ```
+
+---
+
+## Why This Crate Matters
+
+`etheram-validation` turns the architecture from a single-node design into a distributed-systems test framework. It is where safety, liveness, restart behavior, validator transitions, and execution correctness are exercised at the cluster level rather than inferred from isolated protocol handlers.

@@ -9,6 +9,16 @@
 
 ---
 
+## Canonical Project Docs
+
+| Document | Scope |
+|---|---|
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stable 3-6 model and execution semantics |
+| [../docs/IMPLEMENTED-CAPABILITIES.md](../docs/IMPLEMENTED-CAPABILITIES.md) | Workspace-level implemented capability matrix |
+| [../docs/ROADMAP.md](../docs/ROADMAP.md) | Remaining feature families and added project value |
+
+---
+
 ## Purpose
 
 This crate completes Direction H by turning the desktop cluster into something that can be launched, observed, and controlled as a native application rather than only through tests and scripts.

@@ -9,6 +9,22 @@ The core crate defines the minimal, `no_std`-compatible trait surface that all E
 
 ---
 
+## Canonical Project Docs
+
+| Document | Scope |
+|---|---|
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stable 3-6 model and execution semantics |
+| [../docs/IMPLEMENTED-CAPABILITIES.md](../docs/IMPLEMENTED-CAPABILITIES.md) | Workspace-level implemented capability matrix |
+| [../docs/ROADMAP.md](../docs/ROADMAP.md) | Remaining feature families and added project value |
+
+---
+
+## Purpose
+
+This crate defines the smallest stable contract surface shared across the workspace. It is intentionally thin: it names the dimensions, the node execution primitive, and the pure consensus-protocol interface without prescribing any protocol-specific data model or runtime strategy.
+
+---
+
 ## Constraints
 
 - `#![no_std]` — no standard library dependency
@@ -17,7 +33,7 @@ The core crate defines the minimal, `no_std`-compatible trait surface that all E
 
 ---
 
-## Contents
+## Implemented Surface
 
 ### Dimension I/O Traits
 
@@ -99,7 +115,7 @@ src/
 
 ---
 
-## Design Rationale
+## Why This Crate Matters
 
 Core was originally a prescriptive 6-dimension Node trait with all associated types. That was removed because it dictated HOW (structure), not just WHAT (behavior). The current design provides composable building blocks: consumers wire them into whatever node structure fits their needs.
 

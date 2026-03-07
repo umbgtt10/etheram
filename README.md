@@ -6,6 +6,11 @@ EtheRAM explores how distributed system nodes can be decomposed, validated, and 
 
 The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that validates the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum execution semantics.
 
+Canonical documentation:
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stable architectural model and execution semantics
+- [docs/IMPLEMENTED-CAPABILITIES.md](docs/IMPLEMENTED-CAPABILITIES.md) — implemented feature families and proof surface
+- [docs/ROADMAP.md](docs/ROADMAP.md) — remaining feature families and their additional project value
+
 ---
 
 ## Project at a Glance
@@ -27,8 +32,8 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 
 ### Achieved
 
-- **Full IBFT consensus** — three-phase commit, view change, quorum via `⌊2n/3⌋ + 1`, prepared certificate with cryptographic proof ([IBFT Roadmap](etheram-node/IBFT-ROADMAP.md))
-- **Ethereum-like chain** — accounts, nonces, balances, gas metering, state roots, transaction receipts, block re-execution validation ([Chain Roadmap](etheram-node/CHAIN-ROADMAP.md))
+- **Full IBFT consensus** — three-phase commit, view change, quorum via `⌊2n/3⌋ + 1`, prepared certificate with cryptographic proof ([Implemented Capabilities](docs/IMPLEMENTED-CAPABILITIES.md))
+- **Ethereum-like chain** — accounts, nonces, balances, gas metering, state roots, transaction receipts, block re-execution validation ([Implemented Capabilities](docs/IMPLEMENTED-CAPABILITIES.md))
 - **TinyEVM** — subset EVM with opcode execution (`PUSH`, `ADD`, `MUL`, `SSTORE`, `SLOAD`, `RETURN`), per-opcode gas accounting, contract storage
 - **1,029 automated tests** — protocol-level, cluster-level, desktop/process integration, and QEMU end-to-end
 - **Embedded port** — 5-node IBFT cluster on ARM Cortex-M4 (Embassy async, `no_std`, real Ed25519 signatures, semihosting storage, UDP transport)
@@ -36,7 +41,7 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 - **Total component swappability** — storage, cache, transport, timer, external interface, context builder, partitioner, execution engine, signature scheme, observer — all swappable at construction time
 - **Ed25519 cryptographic signatures** — real signing/verification integrated into consensus flow; `PreparedCertificate` carries quorum proof
 - **WAL crash-recovery** — `ConsensusWal` serialization/deserialization with restart recovery
-- **Raft consensus** \u2014 second protocol family (`raft-node`, `raft-validation`, `raft-embassy`) proving decomposition generality across CrashFault+CFT consensus ([Raft Roadmap](raft-node/RAFT-ROADMAP.md))
+- **Raft consensus** \u2014 second protocol family (`raft-node`, `raft-validation`, `raft-embassy`) proving decomposition generality across CrashFault+CFT consensus ([Implemented Capabilities](docs/IMPLEMENTED-CAPABILITIES.md))
 
 ### Planned
 
@@ -120,13 +125,13 @@ Dependencies are strictly one-way by protocol family. Node crates never depend o
 | `raft-validation` | [raft-validation/README.md](raft-validation/README.md) | Multi-node Raft cluster harness and integration tests |
 | `raft-embassy` | [raft-embassy/README.md](raft-embassy/README.md) | `no_std` + Embassy ARM port for Raft |
 
-### Roadmaps
+### Canonical Documents
 
 | Document | Scope |
 |---|---|
-| [IBFT-ROADMAP.md](etheram-node/IBFT-ROADMAP.md) | IBFT consensus protocol features (supported + planned) |
-| [CHAIN-ROADMAP.md](etheram-node/CHAIN-ROADMAP.md) | Ethereum-like chain features (supported + planned) |
-| [RAFT-ROADMAP.md](raft-node/RAFT-ROADMAP.md) | Raft consensus implementation plan (second protocol family) |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stable 3-6 model, execution semantics, and design rationale |
+| [IMPLEMENTED-CAPABILITIES.md](docs/IMPLEMENTED-CAPABILITIES.md) | Canonical inventory of implemented feature families and proof surface |
+| [ROADMAP.md](docs/ROADMAP.md) | Canonical inventory of remaining feature families and their added value |
 
 ---
 
@@ -159,6 +164,7 @@ fn step(&mut self) -> bool {
 
 - **[ADR-001: Six-Dimension Node Decomposition](docs/ADR/001-six-dimension-node-decomposition.md)**
 - **[ADR-002: step() as Single Execution Primitive](docs/ADR/002-step-as-single-execution-primitive.md)**
+- **[ADR-003: embassy-core Extraction and Dual-Configuration Strategy](docs/ADR/003-embassy-core-extraction-and-dual-configuration.md)**
 
 ### Design Documentation
 

@@ -10,6 +10,16 @@
 
 ---
 
+## Canonical Project Docs
+
+| Document | Scope |
+|---|---|
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stable 3-6 model and execution semantics |
+| [../docs/IMPLEMENTED-CAPABILITIES.md](../docs/IMPLEMENTED-CAPABILITIES.md) | Workspace-level implemented capability matrix |
+| [../docs/ROADMAP.md](../docs/ROADMAP.md) | Remaining feature families and added project value |
+
+---
+
 ## Purpose
 
 This crate is the per-node runtime for Direction H. Each OS process hosts one validator and is driven by a `cluster.toml` entry plus a node id.

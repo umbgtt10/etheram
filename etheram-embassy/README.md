@@ -13,7 +13,17 @@ all without the standard library.
 
 ---
 
-## Target
+## Canonical Project Docs
+
+| Document | Scope |
+|---|---|
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stable 3-6 model and execution semantics |
+| [../docs/IMPLEMENTED-CAPABILITIES.md](../docs/IMPLEMENTED-CAPABILITIES.md) | Workspace-level implemented capability matrix |
+| [../docs/ROADMAP.md](../docs/ROADMAP.md) | Remaining feature families and added project value |
+
+---
+
+## Purpose
 
 This crate answers one question: **does the EtheRAM architecture hold under embedded
 constraints?**
@@ -34,7 +44,7 @@ resource constraints.
 
 ---
 
-## Features
+## Implemented Embedded Surface
 
 ### Two always-green configurations
 

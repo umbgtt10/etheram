@@ -12,12 +12,13 @@ This crate is `#![no_std]` and uses `alloc` for heap types. It contains node abs
 
 ---
 
-## Roadmaps
+## Canonical Project Docs
 
 | Document | Scope |
 |---|---|
-| [IBFT-ROADMAP.md](IBFT-ROADMAP.md) | IBFT consensus protocol features (supported + planned) |
-| [CHAIN-ROADMAP.md](CHAIN-ROADMAP.md) | Ethereum-like chain features (supported + planned) |
+| [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stable 3-6 model, execution semantics, and design rationale |
+| [../docs/IMPLEMENTED-CAPABILITIES.md](../docs/IMPLEMENTED-CAPABILITIES.md) | Canonical inventory of implemented feature families |
+| [../docs/ROADMAP.md](../docs/ROADMAP.md) | Canonical inventory of remaining feature families |
 
 ---
 
