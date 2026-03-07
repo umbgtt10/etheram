@@ -28,6 +28,7 @@ use std::net::TcpListener;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
+use tonic::Code;
 
 const POLL_TIMEOUT_MS: u64 = 2_000;
 
@@ -79,6 +80,7 @@ fn get_height_rpc_polled_request_then_response_returns_height_reply() {
     let port = next_port();
     let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
         .expect("failed to build external interface bus");
+    let shutdown_bus = bus.clone();
     let incoming = GrpcExternalInterfaceIncoming::new(bus.clone());
     let outgoing = GrpcExternalInterfaceOutgoing::new(bus);
 
@@ -100,6 +102,7 @@ fn get_height_rpc_polled_request_then_response_returns_height_reply() {
     // Assert
     assert_eq!(request, ClientRequest::GetHeight);
     assert_eq!(reply.height, 7);
+    shutdown_bus.shutdown();
     cleanup_test_db_path(&db_path);
 }
 
@@ -112,6 +115,7 @@ fn get_balance_rpc_polled_request_then_response_returns_balance_reply() {
     let port = next_port();
     let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
         .expect("failed to build external interface bus");
+    let shutdown_bus = bus.clone();
     let incoming = GrpcExternalInterfaceIncoming::new(bus.clone());
     let outgoing = GrpcExternalInterfaceOutgoing::new(bus);
     let address = [9u8; 20];
@@ -143,6 +147,7 @@ fn get_balance_rpc_polled_request_then_response_returns_balance_reply() {
     assert_eq!(request, ClientRequest::GetBalance(address));
     assert_eq!(reply.balance, "123");
     assert_eq!(reply.height, 4);
+    shutdown_bus.shutdown();
     cleanup_test_db_path(&db_path);
 }
 
@@ -155,6 +160,7 @@ fn submit_transaction_rpc_polled_request_then_rejection_returns_rejection_reason
     let port = next_port();
     let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
         .expect("failed to build external interface bus");
+    let shutdown_bus = bus.clone();
     let incoming = GrpcExternalInterfaceIncoming::new(bus.clone());
     let outgoing = GrpcExternalInterfaceOutgoing::new(bus);
     let transaction = Transaction::new([1u8; 20], [2u8; 20], 11, 21_000, 1, 0, vec![1, 2, 3]);
@@ -189,6 +195,125 @@ fn submit_transaction_rpc_polled_request_then_rejection_returns_rejection_reason
         reply.rejection_reason,
         WireTransactionRejectionReason::InvalidNonce as i32
     );
+    shutdown_bus.shutdown();
+    cleanup_test_db_path(&db_path);
+}
+
+#[test]
+fn get_balance_rpc_invalid_address_returns_invalid_argument_status() {
+    // Arrange
+    let db_path = create_test_db_path("grpc_external_interface_invalid_address");
+    let storage =
+        SledStorage::new(db_path.to_string_lossy().as_ref()).expect("failed to build storage");
+    let port = next_port();
+    let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
+        .expect("failed to build external interface bus");
+
+    // Act
+    let status = block_on(async move {
+        let mut client = connect_client(port).await;
+        client
+            .get_balance(GetBalanceRequest {
+                address: vec![1, 2, 3],
+            })
+            .await
+            .expect_err("expected invalid address error")
+            .code()
+    });
+
+    // Assert
+    assert_eq!(status, Code::InvalidArgument);
+    bus.shutdown();
+    cleanup_test_db_path(&db_path);
+}
+
+#[test]
+fn get_height_rpc_without_response_returns_deadline_exceeded_status() {
+    // Arrange
+    let db_path = create_test_db_path("grpc_external_interface_timeout");
+    let storage =
+        SledStorage::new(db_path.to_string_lossy().as_ref()).expect("failed to build storage");
+    let port = next_port();
+    let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
+        .expect("failed to build external interface bus");
+
+    // Act
+    let status = block_on(async move {
+        let mut client = connect_client(port).await;
+        client
+            .get_height(GetHeightRequest {})
+            .await
+            .expect_err("expected timeout error")
+            .code()
+    });
+
+    // Assert
+    assert_eq!(status, Code::DeadlineExceeded);
+    bus.shutdown();
+    cleanup_test_db_path(&db_path);
+}
+
+#[test]
+fn submit_transaction_rpc_missing_payload_returns_invalid_argument_status() {
+    // Arrange
+    let db_path = create_test_db_path("grpc_external_interface_missing_transaction");
+    let storage =
+        SledStorage::new(db_path.to_string_lossy().as_ref()).expect("failed to build storage");
+    let port = next_port();
+    let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
+        .expect("failed to build external interface bus");
+
+    // Act
+    let status = block_on(async move {
+        let mut client = connect_client(port).await;
+        client
+            .submit_transaction(SubmitTransactionRequest { transaction: None })
+            .await
+            .expect_err("expected missing transaction error")
+            .code()
+    });
+
+    // Assert
+    assert_eq!(status, Code::InvalidArgument);
+    bus.shutdown();
+    cleanup_test_db_path(&db_path);
+}
+
+#[test]
+fn submit_transaction_rpc_invalid_value_returns_invalid_argument_status() {
+    // Arrange
+    let db_path = create_test_db_path("grpc_external_interface_invalid_value");
+    let storage =
+        SledStorage::new(db_path.to_string_lossy().as_ref()).expect("failed to build storage");
+    let port = next_port();
+    let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
+        .expect("failed to build external interface bus");
+    let mut wire_transaction = GrpcExternalInterfaceCodec::encode_transaction(&Transaction::new(
+        [1u8; 20],
+        [2u8; 20],
+        11,
+        21_000,
+        1,
+        0,
+        vec![1, 2, 3],
+    ));
+    wire_transaction.value = "not-a-number".to_string();
+
+    // Act
+    let status = block_on(async move {
+        let mut client = connect_client(port).await;
+        client
+            .submit_transaction(SubmitTransactionRequest {
+                transaction: Some(wire_transaction),
+            })
+            .await
+            .expect_err("expected invalid transaction value error")
+            .code()
+    });
+
+    // Assert
+    assert_eq!(status, Code::InvalidArgument);
+    bus.shutdown();
     cleanup_test_db_path(&db_path);
 }
 
@@ -215,7 +340,7 @@ fn get_block_rpc_existing_height_returns_block_reply() {
     );
     storage.mutate(StorageMutation::StoreBlock(block.clone()));
     let port = next_port();
-    let _bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
+    let bus = GrpcExternalInterfaceBus::new(&format!("127.0.0.1:{port}"), storage)
         .expect("failed to build external interface bus");
 
     // Act
@@ -236,5 +361,6 @@ fn get_block_rpc_existing_height_returns_block_reply() {
     assert_eq!(wire_block.proposer, block.proposer);
     assert_eq!(wire_block.gas_limit, block.gas_limit);
     assert_eq!(wire_block.transactions.len(), 1);
+    bus.shutdown();
     cleanup_test_db_path(&db_path);
 }

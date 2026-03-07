@@ -28,6 +28,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::thread::JoinHandle;
 use std::time::Duration;
 use std::time::Instant;
 use tokio::sync::oneshot;
@@ -47,6 +48,7 @@ type SharedGrpcExternalInterfaceState = Arc<Mutex<GrpcExternalInterfaceState>>;
 pub struct GrpcExternalInterfaceBus {
     state: SharedGrpcExternalInterfaceState,
     shutdown: Arc<Mutex<Option<oneshot::Sender<()>>>>,
+    server_thread: Arc<Mutex<Option<JoinHandle<()>>>>,
     storage: SledStorage,
 }
 
@@ -65,6 +67,7 @@ impl GrpcExternalInterfaceBus {
         let bus = Self {
             state: Arc::new(Mutex::new(GrpcExternalInterfaceState::new())),
             shutdown: Arc::new(Mutex::new(None)),
+            server_thread: Arc::new(Mutex::new(None)),
             storage,
         };
         bus.start_server(client_addr)?;
@@ -110,6 +113,15 @@ impl GrpcExternalInterfaceBus {
         {
             let _ = sender.send(());
         }
+
+        if let Some(server_thread) = self
+            .server_thread
+            .lock()
+            .expect("external interface server thread lock poisoned")
+            .take()
+        {
+            let _ = server_thread.join();
+        }
     }
 
     fn start_server(&self, client_addr: &str) -> Result<(), String> {
@@ -123,7 +135,7 @@ impl GrpcExternalInterfaceBus {
             .shutdown
             .lock()
             .expect("external interface shutdown lock poisoned") = Some(shutdown_tx);
-        thread::Builder::new()
+        let server_thread = thread::Builder::new()
             .name(format!("grpc-external-interface-{}", addr.port()))
             .spawn(move || {
                 let runtime = tokio::runtime::Builder::new_current_thread()
@@ -145,8 +157,11 @@ impl GrpcExternalInterfaceBus {
                     }
                 });
             })
-            .map(|_| ())
             .map_err(|error| format!("failed to spawn external interface server: {error}"))?;
+        *self
+            .server_thread
+            .lock()
+            .expect("external interface server thread lock poisoned") = Some(server_thread);
 
         let started = Instant::now();
         loop {
