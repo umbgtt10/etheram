@@ -18,7 +18,6 @@ This crate is `#![no_std]` and uses `alloc` for heap types. It contains node abs
 |---|---|
 | [IBFT-ROADMAP.md](IBFT-ROADMAP.md) | IBFT consensus protocol features (supported + planned) |
 | [CHAIN-ROADMAP.md](CHAIN-ROADMAP.md) | Ethereum-like chain features (supported + planned) |
-| [RAFT-ROADMAP.md](RAFT-ROADMAP.md) | Raft consensus implementation plan (second protocol family) |
 
 ---
 

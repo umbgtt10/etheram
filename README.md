@@ -12,10 +12,10 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 
 | Metric | Value |
 |---|---|
-| Crates | 8 (`core`, `embassy-core`, `etheram-node`, `etheram-validation`, `etheram-embassy`, `raft-node`, `raft-validation`, `raft-embassy`) |
+| Crates | 10 (`core`, `embassy-core`, `etheram-node`, `etheram-validation`, `etheram-embassy`, `etheram-node-process`, `etheram-desktop`, `raft-node`, `raft-validation`, `raft-embassy`) |
 | Production Rust files / LOC | ~190 / ~9 000 |
 | Test files / LOC | ~75 / ~15 000 |
-| Automated tests | 748 (7 + 412 + 124 + 145 + 60) |
+| Automated tests | 900+ across protocol, cluster, process, desktop, and QEMU validation |
 | Consensus protocols | Istanbul BFT (PrePrepare → Prepare → Commit + View Change), Raft (pre-vote, election, log replication, snapshots) |
 | Execution engines | `TinyEvmEngine`, `ValueTransferEngine`, `NoOpExecutionEngine` |
 | Embedded target | ARM Cortex-M4 via QEMU, 5-node async cluster, two hardware configurations |
@@ -32,17 +32,18 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 - **TinyEVM** — subset EVM with opcode execution (`PUSH`, `ADD`, `MUL`, `SSTORE`, `SLOAD`, `RETURN`), per-opcode gas accounting, contract storage
 - **748 automated tests** — protocol-level, cluster-level (Byzantine fault injection, deduplication, replay, malicious blocks, validator set updates), and QEMU end-to-end
 - **Embedded port** — 5-node IBFT cluster on ARM Cortex-M4 (Embassy async, `no_std`, real Ed25519 signatures, semihosting storage, UDP transport)
+- **Desktop multi-process cluster** — `etheram-node-process` + `etheram-desktop` provide a gRPC-connected native cluster with sled-backed state, gRPC client interface, WAL-backed restart recovery, and live partition control
 - **Total component swappability** — storage, cache, transport, timer, external interface, context builder, partitioner, execution engine, signature scheme, observer — all swappable at construction time
 - **Ed25519 cryptographic signatures** — real signing/verification integrated into consensus flow; `PreparedCertificate` carries quorum proof
 - **WAL crash-recovery** — `ConsensusWal` serialization/deserialization with restart recovery
-- **Raft consensus** \u2014 second protocol family (`raft-node`, `raft-validation`, `raft-embassy`) proving decomposition generality across CrashFault+CFT consensus ([Raft Roadmap](etheram-node/RAFT-ROADMAP.md))
+- **Raft consensus** \u2014 second protocol family (`raft-node`, `raft-validation`, `raft-embassy`) proving decomposition generality across CrashFault+CFT consensus ([Raft Roadmap](raft-node/RAFT-ROADMAP.md))
 
 ### Planned
 
 - Physical hardware deployment (STM32 / RP2040)
-- Property-based testing (`proptest`)
 - Merkle Patricia Trie state root
-- Formal specification (TLA+)
+- JSON-RPC external interface
+- BLS round-change certificate aggregation
 
 ---
 
@@ -81,18 +82,21 @@ embassy-core/               Shared no_std Embassy infrastructure for both protoc
 etheram-node/               Ethereum-like node (types + concrete implementations)
 etheram-validation/         Cluster/integration tests (multi-node, std)
 etheram-embassy/            no_std + Embassy embedded port (ARM Cortex-M4)
+etheram-node-process/       One-node desktop/runtime process with gRPC transport, gRPC external interface, sled, and WAL
+etheram-desktop/            Native launcher + dashboard for the desktop multi-process cluster
 raft-node/                  Raft node (types + concrete implementations)
 raft-validation/            Raft cluster/integration tests (multi-node, std)
 raft-embassy/               no_std + Embassy embedded port for Raft
 docs/                       Architecture docs and ADRs
-scripts/                    CI gate script (test.ps1)
+scripts/                    Workspace quality gates and demo runners
 ```
 
 ### Crate Dependency Graph
 
 ```
                ┌── etheram-node ←── etheram-validation
-               │              └── etheram-embassy
+               │              ├── etheram-embassy
+               │              └── etheram-node-process ←── etheram-desktop
 core ──────────┤
                ├── raft-node ←──── raft-validation
                │          └──── raft-embassy
@@ -110,6 +114,8 @@ Dependencies are strictly one-way by protocol family. Node crates never depend o
 | `etheram-node` | [etheram-node/README.md](etheram-node/README.md) | Ethereum-like node types, concrete implementations, IBFT protocol, builders |
 | `etheram-validation` | [etheram-validation/README.md](etheram-validation/README.md) | Multi-node cluster harness and integration tests |
 | `etheram-embassy` | [etheram-embassy/README.md](etheram-embassy/README.md) | `no_std` + Embassy ARM port with QEMU validation |
+| `etheram-node-process` | [etheram-node-process/README.md](etheram-node-process/README.md) | One-node desktop runtime with gRPC networking, sled persistence, and WAL recovery |
+| `etheram-desktop` | [etheram-desktop/README.md](etheram-desktop/README.md) | Native launcher + dashboard for the multi-process desktop cluster |
 | `raft-node` | [raft-node/README.md](raft-node/README.md) | Raft node types, concrete implementations, protocol logic |
 | `raft-validation` | [raft-validation/README.md](raft-validation/README.md) | Multi-node Raft cluster harness and integration tests |
 | `raft-embassy` | [raft-embassy/README.md](raft-embassy/README.md) | `no_std` + Embassy ARM port for Raft |
@@ -120,7 +126,7 @@ Dependencies are strictly one-way by protocol family. Node crates never depend o
 |---|---|
 | [IBFT-ROADMAP.md](etheram-node/IBFT-ROADMAP.md) | IBFT consensus protocol features (supported + planned) |
 | [CHAIN-ROADMAP.md](etheram-node/CHAIN-ROADMAP.md) | Ethereum-like chain features (supported + planned) |
-| [RAFT-ROADMAP.md](etheram-node/RAFT-ROADMAP.md) | Raft consensus implementation plan (second protocol family) |
+| [RAFT-ROADMAP.md](raft-node/RAFT-ROADMAP.md) | Raft consensus implementation plan (second protocol family) |
 
 ---
 

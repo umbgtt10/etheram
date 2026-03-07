@@ -32,7 +32,7 @@ Status legend: `✅ implemented`, `🔄 remaining`
 | # | Feature | Effort | Value |
 |---|---|---|---|
 | C1 ✅ | **Expand TinyEVM** — `MSTORE`/`MLOAD`, `CALLDATALOAD`/`CALLDATASIZE`, `SHA3`, `JUMP`/`JUMPI`, extended `PUSH`/`DUP`/`SWAP`, and related gas accounting are now implemented | High | Established TinyEVM as a credible execution subset rather than a toy interpreter |
-| C2 🔄 | **Merkle Patricia Trie state root** — a real proof-oriented state-root implementation is now part of the architecture rather than the earlier placeholder hash | High | Demonstrated that the storage abstraction can support proof-generating state representations |
+| C2 🔄 | **Merkle Patricia Trie state root** — replace the current deterministic placeholder state-root hashing with a real proof-oriented MPT-backed state representation | High | Would turn the storage abstraction into a proof-generating state backend rather than a correctness-only placeholder |
 | C3 ✅ | **Transaction pool with priority ordering** — gas-price ordering, per-sender nonce sequencing, pool limits, and deterministic eviction are now implemented | Medium | Exercised the Cache dimension with real ordering and admission policies |
 | C4 🔄 | **JSON-RPC external interface** — implement a subset of the Ethereum JSON-RPC spec (`eth_sendTransaction`, `eth_getBalance`, `eth_blockNumber`, `eth_getTransactionReceipt`) as an `ExternalInterface` variant | Medium | Makes the node queryable by standard Ethereum tooling; validates ExternalInterface swappability with a real protocol |
 | C5 🔄 | **Contract deployment** — add `CREATE` opcode and contract account storage so that TinyEVM can deploy and call contracts (even trivially) | High | The largest remaining step toward Ethereum-likeness now that execution, gas, state root, and transaction ordering are already in place |
@@ -127,8 +127,8 @@ etheram-desktop/        # binary crate — launcher + dashboard, spawns child no
     ui/                 # egui dashboard, fed by child stdout/status and launcher state
 ```
 
-`etheram-desktop` depends on `etheram-node` and `core` only — same dependency
-rule as `etheram-embassy`. It is `std`-only and explicitly not `no_std`.
+`etheram-desktop` depends on `etheram-core`, `etheram-node`, and `etheram-node-process`.
+It is `std`-only and explicitly not `no_std`.
 
 ### `cluster.toml` structure (H7)
 
@@ -151,7 +151,7 @@ db_path        = "./data/node2"
 # ... one [[node]] section per node
 ```
 
-### Suggested scenario once H2, H5, and H6 are complete
+### Completed desktop scenario
 
 1. Author a `cluster.toml` for 5 nodes and start the desktop app — all nodes elect a leader and begin committing empty blocks.
 2. Submit several transactions via gRPC (H5); watch them appear as pending and then committed in the dashboard.
@@ -164,7 +164,7 @@ db_path        = "./data/node2"
 
 ## Recommended Sequencing
 
-### Complete Direction H
+### Direction H Completed
 H2 → H5 → H6
 
 ### Maximise architectural validation after the current implementation

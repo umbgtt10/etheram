@@ -2,7 +2,7 @@
 
 > Multi-node cluster harness and integration tests
 
-`etheram-validation` provides the test infrastructure for Stage 2 validation: orchestrating multiple `EtheramNode` instances in a shared-memory cluster, driving consensus rounds, injecting faults, and asserting distributed correctness. This is the only `std` crate in the EtheRAM ecosystem — it uses `Arc`, `Mutex`, and standard library collections for cluster orchestration.
+`etheram-validation` provides the test infrastructure for Stage 2 validation: orchestrating multiple `EtheramNode` instances in a shared-memory cluster, driving consensus rounds, injecting faults, and asserting distributed correctness. It is a `std` crate built for deterministic cluster orchestration with `Arc`, `Mutex`, and standard library collections.
 
 **Parent:** [EtheRAM](../README.md)
 **Depends on:** [core](../core/README.md), [etheram-node](../etheram-node/README.md)
@@ -42,7 +42,7 @@ Single-node test wrapper for protocol-level tests that need an `EtheramNode` wit
 
 ## Tests
 
-145 tests across 16 test files in `tests/`:
+153 tests across 16 test files in `tests/`:
 
 ### Single-Node Integration (`etheram_node_tests.rs`)
 
