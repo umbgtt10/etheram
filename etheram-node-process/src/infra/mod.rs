@@ -13,3 +13,4 @@ pub mod storage;
 pub mod sync;
 pub mod timer;
 pub mod transport;
+pub mod wal;

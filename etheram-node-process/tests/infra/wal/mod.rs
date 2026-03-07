@@ -2,11 +2,4 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-pub mod codec;
-pub mod external_interface;
-pub mod std_shared_state_tests;
-pub mod storage;
-pub mod sync;
-pub mod timer;
-pub mod transport;
-pub mod wal;
+pub mod file_wal_tests;

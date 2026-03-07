@@ -97,7 +97,7 @@ its own OS process, transport over gRPC, state persisted in an embedded database
 This direction proves the decomposition holds under real system pressures without
 requiring dedicated server hardware or container orchestration.
 
-Current status: `H1`, `H3`, `H4`, `H7`, and `H8` are implemented. `H2`, `H5`, and `H6` remain to complete the direction end-to-end.
+Current status: `H1` through `H8` are implemented.
 
 | # | Feature | Effort | Value |
 |---|---|---|---|
@@ -106,7 +106,7 @@ Current status: `H1`, `H3`, `H4`, `H7`, and `H8` are implemented. `H2`, `H5`, an
 | H3 ✅ | **Per-node process harness** — `etheram-node-process` and `etheram-desktop` now form a working multi-process cluster driven by `cluster.toml` | Medium | Proved that the decomposition composes across OS process boundaries with real fault isolation |
 | H4 ✅ | **Desktop UI dashboard** — a native desktop dashboard is now implemented and fed by launcher/process state rather than remaining a planned terminal UI | Medium | Made the cluster observably operable and demonstrated that the Observer dimension supports non-logging consumers |
 | H5 ✅ | **gRPC `ExternalInterface`** — a tonic-backed `ExternalInterfaceIncoming` + `ExternalInterfaceOutgoing` pair exposing `SubmitTransaction`, `GetBalance`, `GetHeight`, and `GetBlock` as unary RPCs. Separate from the peer transport (H1); client-facing and peer-facing gRPC services run on different ports | Medium | Completes the gRPC story — without this there is no way for a user or external tool to talk to a running desktop node |
-| H6 🔄 | **WAL-backed crash recovery** — wire `ConsensusWal` + a real `WalWriter` implementation (writing to sled or a flat append-only file) so that a restarted node recovers its `prepared_certificate`, current round, and locked block before rejoining the cluster. `NoOpWalWriter` stays available for tests | Medium | Activates code that already exists in the architecture but has never been exercised end-to-end; prevents the locked-block invariant from being violated on restart |
+| H6 ✅ | **WAL-backed crash recovery** — `ConsensusWal` is now persisted by a real file-backed `WalWriter` in `etheram-node-process`, and restarted nodes reload their `prepared_certificate`, current round, and locked block before rejoining. `NoOpWalWriter` stays available for tests | Medium | Activated the pre-existing WAL architecture end-to-end and hardened restart safety around the locked-block invariant |
 | H7 ✅ | **Fleet TOML configuration** — fleet configuration via `cluster.toml` is now implemented and drives the launcher/node-process wiring | Low-Medium | Made the cluster genuinely operable without recompilation |
 | H8 ✅ | **Network partition simulation** — partition/heal control and runtime partition tables are now part of the desktop cluster | Medium | Turned network partitioning into a first-class live test stimulus for Byzantine-resilience demos |
 

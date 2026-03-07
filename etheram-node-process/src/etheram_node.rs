@@ -26,6 +26,7 @@ use crate::infra::transport::partitionable_transport::shutdown_signal::reset_shu
 use crate::infra::transport::transport_backend::TransportBackend;
 use crate::infra::transport::transport_factory::build_transport_incoming;
 use crate::infra::transport::transport_factory::build_transport_outgoing;
+use crate::infra::wal::file_wal::FileWal;
 use etheram_core::types::PeerId;
 use etheram_node::builders::execution_engine_builder::ExecutionEngineBuilder;
 use etheram_node::etheram_node::EtheramNode;
@@ -102,6 +103,8 @@ impl NodeRuntime {
             Arc::clone(&partition_table),
         );
         let storage = build_storage(db_path)?;
+        let wal = FileWal::new(db_path)?;
+        let restored_wal = wal.load()?;
         let external_interface_bus = GrpcExternalInterfaceBus::new(client_addr, storage.clone())?;
         let external_interface_incoming =
             build_external_interface_incoming(external_interface_bus.clone())?;
@@ -110,7 +113,7 @@ impl NodeRuntime {
         let sync_storage = storage.clone();
         let cache = build_cache()?;
         let context_builder = build_context_builder()?;
-        let protocol = build_protocol(validators)?;
+        let protocol = build_protocol(validators, restored_wal, Box::new(wal))?;
         let partitioner = build_partitioner()?;
         let observer = build_observer()?;
         let execution_engine = ExecutionEngineBuilder::default()
