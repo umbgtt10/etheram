@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize_block;
+use crate::infra::codec::block_codec::BlockCodec;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::types::Hash;
@@ -19,7 +19,7 @@ pub fn decode_and_validate_blocks(
 
     let mut blocks = Vec::new();
     for (offset, payload) in block_payloads.iter().enumerate() {
-        let block = deserialize_block(payload).ok()?;
+        let block = BlockCodec::deserialize(payload).ok()?;
         let expected_height = start_height + offset as u64;
         if block.height != expected_height {
             return None;

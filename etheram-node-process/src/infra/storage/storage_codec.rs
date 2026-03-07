@@ -2,8 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::transport::grpc_transport::wire_ibft_message::deserialize_block;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
+use crate::infra::codec::block_codec::BlockCodec;
 use etheram_node::common_types::account::Account;
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::types::Address;
@@ -34,7 +33,7 @@ impl StorageCodec {
     }
 
     pub fn decode_block(bytes: &[u8]) -> Result<Block, String> {
-        deserialize_block(bytes).map_err(|error| format!("failed to decode block: {error}"))
+        BlockCodec::deserialize(bytes).map_err(|error| format!("failed to decode block: {error}"))
     }
 
     pub fn decode_contract_storage_key(bytes: &[u8]) -> Result<(Address, Hash), String> {
@@ -79,7 +78,7 @@ impl StorageCodec {
     }
 
     pub fn encode_block(block: &Block) -> Result<Vec<u8>, String> {
-        serialize_block(block).map_err(|error| format!("failed to encode block: {error}"))
+        BlockCodec::serialize(block).map_err(|error| format!("failed to encode block: {error}"))
     }
 
     pub fn encode_contract_storage_key(address: &Address, slot: &Hash) -> Vec<u8> {

@@ -7,9 +7,9 @@ use etheram_core::storage::Storage;
 use etheram_node::common_types::block::Block;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
+use etheram_node_process::infra::codec::block_codec::BlockCodec;
 use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
 use etheram_node_process::infra::sync::sync_state::SyncState;
-use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 
 #[test]
 fn partition_and_heal_lag_recovery_selects_new_request_and_imports_after_heal() {
@@ -26,9 +26,9 @@ fn partition_and_heal_lag_recovery_selects_new_request_and_imports_after_heal() 
     let block_0 = Block::empty(0, 1, [1u8; 32]);
     let block_1 = Block::empty(1, 1, [2u8; 32]);
     let block_2 = Block::empty(2, 1, [3u8; 32]);
-    let payload_0 = serialize_block(&block_0).expect("failed to serialize block 0");
-    let payload_1 = serialize_block(&block_1).expect("failed to serialize block 1");
-    let payload_2 = serialize_block(&block_2).expect("failed to serialize block 2");
+    let payload_0 = BlockCodec::serialize(&block_0).expect("failed to serialize block 0");
+    let payload_1 = BlockCodec::serialize(&block_1).expect("failed to serialize block 1");
+    let payload_2 = BlockCodec::serialize(&block_2).expect("failed to serialize block 2");
 
     // Act
     let decoded =
@@ -67,9 +67,9 @@ fn long_partition_multi_batch_sync_import_catches_up_fully() {
         0,
         first.1,
         &[
-            serialize_block(&batch_1_block_0).expect("serialize 0"),
-            serialize_block(&batch_1_block_1).expect("serialize 1"),
-            serialize_block(&batch_1_block_2).expect("serialize 2"),
+            BlockCodec::serialize(&batch_1_block_0).expect("serialize 0"),
+            BlockCodec::serialize(&batch_1_block_1).expect("serialize 1"),
+            BlockCodec::serialize(&batch_1_block_2).expect("serialize 2"),
         ],
         None,
     )
@@ -82,9 +82,9 @@ fn long_partition_multi_batch_sync_import_catches_up_fully() {
         3,
         second.1,
         &[
-            serialize_block(&batch_2_block_3).expect("serialize 3"),
-            serialize_block(&batch_2_block_4).expect("serialize 4"),
-            serialize_block(&batch_2_block_5).expect("serialize 5"),
+            BlockCodec::serialize(&batch_2_block_3).expect("serialize 3"),
+            BlockCodec::serialize(&batch_2_block_4).expect("serialize 4"),
+            BlockCodec::serialize(&batch_2_block_5).expect("serialize 5"),
         ],
         None,
     )
@@ -146,8 +146,8 @@ fn active_sync_peer_offline_mid_sync_switches_peer_and_completes() {
         0,
         second.1,
         &[
-            serialize_block(&block_0).expect("serialize block 0"),
-            serialize_block(&block_1).expect("serialize block 1"),
+            BlockCodec::serialize(&block_0).expect("serialize block 0"),
+            BlockCodec::serialize(&block_1).expect("serialize block 1"),
         ],
         None,
     )

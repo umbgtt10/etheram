@@ -207,11 +207,11 @@ impl NodeRuntime {
         }
     }
 
-    fn current_height(&self) -> u64 {
+    pub fn current_height(&self) -> u64 {
         self.node.state().query_height()
     }
 
-    fn last_block_hash(&self) -> [u8; 32] {
+    pub fn last_block_hash(&self) -> [u8; 32] {
         let height = self.current_height();
         if height == 0 {
             return [0u8; 32];

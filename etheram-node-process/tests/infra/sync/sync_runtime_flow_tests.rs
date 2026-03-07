@@ -7,9 +7,9 @@ use etheram_core::storage::Storage;
 use etheram_node::common_types::block::Block;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
+use etheram_node_process::infra::codec::block_codec::BlockCodec;
 use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
 use etheram_node_process::infra::sync::sync_state::SyncState;
-use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 
 #[test]
 fn status_observation_then_request_planning_returns_expected_peer_and_range() {
@@ -32,8 +32,8 @@ fn decoded_blocks_import_then_storage_height_and_blocks_advance() {
     let storage = TestInMemoryStorage::new().expect("failed to build storage");
     let block_0 = Block::empty(0, 1, [1u8; 32]);
     let block_1 = Block::empty(1, 1, [2u8; 32]);
-    let payload_0 = serialize_block(&block_0).expect("failed to serialize block 0");
-    let payload_1 = serialize_block(&block_1).expect("failed to serialize block 1");
+    let payload_0 = BlockCodec::serialize(&block_0).expect("failed to serialize block 0");
+    let payload_1 = BlockCodec::serialize(&block_1).expect("failed to serialize block 1");
 
     // Act
     let decoded = decode_and_validate_blocks(0, 0, &[payload_0, payload_1], None);

@@ -2,13 +2,13 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::infra::codec::block_codec::BlockCodec;
 use crate::infra::storage::sync_storage::SyncStorage;
 use crate::infra::sync::sync_import::decode_and_validate_blocks;
 use crate::infra::sync::sync_message::SyncMessage;
 use crate::infra::sync::sync_sender::SyncSender;
 use crate::infra::sync::sync_state::SyncState;
 use crate::infra::transport::grpc_transport::sync_bus::SyncBus;
-use crate::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 use etheram_core::types::PeerId;
 use etheram_node::state::etheram_state::EtheramState;
 use std::sync::Arc;
@@ -122,7 +122,7 @@ impl SyncHandler {
             let Some(block) = state.query_block(height) else {
                 break;
             };
-            let Ok(payload) = serialize_block(&block) else {
+            let Ok(payload) = BlockCodec::serialize(&block) else {
                 break;
             };
             block_payloads.push(payload);

@@ -5,8 +5,8 @@
 use etheram_node::common_types::block::Block;
 use etheram_node::common_types::block::BLOCK_GAS_LIMIT;
 use etheram_node::common_types::transaction::Transaction;
+use etheram_node_process::infra::codec::block_codec::BlockCodec;
 use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
-use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
 use proptest::prelude::*;
 
 fn arb_transaction(max_gas: u64) -> BoxedStrategy<Transaction> {
@@ -63,7 +63,7 @@ fn arb_block(height: u64) -> BoxedStrategy<Block> {
 fn serialize_blocks(blocks: &[Block]) -> Vec<Vec<u8>> {
     blocks
         .iter()
-        .map(|block| serialize_block(block).expect("serialize_block failed"))
+        .map(|block| BlockCodec::serialize(block).expect("serialize_block failed"))
         .collect()
 }
 

@@ -16,6 +16,7 @@ use etheram_node::state::storage::storage_mutation::StorageMutation;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
 use sled::open;
+use sled::Batch;
 use sled::Db;
 use sled::Tree;
 use std::collections::BTreeMap;
@@ -82,10 +83,27 @@ impl SyncStorage for SledStorage {
 
 impl SledStorageInner {
     fn apply_synced_blocks(&mut self, blocks: &[Block]) {
-        for block in blocks {
-            self.mutate(StorageMutation::StoreBlock(block.clone()));
-            self.mutate(StorageMutation::IncrementHeight);
+        if blocks.is_empty() {
+            return;
         }
+
+        let mut block_batch = Batch::default();
+        let next_height = blocks.last().map(|block| block.height + 1).unwrap_or(0);
+
+        for block in blocks {
+            let encoded = StorageCodec::encode_block(block).unwrap_or_else(|error| {
+                panic!("failed to encode block {}: {}", block.height, error)
+            });
+            block_batch.insert(StorageCodec::encode_height(block.height).to_vec(), encoded);
+        }
+
+        self.blocks
+            .apply_batch(block_batch)
+            .unwrap_or_else(|error| panic!("failed to batch store blocks: {}", error));
+        self.meta
+            .insert(META_HEIGHT_KEY, &StorageCodec::encode_height(next_height))
+            .unwrap_or_else(|error| panic!("failed to write height: {}", error));
+        self.flush();
     }
 
     fn flush(&self) {

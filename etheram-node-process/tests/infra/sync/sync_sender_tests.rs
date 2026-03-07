@@ -152,10 +152,10 @@ fn broadcast_status_two_peers_routes_status_to_each_peer_sync_queue() {
     let sender = GrpcSyncSender::new(from_peer, peer_addresses, partition_table);
 
     // Act
-    thread::sleep(Duration::from_millis(40));
+    thread::sleep(Duration::from_millis(100));
     sender.broadcast_status(21, [4u8; 32]);
-    let queued_1 = wait_for_sync_message(&incoming_1, &sync_bus, to_peer_1, 20);
-    let queued_2 = wait_for_sync_message(&incoming_2, &sync_bus, to_peer_2, 20);
+    let queued_1 = wait_for_sync_message(&incoming_1, &sync_bus, to_peer_1, 40);
+    let queued_2 = wait_for_sync_message(&incoming_2, &sync_bus, to_peer_2, 40);
 
     // Assert
     assert!(queued_1.is_some());

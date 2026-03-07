@@ -3,6 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod cache;
+pub mod codec;
 pub mod external_interface;
 pub mod observer;
 pub mod protocol;
