@@ -113,7 +113,7 @@ impl NodeRuntime {
         let sync_storage = storage.clone();
         let cache = build_cache()?;
         let context_builder = build_context_builder()?;
-        let protocol = build_protocol(validators, restored_wal, Box::new(wal))?;
+        let protocol = build_protocol(peer_id, validators, restored_wal, Box::new(wal))?;
         let partitioner = build_partitioner()?;
         let observer = build_observer()?;
         let execution_engine = ExecutionEngineBuilder::default()

@@ -4,6 +4,7 @@
 
 pub mod codec;
 pub mod external_interface;
+pub mod protocol;
 pub mod std_shared_state_tests;
 pub mod storage;
 pub mod sync;
