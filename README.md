@@ -1,15 +1,22 @@
 # EtheRAM
 
-> **A research framework for blockchain node decomposition and abstraction**
+> **A validated node-architecture research framework for distributed systems**
 
-EtheRAM explores how distributed system nodes can be decomposed, validated, and deployed across diverse environments — from in-memory simulation to `no_std` embedded targets running on ARM Cortex-M. Built on lessons from MetalRaft and Fluxion, it emphasizes explicit semantics, deterministic validation, and fully swappable components.
+EtheRAM is a research framework for proving that one node architecture can remain stable across different consensus families, runtime environments, and infrastructure realizations. It explores how distributed system nodes can be decomposed, validated, and deployed across in-memory simulation, desktop multi-process execution, and `no_std` embedded targets on ARM Cortex-M.
 
-The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that validates the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum execution semantics.
+The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that validates the 3-6 architectural model under Byzantine consensus, embedded constraints, and Ethereum execution semantics. The wider workspace strengthens that claim with an independent Raft family, desktop multi-process deployment, and embedded QEMU validation.
+
+In practical terms, the project already demonstrates:
+- one stable node decomposition across IBFT and Raft
+- one execution primitive (`step()`) across in-memory, desktop, and `no_std` embedded runtimes
+- swappable storage, transport, timer, external-interface, observer, execution-engine, and cryptographic layers
+- substantial executable evidence through protocol, cluster, process, desktop, and QEMU validation
 
 Canonical documentation:
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stable architectural model and execution semantics
 - [docs/IMPLEMENTED-CAPABILITIES.md](docs/IMPLEMENTED-CAPABILITIES.md) — implemented feature families and proof surface
 - [docs/ROADMAP.md](docs/ROADMAP.md) — remaining feature families and their additional project value
+- [docs/ASSESSMENT.md](docs/ASSESSMENT.md) — workspace-wide evaluation, succinct summary, and improvement plan
 
 ---
 
@@ -29,6 +36,8 @@ Canonical documentation:
 ---
 
 ## Status
+
+EtheRAM should be read first as a validated node-architecture research framework and only second as an Ethereum-like prototype. The Ethereum-like artefact is the concrete proof vehicle for the broader architectural claim.
 
 ### Achieved
 
@@ -132,6 +141,7 @@ Dependencies are strictly one-way by protocol family. Node crates never depend o
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stable 3-6 model, execution semantics, and design rationale |
 | [IMPLEMENTED-CAPABILITIES.md](docs/IMPLEMENTED-CAPABILITIES.md) | Canonical inventory of implemented feature families and proof surface |
 | [ROADMAP.md](docs/ROADMAP.md) | Canonical inventory of remaining feature families and their added value |
+| [ASSESSMENT.md](docs/ASSESSMENT.md) | Workspace-wide evaluation, succinct summary, risks, and improvement plan |
 
 ---
 
