@@ -15,7 +15,7 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 | Crates | 10 (`core`, `embassy-core`, `etheram-node`, `etheram-validation`, `etheram-embassy`, `etheram-node-process`, `etheram-desktop`, `raft-node`, `raft-validation`, `raft-embassy`) |
 | Production Rust files / LOC | ~190 / ~9 000 |
 | Test files / LOC | ~75 / ~15 000 |
-| Automated tests | 900+ across protocol, cluster, process, desktop, and QEMU validation |
+| Automated tests | 1,029 across protocol, cluster, process, desktop, and QEMU validation |
 | Consensus protocols | Istanbul BFT (PrePrepare → Prepare → Commit + View Change), Raft (pre-vote, election, log replication, snapshots) |
 | Execution engines | `TinyEvmEngine`, `ValueTransferEngine`, `NoOpExecutionEngine` |
 | Embedded target | ARM Cortex-M4 via QEMU, 5-node async cluster, two hardware configurations |
@@ -30,7 +30,7 @@ The primary artefact is **EtheRAM**: a minimal but real Ethereum-like node that 
 - **Full IBFT consensus** — three-phase commit, view change, quorum via `⌊2n/3⌋ + 1`, prepared certificate with cryptographic proof ([IBFT Roadmap](etheram-node/IBFT-ROADMAP.md))
 - **Ethereum-like chain** — accounts, nonces, balances, gas metering, state roots, transaction receipts, block re-execution validation ([Chain Roadmap](etheram-node/CHAIN-ROADMAP.md))
 - **TinyEVM** — subset EVM with opcode execution (`PUSH`, `ADD`, `MUL`, `SSTORE`, `SLOAD`, `RETURN`), per-opcode gas accounting, contract storage
-- **748 automated tests** — protocol-level, cluster-level (Byzantine fault injection, deduplication, replay, malicious blocks, validator set updates), and QEMU end-to-end
+- **1,029 automated tests** — protocol-level, cluster-level, desktop/process integration, and QEMU end-to-end
 - **Embedded port** — 5-node IBFT cluster on ARM Cortex-M4 (Embassy async, `no_std`, real Ed25519 signatures, semihosting storage, UDP transport)
 - **Desktop multi-process cluster** — `etheram-node-process` + `etheram-desktop` provide a gRPC-connected native cluster with sled-backed state, gRPC client interface, WAL-backed restart recovery, and live partition control
 - **Total component swappability** — storage, cache, transport, timer, external interface, context builder, partitioner, execution engine, signature scheme, observer — all swappable at construction time
