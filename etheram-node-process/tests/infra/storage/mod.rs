@@ -3,4 +3,5 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 pub mod in_memory_storage_tests;
+pub mod sled_storage_tests;
 pub mod storage_factory_tests;

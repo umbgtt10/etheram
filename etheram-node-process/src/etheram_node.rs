@@ -58,6 +58,7 @@ impl NodeRuntime {
         listen_addr: &str,
         peer_addresses: &BTreeMap<PeerId, String>,
         validators: &[u64],
+        db_path: &str,
     ) -> Result<Self, String> {
         let transport_backend = TransportBackend::from_env();
         let partition_table = Arc::new(PartitionTable::new());
@@ -99,7 +100,7 @@ impl NodeRuntime {
         );
         let external_interface_incoming = build_external_interface_incoming()?;
         let external_interface_outgoing = build_external_interface_outgoing()?;
-        let storage = build_storage()?;
+        let storage = build_storage(db_path)?;
         let sync_storage = storage.clone();
         let cache = build_cache()?;
         let context_builder = build_context_builder()?;
@@ -132,7 +133,7 @@ impl NodeRuntime {
             observer,
         );
 
-        let sync_handler = SyncHandler::new(sync_bus, sync_sender, sync_storage);
+        let sync_handler = SyncHandler::new(sync_bus, sync_sender, Box::new(sync_storage));
         let timer_scheduler = TimerScheduler::new(timer_state);
 
         Ok(Self {

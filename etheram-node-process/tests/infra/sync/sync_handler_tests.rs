@@ -2,12 +2,12 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::test_in_memory_storage::TestInMemoryStorage;
 use etheram_node::builders::cache_builder::CacheBuilder;
 use etheram_node::builders::storage_builder::StorageBuilder;
 use etheram_node::common_types::block::Block;
 use etheram_node::state::etheram_state::EtheramState;
 use etheram_node::state::storage::storage_mutation::StorageMutation;
-use etheram_node_process::infra::storage::in_memory_storage::InMemoryStorage;
 use etheram_node_process::infra::sync::sync_handler::SyncHandler;
 use etheram_node_process::infra::sync::sync_message::SyncMessage;
 use etheram_node_process::infra::sync::sync_sender::SyncSender;
@@ -84,8 +84,8 @@ fn process_sync_messages_empty_queue_does_nothing() {
     let sync_bus = Arc::new(SyncBus::new());
     let log = FakeSyncLog::default();
     let sender = Box::new(FakeSyncSender::new(log.clone()));
-    let sync_storage = InMemoryStorage::new().expect("failed to create sync storage");
-    let mut handler = SyncHandler::new(sync_bus, sender, sync_storage);
+    let sync_storage = TestInMemoryStorage::new().expect("failed to create sync storage");
+    let mut handler = SyncHandler::new(sync_bus, sender, Box::new(sync_storage));
     let state = build_state();
 
     // Act
@@ -111,8 +111,8 @@ fn process_sync_messages_status_with_lag_sends_get_blocks_request() {
     );
     let log = FakeSyncLog::default();
     let sender = Box::new(FakeSyncSender::new(log.clone()));
-    let sync_storage = InMemoryStorage::new().expect("failed to create sync storage");
-    let mut handler = SyncHandler::new(sync_bus, sender, sync_storage);
+    let sync_storage = TestInMemoryStorage::new().expect("failed to create sync storage");
+    let mut handler = SyncHandler::new(sync_bus, sender, Box::new(sync_storage));
     let state = build_state();
 
     // Act
@@ -150,8 +150,8 @@ fn process_sync_messages_status_without_lag_does_not_send_request() {
     );
     let log = FakeSyncLog::default();
     let sender = Box::new(FakeSyncSender::new(log.clone()));
-    let sync_storage = InMemoryStorage::new().expect("failed to create sync storage");
-    let mut handler = SyncHandler::new(sync_bus, sender, sync_storage);
+    let sync_storage = TestInMemoryStorage::new().expect("failed to create sync storage");
+    let mut handler = SyncHandler::new(sync_bus, sender, Box::new(sync_storage));
     let state = build_state();
 
     // Act
@@ -179,8 +179,8 @@ fn process_sync_messages_get_blocks_responds_with_blocks_message() {
     );
     let log = FakeSyncLog::default();
     let sender = Box::new(FakeSyncSender::new(log.clone()));
-    let sync_storage = InMemoryStorage::new().expect("failed to create sync storage");
-    let mut handler = SyncHandler::new(sync_bus, sender, sync_storage);
+    let sync_storage = TestInMemoryStorage::new().expect("failed to create sync storage");
+    let mut handler = SyncHandler::new(sync_bus, sender, Box::new(sync_storage));
 
     // Act
     handler.process_sync_messages(peer_id, &state);
@@ -217,8 +217,8 @@ fn process_sync_messages_get_blocks_empty_state_responds_with_empty_blocks() {
     );
     let log = FakeSyncLog::default();
     let sender = Box::new(FakeSyncSender::new(log.clone()));
-    let sync_storage = InMemoryStorage::new().expect("failed to create sync storage");
-    let mut handler = SyncHandler::new(sync_bus, sender, sync_storage);
+    let sync_storage = TestInMemoryStorage::new().expect("failed to create sync storage");
+    let mut handler = SyncHandler::new(sync_bus, sender, Box::new(sync_storage));
     let state = build_state();
 
     // Act
@@ -245,8 +245,8 @@ fn broadcast_status_delegates_to_sync_sender() {
     let sync_bus = Arc::new(SyncBus::new());
     let log = FakeSyncLog::default();
     let sender = Box::new(FakeSyncSender::new(log.clone()));
-    let sync_storage = InMemoryStorage::new().expect("failed to create sync storage");
-    let handler = SyncHandler::new(sync_bus, sender, sync_storage);
+    let sync_storage = TestInMemoryStorage::new().expect("failed to create sync storage");
+    let handler = SyncHandler::new(sync_bus, sender, Box::new(sync_storage));
 
     // Act
     handler.broadcast_status(10, [7u8; 32]);

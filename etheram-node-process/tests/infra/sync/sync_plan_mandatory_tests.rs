@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::test_in_memory_storage::TestInMemoryStorage;
 use etheram_core::storage::Storage;
 use etheram_node::common_types::block::Block;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
-use etheram_node_process::infra::storage::in_memory_storage::InMemoryStorage;
 use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
 use etheram_node_process::infra::sync::sync_state::SyncState;
 use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
@@ -15,7 +15,7 @@ use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::s
 fn partition_and_heal_lag_recovery_selects_new_request_and_imports_after_heal() {
     // Arrange
     let mut state = SyncState::new();
-    let storage = InMemoryStorage::new().expect("failed to build storage");
+    let storage = TestInMemoryStorage::new().expect("failed to build storage");
     state.observe_status(2, 3);
     state.observe_status(3, 3);
     let first = state.next_request(0, 64).expect("expected initial request");
@@ -50,7 +50,7 @@ fn partition_and_heal_lag_recovery_selects_new_request_and_imports_after_heal() 
 fn long_partition_multi_batch_sync_import_catches_up_fully() {
     // Arrange
     let mut state = SyncState::new();
-    let storage = InMemoryStorage::new().expect("failed to build storage");
+    let storage = TestInMemoryStorage::new().expect("failed to build storage");
     state.observe_status(2, 6);
 
     let batch_1_block_0 = Block::empty(0, 1, [10u8; 32]);
@@ -130,7 +130,7 @@ fn invalid_range_response_is_rejected_and_failover_is_planned() {
 fn active_sync_peer_offline_mid_sync_switches_peer_and_completes() {
     // Arrange
     let mut state = SyncState::new();
-    let storage = InMemoryStorage::new().expect("failed to build storage");
+    let storage = TestInMemoryStorage::new().expect("failed to build storage");
     state.observe_status(2, 2);
     state.observe_status(3, 2);
     let first = state.next_request(0, 64).expect("expected first request");

@@ -4,6 +4,7 @@
 
 use std::fs;
 use std::net::TcpListener;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
@@ -32,6 +33,7 @@ pub fn create_test_config() -> PathBuf {
         nanos,
         unique
     ));
+    let db_path = path.with_extension("db");
     let transport_port = next_port();
     let client_port = next_port();
 
@@ -44,10 +46,35 @@ log_level = "info"
 id = 1
 transport_addr = "127.0.0.1:{transport_port}"
 client_addr = "127.0.0.1:{client_port}"
-db_path = "./data/node1"
-"#
+db_path = "{}"
+"#,
+        db_path.to_string_lossy().replace('\\', "/")
     );
 
     fs::write(&path, config).expect("failed to write temporary config file");
     path
+}
+
+pub fn create_test_db_path(name: &str) -> PathBuf {
+    let mut path = std::env::temp_dir();
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time before unix epoch")
+        .as_nanos();
+    let unique = COUNTER.fetch_add(1, Ordering::Relaxed);
+    path.push(format!(
+        "etheram_node_process_{}_{}_{}_db",
+        name, nanos, unique
+    ));
+    path
+}
+
+pub fn cleanup_test_config(path: &Path) {
+    let _ = fs::remove_file(path);
+    let _ = fs::remove_dir_all(path.with_extension("db"));
+}
+
+pub fn cleanup_test_db_path(path: &Path) {
+    let _ = fs::remove_dir_all(path);
 }

@@ -2,11 +2,11 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::test_in_memory_storage::TestInMemoryStorage;
 use etheram_core::storage::Storage;
 use etheram_node::common_types::block::Block;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
-use etheram_node_process::infra::storage::in_memory_storage::InMemoryStorage;
 use etheram_node_process::infra::sync::sync_import::decode_and_validate_blocks;
 use etheram_node_process::infra::sync::sync_state::SyncState;
 use etheram_node_process::infra::transport::grpc_transport::wire_ibft_message::serialize_block;
@@ -29,7 +29,7 @@ fn status_observation_then_request_planning_returns_expected_peer_and_range() {
 #[test]
 fn decoded_blocks_import_then_storage_height_and_blocks_advance() {
     // Arrange
-    let storage = InMemoryStorage::new().expect("failed to build storage");
+    let storage = TestInMemoryStorage::new().expect("failed to build storage");
     let block_0 = Block::empty(0, 1, [1u8; 32]);
     let block_1 = Block::empty(1, 1, [2u8; 32]);
     let payload_0 = serialize_block(&block_0).expect("failed to serialize block 0");

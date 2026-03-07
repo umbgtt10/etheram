@@ -47,6 +47,7 @@ ed25519-dalek = { version = "2", default-features = false }
 proptest = "1"
 tiny-keccak = { version = "2", features = ["keccak"] }
 primitive-types = { version = "0.14.0", default-features = false }
+sled = "0.34"
 
 etheram-core = { path = "core" }
 embassy-core = { path = "embassy-core" }

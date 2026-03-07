@@ -59,6 +59,7 @@ fn run() -> Result<(), String> {
         &node.transport_addr,
         &peer_addresses,
         &config.fleet.validator_set,
+        &node.db_path,
     )?;
     if step_limit == 0 {
         println!("etheram-node-process loop mode=forever");

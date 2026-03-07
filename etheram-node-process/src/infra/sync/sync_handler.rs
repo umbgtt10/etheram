@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
-use crate::infra::storage::in_memory_storage::InMemoryStorage;
+use crate::infra::storage::sync_storage::SyncStorage;
 use crate::infra::sync::sync_import::decode_and_validate_blocks;
 use crate::infra::sync::sync_message::SyncMessage;
 use crate::infra::sync::sync_sender::SyncSender;
@@ -22,14 +22,14 @@ pub struct SyncHandler {
     sync_bus: Arc<SyncBus>,
     sync_sender: Box<dyn SyncSender>,
     sync_state: SyncState,
-    sync_storage: InMemoryStorage,
+    sync_storage: Box<dyn SyncStorage>,
 }
 
 impl SyncHandler {
     pub fn new(
         sync_bus: Arc<SyncBus>,
         sync_sender: Box<dyn SyncSender>,
-        sync_storage: InMemoryStorage,
+        sync_storage: Box<dyn SyncStorage>,
     ) -> Self {
         Self {
             sync_bus,

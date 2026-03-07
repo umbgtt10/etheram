@@ -10,17 +10,18 @@ use etheram_node::implementations::in_memory_storage::InMemoryStorage as NodeInM
 use etheram_node::state::storage::storage_mutation::StorageMutation;
 use etheram_node::state::storage::storage_query::StorageQuery;
 use etheram_node::state::storage::storage_query_result::StorageQueryResult;
+use etheram_node_process::infra::storage::sync_storage::SyncStorage;
 use std::sync::Arc;
 use std::sync::Mutex;
 
 type SharedStorage = Arc<Mutex<NodeInMemoryStorage>>;
 
 #[derive(Clone)]
-pub struct InMemoryStorage {
+pub struct TestInMemoryStorage {
     inner: SharedStorage,
 }
 
-impl InMemoryStorage {
+impl TestInMemoryStorage {
     pub fn new() -> Result<Self, String> {
         Ok(Self {
             inner: Arc::new(Mutex::new(NodeInMemoryStorage::new())),
@@ -36,20 +37,26 @@ impl InMemoryStorage {
     }
 }
 
-impl Storage for InMemoryStorage {
+impl Storage for TestInMemoryStorage {
     type Key = Address;
-    type Value = Account;
-    type Query = StorageQuery;
     type Mutation = StorageMutation;
+    type Query = StorageQuery;
     type QueryResult = StorageQueryResult;
+    type Value = Account;
+
+    fn mutate(&mut self, mutation: Self::Mutation) {
+        let mut guard = self.inner.lock().expect("storage lock poisoned");
+        guard.mutate(mutation);
+    }
 
     fn query(&self, query: Self::Query) -> Self::QueryResult {
         let guard = self.inner.lock().expect("storage lock poisoned");
         guard.query(query)
     }
+}
 
-    fn mutate(&mut self, mutation: Self::Mutation) {
-        let mut guard = self.inner.lock().expect("storage lock poisoned");
-        guard.mutate(mutation);
+impl SyncStorage for TestInMemoryStorage {
+    fn apply_synced_blocks(&self, blocks: &[Block]) {
+        self.apply_synced_blocks(blocks);
     }
 }

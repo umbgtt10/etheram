@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::test_config::cleanup_test_config;
 use crate::common::test_config::create_test_config;
-use std::fs;
 use std::io::Read;
 use std::io::Write;
 use std::process::Command;
@@ -75,5 +75,5 @@ fn main_run_forever_shutdown_command_exits_successfully() {
         status,
         stderr_output
     );
-    let _ = fs::remove_file(config_path);
+    cleanup_test_config(&config_path);
 }

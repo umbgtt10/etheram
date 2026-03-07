@@ -1,6 +1,8 @@
 # EtheRAM — Roadmap Options
 
-This document catalogues all candidate directions for the project's next phase, organised into seven categories (A–G). Each option includes effort estimate and architectural rationale.
+This document catalogues the major roadmap directions for the project's next phase, organised into eight categories (A-H). Some entries are now implemented and are retained here as completed milestones for context. Each option includes effort estimate and architectural rationale.
+
+Status legend: `✅ implemented`, `🔄 remaining`
 
 ---
 
@@ -29,12 +31,12 @@ This document catalogues all candidate directions for the project's next phase, 
 
 | # | Feature | Effort | Value |
 |---|---|---|---|
-| C1 | **Expand TinyEVM** — add `MSTORE`/`MLOAD` (memory model), `CALLDATALOAD`/`CALLDATASIZE`, `SHA3`, `JUMP`/`JUMPI`. This would make TinyEVM capable of running simple Solidity-compiled contracts | High | Moves TinyEVM from toy to credible subset; proves the ExecutionEngine trait scales |
-| C2 | **Merkle Patricia Trie state root** — replace the current XOR-mix hash with a real MPT (or a simplified binary trie) for `compute_state_root`. Ethereum clients use this for state proofs | High | Architecturally significant — tests whether storage abstraction can accommodate proof-generating state stores |
-| C3 | **Transaction pool with priority ordering** — currently pending transactions are a flat `Vec`. Add gas-price-based ordering, per-sender nonce sequencing, and a configurable pool size limit | Medium | Practical and exercises the Cache dimension more substantially |
-| C4 | **JSON-RPC external interface** — implement a subset of the Ethereum JSON-RPC spec (`eth_sendTransaction`, `eth_getBalance`, `eth_blockNumber`, `eth_getTransactionReceipt`) as an `ExternalInterface` variant | Medium | Makes the node queryable by standard Ethereum tooling; validates ExternalInterface swappability with a real protocol |
-| C5 | **Contract deployment** — add `CREATE` opcode and contract account storage so that TinyEVM can deploy and call contracts (even trivially) | High | The single biggest step toward Ethereum-likeness; requires memory model + address derivation |
-| C6 | **Block gas limit enforcement** — currently `MAX_GAS_LIMIT` is per-transaction. Add a block-level gas limit so that the proposer fills blocks up to the limit, ordering by gas price | Low-Medium | Straightforward extension of gas metering; exercises proposer logic |
+| C1 ✅ | **Expand TinyEVM** — `MSTORE`/`MLOAD`, `CALLDATALOAD`/`CALLDATASIZE`, `SHA3`, `JUMP`/`JUMPI`, extended `PUSH`/`DUP`/`SWAP`, and related gas accounting are now implemented | High | Established TinyEVM as a credible execution subset rather than a toy interpreter |
+| C2 🔄 | **Merkle Patricia Trie state root** — a real proof-oriented state-root implementation is now part of the architecture rather than the earlier placeholder hash | High | Demonstrated that the storage abstraction can support proof-generating state representations |
+| C3 ✅ | **Transaction pool with priority ordering** — gas-price ordering, per-sender nonce sequencing, pool limits, and deterministic eviction are now implemented | Medium | Exercised the Cache dimension with real ordering and admission policies |
+| C4 🔄 | **JSON-RPC external interface** — implement a subset of the Ethereum JSON-RPC spec (`eth_sendTransaction`, `eth_getBalance`, `eth_blockNumber`, `eth_getTransactionReceipt`) as an `ExternalInterface` variant | Medium | Makes the node queryable by standard Ethereum tooling; validates ExternalInterface swappability with a real protocol |
+| C5 🔄 | **Contract deployment** — add `CREATE` opcode and contract account storage so that TinyEVM can deploy and call contracts (even trivially) | High | The largest remaining step toward Ethereum-likeness now that execution, gas, state root, and transaction ordering are already in place |
+| C6 ✅ | **Block gas limit enforcement** — proposer-side block filling under a block-wide gas budget is now implemented | Low-Medium | Completed the gas-metering story at the block-construction level |
 
 ---
 
@@ -95,36 +97,34 @@ its own OS process, transport over gRPC, state persisted in an embedded database
 This direction proves the decomposition holds under real system pressures without
 requiring dedicated server hardware or container orchestration.
 
+Current status: `H1`, `H3`, `H4`, `H7`, and `H8` are implemented. `H2`, `H5`, and `H6` remain to complete the direction end-to-end.
+
 | # | Feature | Effort | Value |
 |---|---|---|---|
-| H1 | **gRPC transport** — implement `TransportIncoming` + `TransportOutgoing` over [tonic](https://github.com/hyperium/tonic) (gRPC over HTTP/2). Point-to-point `SendMessage` maps to unary RPC; `BroadcastMessage` fans out concurrently. A protobuf codec replaces `WireIbftMessage` | Medium | Validates transport swappability against a real, widely-used RPC protocol; natural fit for cross-language clients later |
-| H2 | **Embedded database storage** — implement `StorageAdapter` over [sled](https://github.com/spacejam/sled) (pure-Rust embedded B-tree, no external process). Each storage mutation becomes a transactional sled batch | Medium | Tests whether the storage abstraction accommodates crash-safe, concurrent write semantics without leaking sled concepts into the protocol |
-| H3 | **Per-node process harness** — an `etheram-node-process` binary crate that runs a single `EtheramNode` step loop, wired with gRPC transport + sled storage, driven by a `cluster.toml` entry passed as a CLI argument. A separate `etheram-desktop` launcher process reads the fleet config and spawns one `etheram-node-process` child per node, monitoring their stdout/stderr for the dashboard UI | Medium | End-to-end proof that the decomposition composes under real OS process boundaries — full fault isolation, independent address spaces, genuine crash recovery |
-| H4 | **Desktop UI — terminal dashboard** — a [ratatui](https://github.com/ratatui-org/ratatui) terminal UI showing live per-node height, round, role, pending tx count, and last committed block hash, updated via the `Observer` trait | Medium | Makes the cluster visually observable; demonstrates that the Observer dimension serves non-logging purposes |
-| H5 | **gRPC `ExternalInterface`** — a tonic-backed `ExternalInterfaceIncoming` + `ExternalInterfaceOutgoing` pair exposing `SubmitTransaction`, `GetBalance`, `GetHeight`, and `GetBlock` as unary RPCs. Separate from the peer transport (H1); client-facing and peer-facing gRPC services run on different ports | Medium | Completes the gRPC story — without this there is no way for a user or external tool to talk to a running desktop node |
-| H6 | **WAL-backed crash recovery** — wire `ConsensusWal` + a real `WalWriter` implementation (writing to sled or a flat append-only file) so that a restarted node recovers its `prepared_certificate`, current round, and locked block before rejoining the cluster. `NoOpWalWriter` stays available for tests | Medium | Activates code that already exists in the architecture but has never been exercised end-to-end; prevents the locked-block invariant from being violated on restart |
-| H7 | **Fleet TOML configuration** — a single `cluster.toml` file that declares the entire fleet: node count, each node's peer ID, listen address (transport + external interface), sled DB path, log level, and the validator set. `etheram-desktop` reads this file at startup and wires all nodes from it — no recompilation needed to change topology. Individual node sections can override fleet-level defaults | Low-Medium | Makes the cluster genuinely operable without recompiling; validates that `EtheramNodeBuilder` can be driven entirely from external config |
-| H8 | **Network partition simulation** — a `PartitionableTransport` decorator wraps any `TransportIncoming`/`TransportOutgoing` implementation and intercepts messages based on a runtime-configurable partition table (`BTreeSet<(PeerId, PeerId)>` of blocked links). The partition table is updated via a control gRPC endpoint on each node process. `etheram-desktop` sends partition/heal commands to the affected processes and reflects the state in the dashboard (`partition <nodeA> <nodeB>` CLI command + hotkey) | Medium | Makes network partitioning a first-class, scriptable test stimulus — enables live demonstration of BFT tolerance under split-brain conditions and liveness recovery after healing |
+| H1 ✅ | **gRPC transport** — `TransportIncoming` + `TransportOutgoing` now run over gRPC for the desktop multi-process cluster | Medium | Validated transport swappability against a real RPC protocol under real process boundaries |
+| H2 🔄 | **Embedded database storage** — implement `StorageAdapter` over [sled](https://github.com/spacejam/sled) (pure-Rust embedded B-tree, no external process). Each storage mutation becomes a transactional sled batch | Medium | Tests whether the storage abstraction accommodates crash-safe, concurrent write semantics without leaking sled concepts into the protocol |
+| H3 ✅ | **Per-node process harness** — `etheram-node-process` and `etheram-desktop` now form a working multi-process cluster driven by `cluster.toml` | Medium | Proved that the decomposition composes across OS process boundaries with real fault isolation |
+| H4 ✅ | **Desktop UI dashboard** — a native desktop dashboard is now implemented and fed by launcher/process state rather than remaining a planned terminal UI | Medium | Made the cluster observably operable and demonstrated that the Observer dimension supports non-logging consumers |
+| H5 🔄 | **gRPC `ExternalInterface`** — a tonic-backed `ExternalInterfaceIncoming` + `ExternalInterfaceOutgoing` pair exposing `SubmitTransaction`, `GetBalance`, `GetHeight`, and `GetBlock` as unary RPCs. Separate from the peer transport (H1); client-facing and peer-facing gRPC services run on different ports | Medium | Completes the gRPC story — without this there is no way for a user or external tool to talk to a running desktop node |
+| H6 🔄 | **WAL-backed crash recovery** — wire `ConsensusWal` + a real `WalWriter` implementation (writing to sled or a flat append-only file) so that a restarted node recovers its `prepared_certificate`, current round, and locked block before rejoining the cluster. `NoOpWalWriter` stays available for tests | Medium | Activates code that already exists in the architecture but has never been exercised end-to-end; prevents the locked-block invariant from being violated on restart |
+| H7 ✅ | **Fleet TOML configuration** — fleet configuration via `cluster.toml` is now implemented and drives the launcher/node-process wiring | Low-Medium | Made the cluster genuinely operable without recompilation |
+| H8 ✅ | **Network partition simulation** — partition/heal control and runtime partition tables are now part of the desktop cluster | Medium | Turned network partitioning into a first-class live test stimulus for Byzantine-resilience demos |
 
-### Crate layout
+### Current crate layout
 
 ```
 etheram-node-process/   # binary crate — runs exactly one node, driven by cluster.toml + node id arg
   src/
-    main.rs             # parses args, reads cluster.toml, wires and runs EtheramNode step loop
-    cluster_config.rs   # TOML deserialization (serde) for fleet + per-node config
-    grpc_transport/     # tonic-based TransportIncoming + TransportOutgoing (H1)
-    grpc_external/      # tonic-based ExternalInterfaceIncoming + Outgoing (H5)
-    sled_storage/       # sled-based StorageAdapter (H2)
-    wal_writer/         # sled/file-backed WalWriter (H6)
-    partitionable_transport/  # partition-table transport decorator (H8)
-    process_observer/   # structured-log Observer writing to stdout for launcher consumption
+    main.rs             # parses args, reads cluster.toml, wires and runs the node process
+    cluster_config.rs   # TOML deserialization for fleet + per-node config
+    etheram_node.rs     # std process wrapper around the core node loop
+    infra/              # transport, sync, storage, timer, observer, scheduler, external interface
 
 etheram-desktop/        # binary crate — launcher + dashboard, spawns child node processes
   src/
     main.rs             # reads cluster.toml, spawns N etheram-node-process children + UI
     launcher.rs         # child process lifecycle (spawn, kill, restart, health-check)
-    ui/                 # ratatui dashboard, fed by child stdout and gRPC health queries
+    ui/                 # egui dashboard, fed by child stdout/status and launcher state
 ```
 
 `etheram-desktop` depends on `etheram-node` and `core` only — same dependency
@@ -151,7 +151,7 @@ db_path        = "./data/node2"
 # ... one [[node]] section per node
 ```
 
-### Suggested scenario
+### Suggested scenario once H2, H5, and H6 are complete
 
 1. Author a `cluster.toml` for 5 nodes and start the desktop app — all nodes elect a leader and begin committing empty blocks.
 2. Submit several transactions via gRPC (H5); watch them appear as pending and then committed in the dashboard.
@@ -164,11 +164,14 @@ db_path        = "./data/node2"
 
 ## Recommended Sequencing
 
-### Maximise architectural validation (moderate effort)
-A4 → B2 → C3 → C6
+### Complete Direction H
+H2 → H5 → H6
+
+### Maximise architectural validation after the current implementation
+B2 → G2 → D2
 
 ### Deepen the Ethereum-like story
-C1 → C3 → C6 → C5
+C5 → C4
 
 ### Complete the consensus story
 A1 → A2 → B1

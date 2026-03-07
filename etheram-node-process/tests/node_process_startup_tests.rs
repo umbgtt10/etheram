@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0
 // http://www.apache.org/licenses/LICENSE-2.0
 
+use crate::common::test_config::cleanup_test_config;
 use crate::common::test_config::create_test_config;
-use std::fs;
 use std::process::Command;
 
 #[test]
@@ -39,7 +39,7 @@ fn main_valid_arguments_returns_success_exit_code() {
     // Assert
     assert!(output.status.success());
 
-    let _ = fs::remove_file(config_path);
+    cleanup_test_config(&config_path);
 }
 
 #[test]
@@ -61,7 +61,7 @@ fn main_valid_arguments_with_grpc_backend_returns_success_exit_code() {
     // Assert
     assert!(output.status.success());
 
-    let _ = fs::remove_file(config_path);
+    cleanup_test_config(&config_path);
 }
 
 #[test]
@@ -83,5 +83,5 @@ fn main_invalid_partition_env_with_grpc_backend_returns_non_success_exit_code() 
     // Assert
     assert!(!output.status.success());
 
-    let _ = fs::remove_file(config_path);
+    cleanup_test_config(&config_path);
 }

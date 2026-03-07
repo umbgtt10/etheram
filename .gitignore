@@ -21,6 +21,9 @@ etheram-node-process/src/infra/transport/grpc_transport/generated/*
 *.tmp
 *.swp
 
+# Local runtime data
+data/
+
 # TLA+ model checker output
 .tlacache/
 
