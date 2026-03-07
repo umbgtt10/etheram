@@ -5,6 +5,7 @@
 pub mod cluster_config_tests;
 pub mod common;
 pub mod infra;
+pub mod node_process_external_interface_tests;
 pub mod node_process_restart_tests;
 pub mod node_process_startup_tests;
 pub mod shutdown_tests;

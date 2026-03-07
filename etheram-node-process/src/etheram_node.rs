@@ -5,6 +5,7 @@
 use crate::infra::cache::cache_factory::build_cache;
 use crate::infra::external_interface::external_interface_incoming_factory::build_external_interface_incoming;
 use crate::infra::external_interface::external_interface_outgoing_factory::build_external_interface_outgoing;
+use crate::infra::external_interface::grpc_external_interface_bus::GrpcExternalInterfaceBus;
 use crate::infra::observer::observer_factory::build_observer;
 use crate::infra::protocol::protocol_factory::build_protocol;
 use crate::infra::scheduler::context_builder_factory::build_context_builder;
@@ -46,6 +47,7 @@ const STATUS_INTERVAL_MS: u64 = 1000;
 const SYNC_RETRY_TICK_MS: u64 = 250;
 
 pub struct NodeRuntime {
+    external_interface_bus: GrpcExternalInterfaceBus,
     node: EtheramNode<IbftMessage>,
     partition_table: Arc<PartitionTable>,
     sync_handler: SyncHandler,
@@ -56,6 +58,7 @@ impl NodeRuntime {
     pub fn new(
         peer_id: PeerId,
         listen_addr: &str,
+        client_addr: &str,
         peer_addresses: &BTreeMap<PeerId, String>,
         validators: &[u64],
         db_path: &str,
@@ -98,9 +101,12 @@ impl NodeRuntime {
             peer_addresses,
             Arc::clone(&partition_table),
         );
-        let external_interface_incoming = build_external_interface_incoming()?;
-        let external_interface_outgoing = build_external_interface_outgoing()?;
         let storage = build_storage(db_path)?;
+        let external_interface_bus = GrpcExternalInterfaceBus::new(client_addr, storage.clone())?;
+        let external_interface_incoming =
+            build_external_interface_incoming(external_interface_bus.clone())?;
+        let external_interface_outgoing =
+            build_external_interface_outgoing(external_interface_bus.clone())?;
         let sync_storage = storage.clone();
         let cache = build_cache()?;
         let context_builder = build_context_builder()?;
@@ -137,6 +143,7 @@ impl NodeRuntime {
         let timer_scheduler = TimerScheduler::new(timer_state);
 
         Ok(Self {
+            external_interface_bus,
             node,
             partition_table,
             sync_handler,
@@ -234,5 +241,11 @@ impl NodeRuntime {
             "{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
             hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7]
         )
+    }
+}
+
+impl Drop for NodeRuntime {
+    fn drop(&mut self) {
+        self.external_interface_bus.shutdown();
     }
 }

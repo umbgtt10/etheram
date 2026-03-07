@@ -57,6 +57,7 @@ fn run() -> Result<(), String> {
     let mut runtime = NodeRuntime::new(
         node.id,
         &node.transport_addr,
+        &node.client_addr,
         &peer_addresses,
         &config.fleet.validator_set,
         &node.db_path,

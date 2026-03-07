@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package etheram.external_interface;
+
+service ExternalInterfaceService {
+  rpc SubmitTransaction(SubmitTransactionRequest) returns (SubmitTransactionReply);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceReply);
+  rpc GetHeight(GetHeightRequest) returns (GetHeightReply);
+  rpc GetBlock(GetBlockRequest) returns (GetBlockReply);
+}
+
+enum TransactionRejectionReason {
+  TRANSACTION_REJECTION_REASON_UNSPECIFIED = 0;
+  TRANSACTION_REJECTION_REASON_INSUFFICIENT_BALANCE = 1;
+  TRANSACTION_REJECTION_REASON_INVALID_NONCE = 2;
+  TRANSACTION_REJECTION_REASON_GAS_LIMIT_EXCEEDED = 3;
+  TRANSACTION_REJECTION_REASON_ZERO_GAS_PRICE = 4;
+}
+
+message TransactionMessage {
+  bytes from = 1;
+  bytes to = 2;
+  string value = 3;
+  uint64 gas_limit = 4;
+  uint64 gas_price = 5;
+  uint64 nonce = 6;
+  bytes data = 7;
+}
+
+message BlockMessage {
+  uint64 height = 1;
+  uint64 proposer = 2;
+  repeated TransactionMessage transactions = 3;
+  bytes state_root = 4;
+  bytes post_state_root = 5;
+  bytes receipts_root = 6;
+  uint64 gas_limit = 7;
+}
+
+message SubmitTransactionRequest {
+  TransactionMessage transaction = 1;
+}
+
+message SubmitTransactionReply {
+  bool accepted = 1;
+  TransactionRejectionReason rejection_reason = 2;
+}
+
+message GetBalanceRequest {
+  bytes address = 1;
+}
+
+message GetBalanceReply {
+  string balance = 1;
+  uint64 height = 2;
+}
+
+message GetHeightRequest {}
+
+message GetHeightReply {
+  uint64 height = 1;
+}
+
+message GetBlockRequest {
+  uint64 height = 1;
+}
+
+message GetBlockReply {
+  bool found = 1;
+  BlockMessage block = 2;
+}

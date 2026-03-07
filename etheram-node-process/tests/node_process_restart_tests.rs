@@ -10,6 +10,36 @@ use etheram_node::state::storage::storage_mutation::StorageMutation;
 use etheram_node_process::etheram_node::NodeRuntime;
 use etheram_node_process::infra::storage::sled_storage::SledStorage;
 use std::collections::BTreeMap;
+use std::net::TcpListener;
+use std::thread;
+use std::time::Duration;
+use std::time::Instant;
+
+const RESTART_TIMEOUT_MS: u64 = 2_000;
+
+fn next_port() -> u16 {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("failed to allocate local port");
+    listener
+        .local_addr()
+        .expect("failed to get local socket address")
+        .port()
+}
+
+fn wait_for_db_unlock(db_path: &str) {
+    let started = Instant::now();
+    loop {
+        match SledStorage::new(db_path) {
+            Ok(storage) => {
+                drop(storage);
+                return;
+            }
+            Err(_) if started.elapsed() <= Duration::from_millis(RESTART_TIMEOUT_MS) => {
+                thread::sleep(Duration::from_millis(10));
+            }
+            Err(error) => panic!("timed out waiting for db unlock: {}", error),
+        }
+    }
+}
 
 #[test]
 fn new_existing_db_restores_height_and_last_hash_across_restart() {
@@ -22,13 +52,18 @@ fn new_existing_db_restores_height_and_last_hash_across_restart() {
     storage.mutate(StorageMutation::StoreBlock(block));
     storage.mutate(StorageMutation::IncrementHeight);
     drop(storage);
+    let transport_addr_1 = format!("127.0.0.1:{}", next_port());
+    let client_addr_1 = format!("127.0.0.1:{}", next_port());
+    let transport_addr_2 = format!("127.0.0.1:{}", next_port());
+    let client_addr_2 = format!("127.0.0.1:{}", next_port());
     let mut peer_addresses = BTreeMap::new();
-    peer_addresses.insert(1, "127.0.0.1:0".to_string());
+    peer_addresses.insert(1, transport_addr_1.clone());
 
     // Act
     let runtime_1 = NodeRuntime::new(
         1,
-        "127.0.0.1:0",
+        &transport_addr_1,
+        &client_addr_1,
         &peer_addresses,
         &[1],
         db_path.to_string_lossy().as_ref(),
@@ -37,9 +72,12 @@ fn new_existing_db_restores_height_and_last_hash_across_restart() {
     let height_1 = runtime_1.current_height();
     let hash_1 = runtime_1.last_block_hash();
     drop(runtime_1);
+    wait_for_db_unlock(db_path.to_string_lossy().as_ref());
+    peer_addresses.insert(1, transport_addr_2.clone());
     let runtime_2 = NodeRuntime::new(
         1,
-        "127.0.0.1:0",
+        &transport_addr_2,
+        &client_addr_2,
         &peer_addresses,
         &[1],
         db_path.to_string_lossy().as_ref(),
